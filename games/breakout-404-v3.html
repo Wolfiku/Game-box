@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BREAKOUT 404</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#000; --fg:#fff; --muted:rgba(255,255,255,.42); --faint:rgba(255,255,255,.18);
+  --panel:rgba(255,255,255,.04); --border:rgba(255,255,255,.12); --gold:#ffcf52; --danger:#ff6a6a;
+  --font1:'Share Tech Mono',monospace; --font2:'JetBrains Mono',monospace; --r:4px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:var(--font2);touch-action:none;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+.screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .28s ease}
+.screen.active{opacity:1;pointer-events:auto}
+#screen-menu,#screen-mode,#screen-settings,#screen-online,#screen-challenges{background:#000}
+.terminal-bg{position:absolute;inset:0;white-space:pre;overflow:hidden;padding:18px;font-size:11px;line-height:1.58;opacity:.17;filter:blur(2.8px);pointer-events:none}
+.menu-content,.mode-content,.settings-content,.online-content,.challenges-content{position:relative;z-index:2}
+.menu-content{display:flex;flex-direction:column;align-items:center;gap:32px}
+.menu-logo h1{font-family:var(--font1);font-size:clamp(2.4rem,8vw,5rem);letter-spacing:.15em;text-shadow:0 0 38px rgba(255,255,255,.15)}
+.menu-logo .subtitle,.mode-title,.settings-title,.online-title,.challenges-title,.pause-title,.cr-title{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--muted);text-align:center}
+.menu-buttons,.pause-btns,.go-btns,.cr-btns{display:flex;flex-direction:column;gap:8px;width:250px}
+.menu-btn,.pause-btn,.go-btn,.cr-btn,.chip-btn{padding:12px 20px;text-align:left;text-transform:uppercase;letter-spacing:.14em;font-size:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);border-radius:var(--r);color:rgba(255,255,255,.68);transition:.16s ease}
+.menu-btn:hover,.pause-btn:hover,.go-btn:hover,.cr-btn:hover,.chip-btn:hover,.mode-card:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.35);color:#fff}
+.menu-btn::before,.pause-btn::before,.go-btn::before,.cr-btn::before,.chip-btn::before{content:'> ';color:rgba(255,255,255,.24)}
+.mode-content{display:flex;flex-direction:column;align-items:center;gap:28px;padding:20px}
+.mode-cards{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.mode-card{width:210px;padding:24px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.03);border-radius:var(--r);transition:.16s ease;cursor:pointer}
+.mode-card h3{font-family:var(--font1);font-size:15px;letter-spacing:.1em;margin-bottom:8px}
+.mode-card p{font-size:11px;line-height:1.55;color:var(--muted)}
+.mode-back,.settings-back,.online-back,.challenges-back{font-size:11px;letter-spacing:.2em;color:var(--faint);text-transform:uppercase}
+.mode-back:hover,.settings-back:hover,.online-back:hover,.challenges-back:hover{color:var(--muted)}
+.settings-content{display:flex;flex-direction:column;gap:14px;width:min(340px,90vw)}
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.settings-label,.settings-val{font-size:12px}
+.settings-label{color:rgba(255,255,255,.62);letter-spacing:.1em}
+.toggle-btn{width:36px;height:20px;border:1px solid rgba(255,255,255,.22);border-radius:10px;background:rgba(255,255,255,.07);position:relative;transition:.16s ease}
+.toggle-btn::after{content:'';position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.5);transition:.16s ease}.toggle-btn.on{background:rgba(255,255,255,.26)}.toggle-btn.on::after{left:18px;background:#fff}
+.vol-slider{-webkit-appearance:none;appearance:none;width:120px;height:2px;background:rgba(255,255,255,.22)}.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff}
+.online-status{font-size:12px;letter-spacing:.08em;color:var(--faint);border:1px solid rgba(255,255,255,.06);padding:16px 26px;border-radius:var(--r)}
+.online-status span{color:rgba(255,255,255,.25)}
+#screen-challenges{overflow:auto}
+.challenges-content{display:flex;flex-direction:column;align-items:center;gap:20px;padding:28px 14px;max-width:1040px;width:100%}
+.challenges-grid{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:8px;width:100%}
+.challenge-item{min-height:96px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);border-radius:var(--r);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:5px;padding:8px;cursor:pointer;transition:.16s ease}
+.challenge-item:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.33)}
+.challenge-item.completed{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.28)}
+.challenge-item.completed .ch-num{color:var(--gold)}
+.challenge-item.locked{opacity:.32;pointer-events:none}
+.ch-num{font-family:var(--font1);font-size:16px;color:rgba(255,255,255,.55)}
+.ch-name{font-size:8px;line-height:1.35;color:rgba(255,255,255,.38);letter-spacing:.06em}
+.ch-pts{font-size:8px;color:rgba(255,255,255,.24)}
+.challenges-ram{font-size:11px;letter-spacing:.16em;color:var(--muted)}
+#screen-game{background:#000;display:block;opacity:0;pointer-events:none}
+#screen-game.active{opacity:1;pointer-events:auto}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+#hud{position:fixed;inset:0 0 auto 0;height:58px;display:flex;justify-content:space-between;align-items:flex-start;padding:12px 14px;z-index:20;pointer-events:none}
+#hud-left,#hud-right{display:flex;flex-direction:column;gap:7px}
+#btn-stop{pointer-events:auto;font-size:11px;text-transform:uppercase;letter-spacing:.2em;color:rgba(255,255,255,.36);padding:4px 0}
+#btn-stop:hover{color:rgba(255,255,255,.76)}
+#life-display{display:none;font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.74)}
+#life-display.visible{display:block}
+#score-display{font-family:var(--font1);font-size:20px;letter-spacing:.1em;color:rgba(255,255,255,.88);text-align:right}
+#boss-bar-wrap{display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:21;width:min(340px,56vw);pointer-events:none}
+#boss-bar-wrap.visible{display:block}
+#boss-name{font-size:10px;letter-spacing:.2em;color:rgba(255,255,255,.35);text-align:center;margin-bottom:6px;text-transform:uppercase}
+#boss-bar-bg{height:4px;background:rgba(255,255,255,.08)}
+#boss-bar{height:4px;background:#fff;width:100%}
+#challenge-hud{display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:21;gap:10px;align-items:center;font-size:10px;letter-spacing:.16em;color:rgba(255,255,255,.28);pointer-events:none}
+#challenge-hud.visible{display:flex}
+.modifier-tag{font-size:9px;border:1px solid rgba(255,255,255,.1);padding:2px 6px;border-radius:2px;color:rgba(255,255,255,.24)}
+#item-popup{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:22;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.62);opacity:0;transition:opacity .3s ease;pointer-events:none}#item-popup.visible{opacity:1}
+#active-items{position:fixed;left:50%;transform:translateX(-50%);bottom:58px;display:flex;gap:6px;z-index:22;pointer-events:none}.ai-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.42);animation:pulse 1.5s ease-in-out infinite}@keyframes pulse{0%,100%{opacity:.35}50%{opacity:.92}}
+#pause-overlay,#gameover-overlay,#challenge-result{position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:40;opacity:0;pointer-events:none;transition:opacity .22s ease}
+#pause-overlay.visible,#gameover-overlay.visible,#challenge-result.visible{opacity:1;pointer-events:auto}
+.pause-content,.go-content,.cr-content{display:flex;flex-direction:column;align-items:center;gap:18px;padding:20px}
+.go-title,.cr-ch-name{font-family:var(--font1);font-size:clamp(1.4rem,5vw,2.8rem);letter-spacing:.15em;text-align:center}.go-score,.go-ram,.story-meta,.challenge-meta{font-size:12px;letter-spacing:.2em;color:rgba(255,255,255,.44);text-align:center}.go-ram{color:var(--gold);display:none}
+#mobile-zone{position:fixed;left:0;right:0;bottom:0;height:32vh;z-index:19;background:linear-gradient(to top,rgba(255,255,255,.02),transparent);opacity:.001}
+#mobile-zone::after{content:'';position:absolute;left:50%;bottom:16px;transform:translateX(-50%);width:110px;height:3px;background:rgba(255,255,255,.08);border-radius:2px}
+@media (max-width:860px){.challenges-grid{grid-template-columns:repeat(4,1fr)}.mode-card{width:min(250px,82vw)}#boss-bar-wrap{width:58vw}}
+@media (max-width:560px){.menu-buttons,.pause-btns,.go-btns,.cr-btns{width:220px}.challenges-grid{grid-template-columns:repeat(3,1fr)}#hud{height:66px}#score-display{font-size:17px}.menu-logo h1{font-size:2.2rem}.mode-cards{gap:10px}}
+</style>
+</head>
+<body>
+<div id="screen-menu" class="screen active">
+  <div class="terminal-bg" id="terminalBg"></div>
+  <div class="menu-content">
+    <div class="menu-logo"><h1>BREAKOUT 404</h1><div class="subtitle">v3.1.0 // terminal breach</div></div>
+    <div class="menu-buttons">
+      <button class="menu-btn" id="btn-start">Start Game</button>
+      <button class="menu-btn" id="btn-settings">Settings</button>
+      <button class="menu-btn" id="btn-online">Online</button>
+    </div>
+  </div>
+</div>
+<div id="screen-mode" class="screen">
+  <div class="mode-content">
+    <div class="mode-title">Select Mode</div>
+    <div class="mode-cards">
+      <div class="mode-card" id="btn-endless"><h3>Endless</h3><p>Arcade run with brick patterns, visible lives and increasing pressure.</p></div>
+      <div class="mode-card" id="btn-story"><h3>Story</h3><p>Real stage progression with challenge intermissions and boss encounters.</p></div>
+      <div class="mode-card" id="btn-challenge"><h3>Challenge</h3><p>Expanded modifier mode with more handcrafted gameplay tests and RAM rewards.</p></div>
+    </div>
+    <button class="mode-back" id="btn-mode-back">← back</button>
+  </div>
+</div>
+<div id="screen-settings" class="screen">
+  <div class="settings-content">
+    <div class="settings-title">Settings</div>
+    <div class="settings-row"><span class="settings-label">Sound</span><div class="toggle-btn on" id="toggle-sound"></div></div>
+    <div class="settings-row"><span class="settings-label">Volume</span><input type="range" class="vol-slider" min="0" max="100" value="60" id="vol-slider"></div>
+    <div class="settings-row"><span class="settings-label">Particles</span><div class="toggle-btn on" id="toggle-particles"></div></div>
+    <div class="settings-row"><span class="settings-label">RAM Points</span><span class="settings-val" id="ram-display">0</span></div>
+    <button class="settings-back" id="btn-settings-back">← back</button>
+  </div>
+</div>
+<div id="screen-online" class="screen">
+  <div class="online-content">
+    <div class="online-title">Online</div>
+    <div class="online-status"><span>⬤</span> &nbsp;no event hosted right now</div>
+    <button class="online-back" id="btn-online-back">← back</button>
+  </div>
+</div>
+<div id="screen-challenges" class="screen">
+  <div class="challenges-content">
+    <div class="challenges-title">Challenge Mode</div>
+    <div class="challenges-ram" id="challenges-ram-display">0 RAM pts</div>
+    <div class="challenges-grid" id="challenges-grid"></div>
+    <button class="challenges-back" id="btn-challenges-back">← back</button>
+  </div>
+</div>
+<div id="screen-game" class="screen">
+  <canvas id="gameCanvas"></canvas>
+  <div id="hud">
+    <div id="hud-left"><button id="btn-stop">■ stop</button><div id="life-display"></div></div>
+    <div id="hud-right"><div id="score-display">000000</div></div>
+  </div>
+  <div id="boss-bar-wrap"><div id="boss-name"></div><div id="boss-bar-bg"><div id="boss-bar"></div></div></div>
+  <div id="challenge-hud"><span id="ch-hud-name"></span><span class="modifier-tag" id="ch-hud-mod"></span></div>
+  <div id="item-popup"></div><div id="active-items"></div><div id="mobile-zone"></div>
+</div>
+<div id="pause-overlay"><div class="pause-content"><div class="pause-title">Paused</div><div class="pause-btns"><button class="pause-btn" id="btn-resume">Resume</button><button class="pause-btn" id="btn-pause-quit">Quit to Menu</button></div></div></div>
+<div id="gameover-overlay"><div class="go-content"><div class="go-title" id="go-title">GAME OVER</div><div class="go-score">Score: <span id="go-score-val">0</span></div><div class="story-meta" id="go-meta"></div><div class="go-ram" id="go-ram"></div><div class="go-btns"><button class="go-btn" id="btn-go-retry">Retry</button><button class="go-btn" id="btn-go-menu">Main Menu</button></div></div></div>
+<div id="challenge-result"><div class="cr-content"><div class="cr-title">Challenge Complete</div><div class="cr-ch-name" id="cr-ch-name"></div><div class="challenge-meta" id="cr-sub"></div><div class="go-ram" style="display:block" id="cr-pts"></div><div class="cr-btns"><button class="cr-btn" id="btn-cr-next">Next Challenge</button><button class="cr-btn" id="btn-cr-menu">Main Menu</button></div></div></div>
+<script>
+const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
+let currentScreen='menu';
+const settings={sound:true,volume:.6,particles:true};
+let ramPoints=0; let completedChallenges=new Set(); let currentMode='endless'; let currentChallengeIdx=0; let storyStage=0;
+const ITEMS=[
+{name:'Expand',effect:'expand_paddle',label:'+ Paddle Expand'},{name:'Shrink',effect:'shrink_paddle',label:'- Paddle Shrink'},{name:'Fast Ball',effect:'fast_ball',label:'⚡ Fast Ball'},{name:'Slow Ball',effect:'slow_ball',label:'◉ Slow Ball'},{name:'Extra Life',effect:'extra_life',label:'♥ Extra Life'},{name:'Multiball',effect:'multiball',label:'◈ Multiball'},{name:'Ghost',effect:'ghost_ball',label:'◌ Ghost Ball'},{name:'Magnet',effect:'magnet',label:'⊕ Magnet'},{name:'Fireball',effect:'fireball',label:'✦ Fireball'},{name:'Shield',effect:'shield',label:'▣ Shield'}
+];
+const CHALLENGES=[
+{name:'Ghost Paddle',mod:'Invisible ball',pts:80,rule:'clearAll',goal:1},{name:'Speed Demon',mod:'3× ball speed',pts:120,rule:'clearAll',goal:1},{name:'One Hit',mod:'1 life only',pts:150,rule:'clearAll',goal:1},{name:'Gravity Flip',mod:'Inverted paddle',pts:90,rule:'clearAll',goal:1},{name:'Micro Paddle',mod:'50% paddle size',pts:110,rule:'clearAll',goal:1},{name:'Darkness',mod:'No bricks visible',pts:130,rule:'clearAll',goal:1},{name:'Multiball Rush',mod:'3 balls',pts:100,rule:'clearAll',goal:1},{name:'Slow Mo',mod:'0.3× speed',pts:60,rule:'clearAll',goal:1},{name:'No Bouncing',mod:'No side walls',pts:140,rule:'clearAll',goal:1},{name:'Glass Ceiling',mod:'Top wall = death',pts:160,rule:'clearAll',goal:1},{name:'Chaos',mod:'Random direction',pts:170,rule:'clearAll',goal:1},{name:'Shrinking',mod:'Paddle shrinks',pts:130,rule:'clearAll',goal:1},{name:'Magnet Lock',mod:'Ball sticks',pts:80,rule:'clearAll',goal:1},{name:'Thunder',mod:'Storm pattern',pts:120,rule:'survive',goal:35},{name:'Mirror',mod:'Mirrored controls',pts:100,rule:'clearAll',goal:1},{name:'Blitz',mod:'30 sec timer',pts:200,rule:'clearAll',goal:1},{name:'Steel Wall',mod:'Bottom = wall',pts:90,rule:'clearAll',goal:1},{name:'Neon Grid',mod:'Dense brick layout',pts:110,rule:'clearAll',goal:1},{name:'Zero Gravity',mod:'No ball drag',pts:95,rule:'clearAll',goal:1},{name:'Phantom Bricks',mod:'Bricks reappear',pts:180,rule:'clearAll',goal:1},{name:'Dual Paddle',mod:'Two paddles',pts:160,rule:'clearAll',goal:1},{name:'Fragile Ball',mod:'Ball breaks on edge',pts:200,rule:'clearAll',goal:1},{name:'Flash Bang',mod:'Screen flashes',pts:150,rule:'clearAll',goal:1},{name:'Marathon',mod:'5× normal bricks',pts:250,rule:'clearAll',goal:1},{name:'FINAL 404',mod:'All modifiers active',pts:500,rule:'clearAll',goal:1},
+{name:'Pulse Core',mod:'Ball speed pulses',pts:135,rule:'clearAll',goal:1},{name:'Sniper Lane',mod:'Only center gap',pts:120,rule:'clearAll',goal:1},{name:'Orbital',mod:'Curved ball drift',pts:155,rule:'clearAll',goal:1},{name:'Overclock',mod:'Boss side cannons',pts:190,rule:'survive',goal:45},{name:'Backfire',mod:'Brick hits spawn shards',pts:165,rule:'clearAll',goal:1},{name:'Checksum',mod:'Alternating invisible rows',pts:140,rule:'clearAll',goal:1},{name:'Hex Lock',mod:'Hex pattern walls',pts:180,rule:'clearAll',goal:1},{name:'Cold Start',mod:'Very slow paddle',pts:125,rule:'clearAll',goal:1},{name:'Dead Pixel',mod:'Broken brick field',pts:145,rule:'clearAll',goal:1},{name:'Cache Flood',mod:'Many item drops',pts:130,rule:'collect',goal:8},{name:'Kernel Panic',mod:'Boss + timer',pts:320,rule:'boss',goal:140},{name:'Root Access',mod:'Final gauntlet',pts:650,rule:'boss',goal:220}
+];
+const STORY_STAGES=[
+{type:'level',name:'Boot Sector',layout:'diamond',rewardLife:1,target:1,desc:'Initialize the first grid.'},
+{type:'level',name:'Cold Boot',layout:'corridor',rewardLife:1,target:1,desc:'Narrow lanes and direct rebounds.'},
+{type:'challenge',name:'Integrity Check',modifier:'3× ball speed',layout:'stairs',goal:'clearAll',desc:'Pass a fast calibration stage.'},
+{type:'level',name:'Memory Lane',layout:'waves',rewardLife:1,target:1,desc:'Wide rhythm pattern.'},
+{type:'boss',name:'Null Pointer',boss:'null_pointer',hp:90,desc:'Moving core protected by orbit bricks.'},
+{type:'level',name:'Packet Storm',layout:'zigzag',rewardLife:1,target:1,desc:'Broken diagonal routes.'},
+{type:'challenge',name:'Signal Loss',modifier:'No side walls',layout:'centerTower',goal:'clearAll',desc:'Do not leak the ball.'},
+{type:'level',name:'Deep Cache',layout:'checker',rewardLife:1,target:1,desc:'Alternating cells and tighter gaps.'},
+{type:'boss',name:'Firewall',boss:'firewall',hp:120,desc:'Shield bars regenerate around the core.'},
+{type:'level',name:'Ghost Archive',layout:'rings',rewardLife:1,target:1,desc:'Circular pattern with thin entries.'},
+{type:'challenge',name:'Mirror Auth',modifier:'Mirrored controls',layout:'snake',goal:'clearAll',desc:'Reverse control certification.'},
+{type:'level',name:'Kernel Drift',layout:'fan',rewardLife:1,target:1,desc:'Layered spread pattern.'},
+{type:'boss',name:'Kernel Panic',boss:'kernel_panic',hp:170,desc:'A heavy boss with attack bursts.'},
+{type:'level',name:'404 Vault',layout:'404',rewardLife:2,target:1,desc:'Final symbolic breach.'},
+{type:'boss',name:'Administrator',boss:'administrator',hp:240,desc:'Final multi-phase terminal entity.'}
+];
+function showScreen(id){$$('.screen').forEach(s=>s.classList.remove('active')); $('#screen-'+id).classList.add('active'); currentScreen=id}
+function buildTerminalText(){const rows=['root@breakout404:~$ ./boot_story --safe=false','Loading renderer.................. OK','Mounting /levels/patterns......... OK','Scanning /boss/ai/................ OK','RAM points cache.................. 0','Online daemon..................... idle','event.host......................... none','./challenge_registry --load 37','./story_mode --bosses=real --lives=visible','touch handler..................... mobile perfect','swipe zone........................ armed','','root@breakout404:~$ _']; let out=[]; for(let i=0;i<80;i++) out.push(rows[i%rows.length]); $('#terminalBg').textContent=out.join('\n')} buildTerminalText();
+function saveProgress(){localStorage.setItem('breakout404_v3',JSON.stringify({ramPoints,completed:[...completedChallenges]}))}
+function loadProgress(){try{const d=JSON.parse(localStorage.getItem('breakout404_v3')||'{}'); ramPoints=d.ramPoints||0; completedChallenges=new Set(d.completed||[])}catch(e){}} loadProgress();
+function buildChallengeGrid(){const g=$('#challenges-grid'); g.innerHTML=''; CHALLENGES.forEach((ch,i)=>{const locked=i>0 && !completedChallenges.has(i-1) && !completedChallenges.has(i); const d=document.createElement('div'); d.className='challenge-item'+(completedChallenges.has(i)?' completed':'')+(locked?' locked':''); d.innerHTML=`<div class="ch-num">${String(i+1).padStart(2,'0')}</div><div class="ch-name">${ch.name}</div><div class="ch-pts">${ch.pts}pts</div>`; d.onclick=()=>startChallenge(i); g.appendChild(d)}); $('#challenges-ram-display').textContent=ramPoints+' RAM pts'}
+$('#btn-start').onclick=()=>showScreen('mode'); $('#btn-settings').onclick=()=>{$('#ram-display').textContent=ramPoints; showScreen('settings')}; $('#btn-online').onclick=()=>showScreen('online'); $('#btn-mode-back').onclick=()=>showScreen('menu'); $('#btn-settings-back').onclick=()=>showScreen('menu'); $('#btn-online-back').onclick=()=>showScreen('menu'); $('#btn-challenges-back').onclick=()=>showScreen('mode'); $('#btn-endless').onclick=()=>{currentMode='endless'; startGame()}; $('#btn-story').onclick=()=>{currentMode='story'; storyStage=0; startGame()}; $('#btn-challenge').onclick=()=>{buildChallengeGrid(); showScreen('challenges')};
+$('#toggle-sound').onclick=e=>{e.currentTarget.classList.toggle('on'); settings.sound=e.currentTarget.classList.contains('on')}; $('#toggle-particles').onclick=e=>{e.currentTarget.classList.toggle('on'); settings.particles=e.currentTarget.classList.contains('on')}; $('#vol-slider').oninput=e=>settings.volume=e.target.value/100;
+let audioCtx=null; function ac(){if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); return audioCtx} function tone(f,d,t='square',v=.15){if(!settings.sound) return; try{const c=ac(),o=c.createOscillator(),g=c.createGain(); o.type=t; o.frequency.value=f; g.gain.setValueAtTime(settings.volume*v,c.currentTime); g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+d); o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+d)}catch(e){}}
+const sfx={brick(){tone(430,.05,'square',.11)},paddle(){tone(220,.07,'sine',.13)},wall(){tone(330,.04,'square',.07)},item(){tone(660,.15,'sine',.18)},lose(){tone(120,.28,'sawtooth',.18)},win(){[523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,.12,'sine',.16),i*90))},boss(){tone(90,.22,'sawtooth',.2)}};
+const canvas=$('#gameCanvas'),ctx=canvas.getContext('2d'); let W=0,H=0,mouseX=0; function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight;mouseX=W/2} addEventListener('resize',resize); resize();
+let game={running:false,paused:false,score:0,lives:3,level:1,balls:[],bricks:[],drops:[],particles:[],paddle:{x:0,y:0,w:0,h:10},dual:null,shield:false,magnet:false,magnetBall:null,mode:'endless',stageIndex:0,stage:null,boss:null,flash:0,timer:null,timerMax:null,randomTimer:0,effects:{},storyLifeEarned:0,missCount:0,mobileDrag:false,mobileAnchor:0,mobilePaddleAnchor:0,challGoalCount:0};
+function baseSpeed(mult=1){return Math.max(4.2,H*.0055)*mult}
+function createBall(x,y,mult=1){const a=-Math.PI/2+(Math.random()-.5)*.55,s=baseSpeed(mult); return {x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:7,ghost:false,fire:false,stuck:false,curve:0,fragile:false}}
+function spawnParticles(x,y,n=8){if(!settings.particles) return; for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=70+Math.random()*120; game.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.24+Math.random()*.25,max:.45,size:2+Math.random()*2})}}
+function spawnDrop(x,y,heavy=false){const item=ITEMS[Math.floor(Math.random()*ITEMS.length)]; const chance=heavy?.34:.13; if(Math.random()<chance) game.drops.push({x,y,effect:item.effect,name:item.label,s:item.name[0]})}
+function popup(txt){const el=$('#item-popup'); el.textContent=txt; el.classList.add('visible'); clearTimeout(popup.t); popup.t=setTimeout(()=>el.classList.remove('visible'),1600)}
+function dot(life=9000){const el=document.createElement('div'); el.className='ai-dot'; $('#active-items').appendChild(el); setTimeout(()=>el.remove(),life)}
+function updateHUD(){ $('#score-display').textContent=String(game.score).padStart(6,'0'); const life=$('#life-display'); if(game.lives>0){life.classList.add('visible'); life.textContent='LIVES '+Array.from({length:Math.min(game.lives,8)},()=> '◻').join(' ')+(game.lives>8?' +'+(game.lives-8):'')} else {life.classList.remove('visible')} }
+function showBossBar(name,hp,max){const wrap=$('#boss-bar-wrap'); if(!name){wrap.classList.remove('visible'); return} wrap.classList.add('visible'); $('#boss-name').textContent=name; $('#boss-bar').style.width=Math.max(0,(hp/max)*100)+'%'}
+function showChallengeHud(name,mod){$('#challenge-hud').classList.add('visible'); $('#ch-hud-name').textContent=name; $('#ch-hud-mod').textContent=mod} function hideChallengeHud(){$('#challenge-hud').classList.remove('visible')}
+function stageByStoryIndex(i){return STORY_STAGES[i]||null}
+function patternCoords(layout,cols,rows){const pts=[]; const cx=(cols-1)/2,cy=(rows-1)/2; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){let ok=false; if(layout==='full') ok=true; if(layout==='diamond') ok=Math.abs(c-cx)+Math.abs(r-cy)<=Math.min(cx,cy)+.5; if(layout==='corridor') ok=(c===2||c===cols-3||r<2||r>rows-3||c===Math.floor(cols/2)); if(layout==='waves') ok=((r+c)%3!==1)||r<2; if(layout==='zigzag') ok=((r%2===0&&c<cols-2)||(r%2===1&&c>1)); if(layout==='checker') ok=((r+c)%2===0); if(layout==='rings'){const dx=Math.abs(c-cx),dy=Math.abs(r-cy); ok=(Math.max(dx,dy)===1||Math.max(dx,dy)===3||r===0)} if(layout==='snake') ok=(r%2===0?c<cols-1:c>0); if(layout==='fan') ok=(r<2)||Math.abs(c-cx)<=r+1; if(layout==='stairs') ok=c>=r/2 && c<cols-(r/2)-1; if(layout==='centerTower') ok=Math.abs(c-cx)<=1||r===0; if(layout==='404') ok=(c===0||c===3||c===cols-1||c===cols-4||r===0||r===3)&&(r<7) || (c>4&&c<cols-5&&r===2) || (c===Math.floor(cols/2)&&r<6); if(layout==='rings2') ok=(Math.max(Math.abs(c-cx),Math.abs(r-cy))%2===1); if(layout==='hex') ok=(r===0||r===rows-1||c===0||c===cols-1||Math.abs(c-cx)+Math.abs(r-cy)<4); if(!ok) continue; pts.push([c,r])} return pts}
+function buildBricks(cfg={layout:'full',cols:12,rows:8,hp:1,y:74}){game.bricks=[]; const cols=cfg.cols||12,rows=cfg.rows||8; const pad=22,bw=Math.floor((W-pad*2)/cols),bh=20; const coords=patternCoords(cfg.layout||'full',cols,rows); coords.forEach(([c,r],i)=>{game.bricks.push({x:pad+c*bw,y:(cfg.y||74)+r*(bh+4),w:bw-4,h:bh,hp:(typeof cfg.hp==='function'?cfg.hp(c,r,i):cfg.hp||1),maxHp:(typeof cfg.hp==='function'?cfg.hp(c,r,i):cfg.hp||1),alive:true,reappear:0,kind:'brick'})})}
+function buildBoss(type,hp){const core={type,hp,maxHp:hp,x:W/2,y:130,r:26,dir:1,phase:0,shield:0,cooldown:0,orbits:[]}; if(type==='null_pointer'){for(let i=0;i<6;i++) core.orbits.push({a:i*(Math.PI*2/6),dist:58,hp:1,alive:true})} if(type==='firewall'){core.shield=8} if(type==='kernel_panic'||type==='administrator'){core.shield=10; core.cooldown=1.8} return core}
+function initMode(mode){hideChallengeHud(); showBossBar(); const padW=Math.max(72,Math.min(170,W*.13)); game={running:true,paused:false,score:0,lives:3,level:1,balls:[],bricks:[],drops:[],particles:[],paddle:{x:W/2-padW/2,y:H-52,w:padW,h:10,baseW:padW,mirror:false,speedMul:1},dual:null,shield:false,magnet:false,magnetBall:null,mode,stageIndex:storyStage,stage:null,boss:null,flash:0,timer:null,timerMax:null,randomTimer:0,effects:{},storyLifeEarned:0,missCount:0,mobileDrag:false,mobileAnchor:0,mobilePaddleAnchor:0,challGoalCount:0}; game.balls=[createBall(W/2,H-84)]; if(mode==='endless'){buildBricks({layout:['diamond','checker','waves','zigzag','rings','fan','corridor','stairs'][0],cols:12,rows:8,hp:1}); game.endlessPattern=0} if(mode==='story') loadStoryStage(storyStage); updateHUD()}
+function applyModifier(mod){const low=mod.toLowerCase(); if(low.includes('invisible')) game.balls.forEach(b=>b.ghost=true); if(low.includes('3×')) game.balls.forEach(b=>{b.vx*=3;b.vy*=3}); if(low.includes('1 life')) game.lives=1; if(low.includes('inverted')||low.includes('mirrored')) game.paddle.mirror=true; if(low.includes('50%')){game.paddle.w=Math.round(game.paddle.baseW*.5)} if(low.includes('hidden')) game.hiddenBricks=true; if(low.includes('3 balls')){game.balls=[createBall(W/2,H-84),createBall(W/2-18,H-84),createBall(W/2+18,H-84)]} if(low.includes('0.3×')) game.balls.forEach(b=>{b.vx*=.3;b.vy*=.3}); if(low.includes('no side walls')) game.noSideWalls=true; if(low.includes('top wall')) game.topDeath=true; if(low.includes('random direction')) game.randomDir=true; if(low.includes('shrinks')) game.shrink=true; if(low.includes('sticks')){game.magnet=true; game.balls[0].stuck=true; game.magnetBall=game.balls[0]} if(low.includes('storm')) game.storm=true; if(low.includes('30 sec')){game.timer=30; game.timerMax=30} if(low.includes('bottom = wall')) game.steel=true; if(low.includes('dense')) game.dense=true; if(low.includes('reappear')) game.reappear=true; if(low.includes('two paddles')) game.dual={x:game.paddle.x,y:52,w:game.paddle.w,h:10}; if(low.includes('edge')) game.fragile=true; if(low.includes('flashes')) game.flashBang=true; if(low.includes('5× normal')) game.marathon=true; if(low.includes('speed pulses')) game.pulseSpeed=true; if(low.includes('only center gap')) game.sniper=true; if(low.includes('curved ball drift')) game.curve=true; if(low.includes('side cannons')) game.sideCannons=true; if(low.includes('spawn shards')) game.shards=true; if(low.includes('alternating invisible rows')) game.altHidden=true; if(low.includes('hex pattern')) game.hex=true; if(low.includes('very slow paddle')) game.paddle.speedMul=.7; if(low.includes('broken brick field')) game.deadPixel=true; if(low.includes('many item drops')) game.heavyDrops=true; if(low.includes('boss + timer')){game.timer=42; game.timerMax=42; game.boss=buildBoss('kernel_panic',140)} if(low.includes('final gauntlet')){game.randomDir=true; game.flashBang=true; game.boss=buildBoss('administrator',220); game.timer=55; game.timerMax=55; game.dual={x:game.paddle.x,y:52,w:game.paddle.w,h:10}}
+}
+function challengeLayoutFor(index){const arr=['diamond','corridor','waves','zigzag','checker','rings','fan','stairs','centerTower','snake','404','hex']; return arr[index%arr.length]}
+function initChallenge(idx){hideChallengeHud(); const ch=CHALLENGES[idx]; const padW=Math.max(72,Math.min(170,W*.13)); game={running:true,paused:false,score:0,lives:3,level:1,balls:[createBall(W/2,H-84)],bricks:[],drops:[],particles:[],paddle:{x:W/2-padW/2,y:H-52,w:padW,h:10,baseW:padW,mirror:false,speedMul:1},dual:null,shield:false,magnet:false,magnetBall:null,mode:'challenge',stageIndex:idx,stage:ch,boss:null,flash:0,timer:null,timerMax:null,randomTimer:0,effects:{},storyLifeEarned:0,missCount:0,mobileDrag:false,mobileAnchor:0,mobilePaddleAnchor:0,challGoalCount:0}; buildBricks({layout:challengeLayoutFor(idx),cols:(idx%5===0?13:12),rows:(idx%7===0?9:8),hp:(idx>24?2:1)}); applyModifier(ch.mod); if(ch.mod.toLowerCase().includes('dense')) buildBricks({layout:challengeLayoutFor(idx),cols:14,rows:10,hp:1}); if(ch.mod.toLowerCase().includes('5× normal')) buildBricks({layout:'full',cols:16,rows:13,hp:1}); if(ch.mod.toLowerCase().includes('hex pattern')) buildBricks({layout:'hex',cols:13,rows:9,hp:2}); if(ch.rule==='boss'&&!game.boss){game.boss=buildBoss(idx===36?'administrator':'kernel_panic',ch.goal)} showChallengeHud(ch.name,ch.mod); updateHUD()}
+function loadStoryStage(i){const s=stageByStoryIndex(i); game.stage=s; game.stageIndex=i; game.hiddenBricks=false; game.noSideWalls=false; game.topDeath=false; game.randomDir=false; game.shrink=false; game.storm=false; game.flashBang=false; game.reappear=false; game.curve=false; game.heavyDrops=false; game.fragile=false; game.paddle.mirror=false; game.dual=null; game.boss=null; game.timer=null; game.timerMax=null; game.balls=[createBall(W/2,H-84)]; game.paddle.w=game.paddle.baseW; if(!s){triggerWinStory(); return} if(s.type==='level'){buildBricks({layout:s.layout,cols:12,rows:8,hp:(c,r)=> (i>7 && (r%3===0)?2:1)}); showBossBar(); hideChallengeHud()} if(s.type==='challenge'){buildBricks({layout:s.layout,cols:12,rows:8,hp:1}); applyModifier(s.modifier); showChallengeHud(s.name,s.modifier); showBossBar()} if(s.type==='boss'){game.boss=buildBoss(s.boss,s.hp); buildBricks({layout:s.boss==='administrator'?'404':'rings2',cols:12,rows:4,hp:1,y:70}); showBossBar(s.name,s.hp,s.hp); hideChallengeHud()} updateHUD()}
+function startGame(){if(currentMode==='story'){initMode('story')} else {initMode(currentMode)} showScreen('game'); last=performance.now(); acc=0; cancelAnimationFrame(loopId); loopId=requestAnimationFrame(loop)}
+function startChallenge(i){currentMode='challenge'; currentChallengeIdx=i; initChallenge(i); showScreen('game'); last=performance.now(); acc=0; cancelAnimationFrame(loopId); loopId=requestAnimationFrame(loop)}
+function fireMagnet(){const b=game.magnetBall; if(!b||!b.stuck) return; b.stuck=false; const a=-Math.PI/2+(Math.random()-.5)*.4,s=baseSpeed(); b.vx=Math.cos(a)*s; b.vy=Math.sin(a)*s}
+function applyItem(effect,name){popup(name); sfx.item(); if(effect==='expand_paddle'){game.paddle.w=Math.min(W*.28,game.paddle.w*1.3); dot(); setTimeout(()=>game.paddle.w=game.paddle.baseW,8500)} if(effect==='shrink_paddle'){game.paddle.w=Math.max(44,game.paddle.w*.7); dot(); setTimeout(()=>game.paddle.w=game.paddle.baseW,6500)} if(effect==='fast_ball'){game.balls.forEach(b=>{b.vx*=1.45;b.vy*=1.45}); dot(); setTimeout(()=>game.balls.forEach(b=>{b.vx/=1.45;b.vy/=1.45}),7000)} if(effect==='slow_ball'){game.balls.forEach(b=>{b.vx*=.65;b.vy*=.65}); dot(); setTimeout(()=>game.balls.forEach(b=>{b.vx/=.65;b.vy/=.65}),7000)} if(effect==='extra_life'){game.lives=Math.min(9,game.lives+1); updateHUD()} if(effect==='multiball'){game.balls.push(createBall(game.paddle.x+game.paddle.w*.35,game.paddle.y-12),createBall(game.paddle.x+game.paddle.w*.65,game.paddle.y-12))} if(effect==='ghost_ball'){game.balls.forEach(b=>b.ghost=true); dot(); setTimeout(()=>game.balls.forEach(b=>b.ghost=false),6000)} if(effect==='magnet'){game.magnet=true; dot(); setTimeout(()=>game.magnet=false,10000)} if(effect==='fireball'){game.balls.forEach(b=>b.fire=true); dot(); setTimeout(()=>game.balls.forEach(b=>b.fire=false),8000)} if(effect==='shield'){game.shield=true; updateHUD()}}
+function loseBall(index){if(game.shield){game.shield=false; return} game.balls.splice(index,1); if(game.balls.length===0){game.lives--; updateHUD(); sfx.lose(); if(game.lives<=0){triggerGameOver(false); return} const b=createBall(W/2,H-84); if(game.magnet){b.stuck=true; game.magnetBall=b} if(game.curve) b.curve=(Math.random()-.5)*.08; if(game.fragile) b.fragile=true; game.balls=[b]}}
+function nextEndlessLevel(){game.level++; game.score+=500; const layouts=['diamond','checker','waves','zigzag','rings','fan','corridor','stairs','centerTower','snake']; game.endlessPattern=(game.endlessPattern+1)%layouts.length; const hp=1+Math.floor(game.level/5); buildBricks({layout:layouts[game.endlessPattern],cols:12+(game.level%3===0?1:0),rows:8+(game.level%4===0?1:0),hp:Math.min(3,hp)}); game.balls=[createBall(W/2,H-84,1+game.level*.04)]; sfx.win(); updateHUD()}
+function advanceStory(){const st=game.stage; if(st&&st.type==='level'){game.lives=Math.min(9,game.lives+(st.rewardLife||1)); game.storyLifeEarned+=(st.rewardLife||1); updateHUD()} storyStage++; if(storyStage>=STORY_STAGES.length){triggerWinStory(); return} loadStoryStage(storyStage)}
+function completeChallengeMode(){const idx=currentChallengeIdx,ch=CHALLENGES[idx]; if(!completedChallenges.has(idx)){completedChallenges.add(idx); ramPoints+=ch.pts; saveProgress()} $('#cr-ch-name').textContent=ch.name; $('#cr-sub').textContent=ch.rule==='survive'?'survived challenge':'breach completed'; $('#cr-pts').textContent='+'+ch.pts+' RAM pts  ·  total: '+ramPoints; $('#challenge-result').classList.add('visible'); sfx.win()}
+function triggerWinStory(){stopGame(); $('#go-title').textContent='STORY CLEARED'; $('#go-score-val').textContent=game.score; $('#go-meta').textContent='stages '+STORY_STAGES.length+'  ·  lives earned '+game.storyLifeEarned; $('#go-ram').style.display='none'; $('#gameover-overlay').classList.add('visible'); storyStage=0; saveProgress()}
+function triggerGameOver(won){stopGame(); $('#go-title').textContent=won?'YOU WIN':'GAME OVER'; $('#go-score-val').textContent=game.score; const meta=$('#go-meta'); if(game.mode==='story'){meta.textContent='stage '+(game.stageIndex+1)+' / '+STORY_STAGES.length+'  ·  lives earned '+game.storyLifeEarned}else if(game.mode==='challenge'){meta.textContent=CHALLENGES[currentChallengeIdx].name}else{meta.textContent='level '+game.level} $('#go-ram').style.display='none'; $('#gameover-overlay').classList.add('visible')}
+function stopGame(){game.running=false; cancelAnimationFrame(loopId)} function togglePause(){if(!game.running)return; game.paused=!game.paused; $('#pause-overlay').classList.toggle('visible',game.paused)}
+$('#btn-stop').onclick=()=>togglePause(); $('#btn-resume').onclick=()=>togglePause(); $('#btn-pause-quit').onclick=()=>{$('#pause-overlay').classList.remove('visible'); stopGame(); showScreen('menu')}; $('#btn-go-retry').onclick=()=>{$('#gameover-overlay').classList.remove('visible'); if(currentMode==='challenge') startChallenge(currentChallengeIdx); else startGame()}; $('#btn-go-menu').onclick=()=>{$('#gameover-overlay').classList.remove('visible'); showScreen('menu')}; $('#btn-cr-next').onclick=()=>{$('#challenge-result').classList.remove('visible'); const n=currentChallengeIdx+1; if(n<CHALLENGES.length) startChallenge(n); else showScreen('menu')}; $('#btn-cr-menu').onclick=()=>{$('#challenge-result').classList.remove('visible'); buildChallengeGrid(); showScreen('challenges')};
+let pointerDown=false;
+document.addEventListener('mousemove',e=>{if(!game.mobileDrag) mouseX=e.clientX});
+const mobileZone=$('#mobile-zone');
+function pointerX(ev){return ev.touches?ev.touches[0].clientX:ev.clientX}
+mobileZone.addEventListener('touchstart',e=>{const x=pointerX(e); pointerDown=true; game.mobileDrag=true; game.mobileAnchor=x; game.mobilePaddleAnchor=game.paddle.x+game.paddle.w/2; mouseX=x; if(game.magnet&&game.magnetBall&&game.magnetBall.stuck) fireMagnet(); e.preventDefault()},{passive:false});
+mobileZone.addEventListener('touchmove',e=>{const x=pointerX(e); if(pointerDown){const dx=x-game.mobileAnchor; mouseX=game.mobilePaddleAnchor+dx} e.preventDefault()},{passive:false});
+mobileZone.addEventListener('touchend',e=>{pointerDown=false; game.mobileDrag=false; e.preventDefault()},{passive:false});
+canvas.addEventListener('touchstart',e=>{const x=pointerX(e); mouseX=x; if(game.magnet&&game.magnetBall&&game.magnetBall.stuck) fireMagnet(); e.preventDefault()},{passive:false});
+document.addEventListener('click',()=>{if(game.magnet&&game.magnetBall&&game.magnetBall.stuck) fireMagnet()});
+document.addEventListener('keydown',e=>{if(e.code==='Escape'&&currentScreen==='game') togglePause(); if(e.code==='Space'&&currentScreen==='game'){e.preventDefault(); if(game.magnet&&game.magnetBall&&game.magnetBall.stuck) fireMagnet()}});
+let loopId=0,last=0,acc=0,T=1000/60;
+function loop(ts){if(!game.running) return; loopId=requestAnimationFrame(loop); const dt=Math.min(50,ts-last); last=ts; if(!game.paused){acc+=dt; while(acc>=T){update(T/1000); acc-=T}} render()}
+function update(dt){const p=game.paddle; const tx=((p.mirror?W-mouseX:mouseX)-p.w/2); p.x+=(Math.max(0,Math.min(W-p.w,tx))-p.x)*Math.min(.45,p.speedMul*.28); if(game.dual){game.dual.x=p.x; game.dual.w=p.w}
+ if(game.magnet&&game.magnetBall&&game.magnetBall.stuck){game.magnetBall.x=p.x+p.w/2; game.magnetBall.y=p.y-10}
+ if(game.shrink){game.effects.shrink=(game.effects.shrink||0)+dt; if(game.effects.shrink>4.8){game.effects.shrink=0; p.w=Math.max(42,p.w-5)}}
+ if(game.randomDir){game.randomTimer+=dt; if(game.randomTimer>2.1){game.randomTimer=0; game.balls.forEach(b=>{const s=Math.hypot(b.vx,b.vy),a=Math.random()*Math.PI*2; b.vx=Math.cos(a)*s; b.vy=Math.sin(a)*s})}}
+ if(game.flashBang){game.effects.flashBang=(game.effects.flashBang||0)+dt; if(game.effects.flashBang>4){game.effects.flashBang=0; game.flash=.26}}
+ if(game.storm){game.effects.storm=(game.effects.storm||0)+dt; if(game.effects.storm>1.7){game.effects.storm=0; const candidates=game.bricks.filter(b=>b.alive); if(candidates.length){const b=candidates[Math.floor(Math.random()*candidates.length)]; b.y+=12; if(b.y>p.y-50) b.y=p.y-70}}}
+ if(game.timer!==null){game.timer-=dt; if(game.timer<=0){game.timer=0; if(game.mode==='challenge'&&CHALLENGES[currentChallengeIdx].rule==='survive') completeChallengeMode(); else triggerGameOver(false); return}}
+ if(game.flash>0) game.flash-=dt;
+ for(let i=game.particles.length-1;i>=0;i--){const a=game.particles[i]; a.x+=a.vx*dt; a.y+=a.vy*dt; a.vy+=240*dt; a.life-=dt; if(a.life<=0) game.particles.splice(i,1)}
+ for(let i=game.drops.length-1;i>=0;i--){const d=game.drops[i]; d.y+=170*dt; if(d.y+8>p.y&&d.y-8<p.y+p.h&&d.x+8>p.x&&d.x-8<p.x+p.w){applyItem(d.effect,d.name); game.drops.splice(i,1); game.challGoalCount++; if(game.mode==='challenge'&&CHALLENGES[currentChallengeIdx].rule==='collect'&&game.challGoalCount>=CHALLENGES[currentChallengeIdx].goal){completeChallengeMode(); return}} else if(d.y>H+20) game.drops.splice(i,1)}
+ if(game.reappear){game.bricks.forEach(b=>{if(!b.alive&&b.reappear>0){b.reappear-=dt; if(b.reappear<=0){b.alive=true;b.hp=b.maxHp}}})}
+ if(game.boss) updateBoss(dt);
+ for(let bi=game.balls.length-1;bi>=0;bi--){const b=game.balls[bi]; if(b.stuck) continue; if(game.curve) b.curve=(b.curve||((Math.random()-.5)*.03)); if(b.curve) b.vx+=b.curve; if(game.pulseSpeed){const m=1+Math.sin(performance.now()/240)*.008; b.vx*=m; b.vy*=m}
+ b.x+=b.vx; b.y+=b.vy;
+ if(!game.noSideWalls){ if(b.x-b.r<0){ if(game.fragile){loseBall(bi); continue} b.x=b.r; b.vx=Math.abs(b.vx); sfx.wall()} if(b.x+b.r>W){ if(game.fragile){loseBall(bi); continue} b.x=W-b.r; b.vx=-Math.abs(b.vx); sfx.wall()} } else { if(b.x+b.r<0||b.x-b.r>W){loseBall(bi); continue} }
+ if(game.topDeath){ if(b.y-b.r<0){loseBall(bi); continue} } else if(b.y-b.r<0){ b.y=b.r; b.vy=Math.abs(b.vy); sfx.wall() }
+ if(b.y+b.r>H){ if(game.steel){game.missCount++; b.y=H-b.r; b.vy=-Math.abs(b.vy); if(game.missCount>=3){loseBall(bi); continue}} else {loseBall(bi); continue} }
+ if(game.dual && b.vy<0 && b.y-b.r<=game.dual.y+game.dual.h && b.y-b.r>=game.dual.y && b.x+b.r>game.dual.x && b.x-b.r<game.dual.x+game.dual.w){b.y=game.dual.y+game.dual.h+b.r; b.vy=Math.abs(b.vy); sfx.paddle()}
+ if(b.vy>0 && b.y+b.r>=p.y && b.y-b.r<=p.y+p.h && b.x+b.r>p.x && b.x-b.r<p.x+p.w){const rel=(b.x-(p.x+p.w/2))/(p.w/2),a=rel*(Math.PI*.38)-Math.PI/2,s=Math.hypot(b.vx,b.vy); b.vx=Math.cos(a)*s; b.vy=Math.sin(a)*s; b.y=p.y-b.r; sfx.paddle(); if(game.magnet){b.stuck=true; game.magnetBall=b}}
+ let hit=false;
+ for(const brick of game.bricks){ if(!brick.alive) continue; if(b.x+b.r>brick.x&&b.x-b.r<brick.x+brick.w&&b.y+b.r>brick.y&&b.y-b.r<brick.y+brick.h){ brick.hp--; hit=true; if(brick.hp<=0){brick.alive=false; game.score+=10; updateHUD(); sfx.brick(); spawnParticles(brick.x+brick.w/2,brick.y+brick.h/2); spawnDrop(brick.x+brick.w/2,brick.y+brick.h/2,game.heavyDrops); if(game.reappear&&Math.random()<.32) brick.reappear=8; if(game.shards){for(let s=0;s<2;s++) game.drops.push({x:brick.x+brick.w/2+(s?8:-8),y:brick.y+brick.h/2,effect:'slow_ball',name:'Shard'})}} else sfx.brick(); if(!b.fire){const ox=Math.min(b.x+b.r-brick.x,brick.x+brick.w-(b.x-b.r)),oy=Math.min(b.y+b.r-brick.y,brick.y+brick.h-(b.y-b.r)); if(ox<oy) b.vx=-b.vx; else b.vy=-b.vy} break }}
+ if(game.boss && collideBoss(b,game.boss)){if(!b.fire){b.vy=-b.vy} }
+ }
+ const alive=game.bricks.filter(b=>b.alive).length;
+ if(game.mode==='endless'&&alive===0){nextEndlessLevel(); return}
+ if(game.mode==='story'){if(game.stage.type==='boss'){if(game.boss&&game.boss.hp<=0){game.score+=800; sfx.win(); storyStage++; if(storyStage>=STORY_STAGES.length){triggerWinStory(); return} loadStoryStage(storyStage); return}} else if(alive===0){game.score+=400; sfx.win(); advanceStory(); return}}
+ if(game.mode==='challenge'){const ch=CHALLENGES[currentChallengeIdx]; if(ch.rule==='clearAll'&&alive===0){completeChallengeMode(); return} if(ch.rule==='boss'&&game.boss&&game.boss.hp<=0){completeChallengeMode(); return}}
+}
+function updateBoss(dt){const b=game.boss; if(!b) return; b.x+=Math.sin(performance.now()/650)*.9*b.dir; if(b.x<90||b.x>W-90) b.dir*=-1; if(b.type==='null_pointer'){b.orbits.forEach(o=>o.a+=dt*1.2)} if(b.type==='firewall'){b.phase+=dt; if(b.phase>4){b.phase=0; if(game.bricks.filter(x=>x.alive).length<8){const extras=patternCoords('corridor',12,3); extras.forEach(([c,r])=>game.bricks.push({x:22+c*Math.floor((W-44)/12),y:72+r*24,w:Math.floor((W-44)/12)-4,h:20,hp:1,maxHp:1,alive:true,reappear:0,kind:'shield'}))}}} if(b.type==='kernel_panic'||b.type==='administrator'){b.cooldown-=dt; if(b.cooldown<=0){b.cooldown=b.type==='administrator'?1.05:1.55; game.flash=.08; sfx.boss(); for(let k=0;k<(b.type==='administrator'?4:2);k++){game.drops.push({x:(k+1)*(W/((b.type==='administrator'?4:2)+1)),y:74,effect:'shrink_paddle',name:'Pulse'})}}}
+ showBossBar(game.stage?game.stage.name:'Boss',b.hp,b.maxHp)}
+function collideBoss(ball,boss){ if(!boss) return false; let hit=false; if(boss.type==='null_pointer'){ for(const o of boss.orbits){ if(!o.alive) continue; const ox=boss.x+Math.cos(o.a)*o.dist, oy=boss.y+Math.sin(o.a)*o.dist; const d=Math.hypot(ball.x-ox,ball.y-oy); if(d<ball.r+10){o.alive=false; boss.hp-=12; spawnParticles(ox,oy,14); sfx.boss(); hit=true; break} } if(!hit){const d=Math.hypot(ball.x-boss.x,ball.y-boss.y); if(d<ball.r+boss.r){boss.hp-=4; spawnParticles(ball.x,ball.y,10); sfx.boss(); hit=true}} }
+ else if(boss.type==='firewall'){ const shieldAlive=game.bricks.filter(x=>x.alive).length>0; const d=Math.hypot(ball.x-boss.x,ball.y-boss.y); if(!shieldAlive && d<ball.r+boss.r+6){boss.hp-=5; spawnParticles(ball.x,ball.y,12); sfx.boss(); hit=true} }
+ else { const d=Math.hypot(ball.x-boss.x,ball.y-boss.y); if(d<ball.r+boss.r+8){boss.hp-=ball.fire?10:6; spawnParticles(ball.x,ball.y,12); sfx.boss(); hit=true} }
+ if(boss.hp<0) boss.hp=0; return hit }
+function render(){ctx.clearRect(0,0,W,H); ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H); if(game.flash>0){ctx.fillStyle=`rgba(255,255,255,${Math.min(.58,game.flash*2.4)})`; ctx.fillRect(0,0,W,H)}
+ game.bricks.forEach((b,i)=>{ if(!b.alive) return; if(game.hiddenBricks) return; if(game.altHidden && i%2===0) return; ctx.globalAlpha=b.hp===1&&b.maxHp>1?.52:1; ctx.fillStyle='#fff'; ctx.fillRect(b.x,b.y,b.w,b.h); if(b.hp<b.maxHp){ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(b.x+b.w*.28,b.y+b.h*.2); ctx.lineTo(b.x+b.w*.74,b.y+b.h*.82); ctx.stroke()} ctx.globalAlpha=1 })
+ if(game.boss) drawBoss(game.boss); if(game.shield){ctx.strokeStyle='rgba(255,255,255,.4)'; ctx.setLineDash([8,6]); ctx.beginPath(); ctx.moveTo(0,H-28); ctx.lineTo(W,H-28); ctx.stroke(); ctx.setLineDash([])}
+ ctx.fillStyle='#fff'; ctx.fillRect(game.paddle.x,game.paddle.y,game.paddle.w,game.paddle.h); if(game.dual){ctx.globalAlpha=.58; ctx.fillRect(game.dual.x,game.dual.y,game.dual.w,game.dual.h); ctx.globalAlpha=1}
+ game.drops.forEach(d=>{ctx.fillStyle='rgba(255,255,255,.7)'; ctx.font='12px JetBrains Mono'; ctx.textAlign='center'; ctx.fillText(d.s,d.x,d.y)})
+ game.particles.forEach(p=>{ctx.globalAlpha=p.life/p.max; ctx.fillStyle='#fff'; ctx.fillRect(p.x-p.size/2,p.y-p.size/2,p.size,p.size); ctx.globalAlpha=1})
+ game.balls.forEach(b=>{ctx.globalAlpha=b.ghost?.14:1; if(b.fire){ctx.shadowColor='#fff'; ctx.shadowBlur=12} ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; ctx.globalAlpha=1})
+ if(game.timer!==null){const f=game.timer/game.timerMax; ctx.fillStyle='rgba(255,255,255,.12)'; ctx.fillRect(0,H-3,W,3); ctx.fillStyle=f>.3?'rgba(255,255,255,.62)':'rgba(255,100,100,.85)'; ctx.fillRect(0,H-3,W*f,3)} }
+function drawBoss(b){ctx.save(); if(b.type==='null_pointer'){ctx.strokeStyle='rgba(255,255,255,.32)'; ctx.lineWidth=1; b.orbits.forEach(o=>{if(!o.alive)return; const x=b.x+Math.cos(o.a)*o.dist,y=b.y+Math.sin(o.a)*o.dist; ctx.beginPath(); ctx.arc(x,y,9,0,Math.PI*2); ctx.stroke(); ctx.fillStyle='#fff'; ctx.fillRect(x-3,y-3,6,6)}); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill() }
+ else if(b.type==='firewall'){ctx.fillStyle='rgba(255,255,255,.18)'; ctx.fillRect(b.x-64,b.y-14,128,28); ctx.fillStyle='#fff'; ctx.fillRect(b.x-20,b.y-20,40,40)}
+ else if(b.type==='kernel_panic'){ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.strokeRect(b.x-34,b.y-34,68,68); ctx.fillStyle='#fff'; ctx.fillRect(b.x-12,b.y-12,24,24)}
+ else if(b.type==='administrator'){ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(b.x,b.y-36); ctx.lineTo(b.x+32,b.y); ctx.lineTo(b.x,b.y+36); ctx.lineTo(b.x-32,b.y); ctx.closePath(); ctx.stroke(); ctx.fillStyle='#fff'; ctx.fillRect(b.x-9,b.y-9,18,18)} ctx.restore()}
+window.render_game_to_text=()=>JSON.stringify({screen:currentScreen,mode:game.mode,score:game.score,lives:game.lives,stage:game.stage?.name||null,boss:game.boss?.type||null,aliveBricks:game.bricks.filter(b=>b.alive).length,challenges:CHALLENGES.length});
+</script>
+</body>
+</html>
