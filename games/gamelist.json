@@ -1,0 +1,10 @@
+{
+  "games": [
+    {
+      "index": 0,
+      "name": "Demo Game",
+      "icon": "games/demo/icon.svg",
+      "path": "games/demo/index.html"
+    }
+  ]
+}
