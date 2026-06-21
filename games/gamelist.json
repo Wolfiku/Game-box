@@ -9,7 +9,7 @@
     {
       "index": 1,
       "name": "Breakout 404",
-      "icon": "games/breakout-404/icon.svg",
+      "icon": "games/breakout-404/icon.png",
       "path": "games/breakout-404/index.html"
     }
   ]
