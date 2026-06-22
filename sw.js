@@ -6,15 +6,18 @@
 
 const CACHE_VERSION = 'gamebox-v3';
 
+// Detect base path dynamically so the SW works on any host (GitHub Pages, Plesk, etc.)
+const BASE = self.location.pathname.replace('sw.js', '');
+
 // Files to pre-cache on install
 const PRECACHE = [
-  '/Game-box/',
-  '/Game-box/index.html',
-  '/Game-box/style.css',
-  '/Game-box/app.js',
-  '/Game-box/manifest.json',
-  '/Game-box/icons/icon-192.png',
-  '/Game-box/icons/icon-512.png',
+  BASE,
+  BASE + 'index.html',
+  BASE + 'style.css',
+  BASE + 'app.js',
+  BASE + 'manifest.json',
+  BASE + 'icons/icon-192.png',
+  BASE + 'icons/icon-512.png',
 ];
 
 // Shell file extensions — always try network first
