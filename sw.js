@@ -1,7 +1,13 @@
-const CACHE = 'gamebox-v2';
+// ── Game-Box sw.js v3 ────────────────────────────────────────────────────────
+// Strategy:
+//   Shell files (HTML/JS/CSS)  → Network-first, cache fallback
+//   Game assets (images/html)  → Cache-first, network fallback
+//   gamelist.json              → Network-first always (so new games show up)
 
-// Static shell assets
-const SHELL = [
+const CACHE_VERSION = 'gamebox-v3';
+
+// Files to pre-cache on install
+const PRECACHE = [
   '/Game-box/',
   '/Game-box/index.html',
   '/Game-box/style.css',
@@ -9,53 +15,76 @@ const SHELL = [
   '/Game-box/manifest.json',
   '/Game-box/icons/icon-192.png',
   '/Game-box/icons/icon-512.png',
-  '/Game-box/games/gamelist.json',
 ];
 
+// Shell file extensions — always try network first
+const SHELL_EXTS = ['.html', '.js', '.css', '.json'];
+
+function isShell(url) {
+  const u = new URL(url);
+  return SHELL_EXTS.some(ext => u.pathname.endsWith(ext)) || u.pathname.endsWith('/');
+}
+
+// ── Install: pre-cache shell ──────────────────────────────────────────────────
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(async cache => {
-      // Cache shell first
-      await cache.addAll(SHELL);
-      // Then try to fetch and cache gamelist + all game assets
-      try {
-        const r = await fetch('/Game-box/games/gamelist.json');
-        const data = await r.json();
-        const gameAssets = [];
-        for (const game of (data.games || [])) {
-          gameAssets.push('/Game-box/' + game.icon);
-          gameAssets.push('/Game-box/' + game.path);
-        }
-        await cache.addAll(gameAssets.filter(Boolean));
-      } catch {}
-    })
+    caches.open(CACHE_VERSION).then(cache => cache.addAll(PRECACHE))
   );
-  self.skipWaiting();
+  self.skipWaiting(); // activate immediately
 });
 
+// ── Activate: delete old caches ───────────────────────────────────────────────
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k)))
     )
   );
-  self.clients.claim();
+  self.clients.claim(); // take control of all open tabs immediately
 });
 
-// Cache-first with network fallback
+// ── Fetch ─────────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
-        // Cache any successful GET response from our origin
-        if (res.ok && e.request.url.startsWith(self.location.origin)) {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-        }
-        return res;
-      }).catch(() => cached);
-    })
-  );
+
+  const url = e.request.url;
+
+  // Only handle same-origin requests
+  if (!url.startsWith(self.location.origin)) return;
+
+  if (isShell(url)) {
+    // Network-first: try to get a fresh copy, fall back to cache
+    e.respondWith(networkFirst(e.request));
+  } else {
+    // Cache-first: serve from cache (game assets, images, etc.)
+    e.respondWith(cacheFirst(e.request));
+  }
 });
+
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_VERSION);
+  try {
+    const fresh = await fetch(request);
+    if (fresh.ok) {
+      cache.put(request, fresh.clone()); // update cache with fresh copy
+    }
+    return fresh;
+  } catch {
+    // Offline — serve from cache
+    const cached = await cache.match(request);
+    return cached || new Response('Offline', { status: 503 });
+  }
+}
+
+async function cacheFirst(request) {
+  const cache  = await caches.open(CACHE_VERSION);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+  try {
+    const fresh = await fetch(request);
+    if (fresh.ok) cache.put(request, fresh.clone());
+    return fresh;
+  } catch {
+    return new Response('Offline', { status: 503 });
+  }
+}
