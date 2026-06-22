@@ -1,5 +1,4 @@
-// ── Game-Box app.js v2.3 ──────────────────────────────────────────────────────
-// Detect base path dynamically so the app works on any host (GitHub Pages, Plesk, etc.)
+// ── Game-Box app.js ───────────────────────────────────────────────────────────
 const BASE = (() => {
   for (const s of document.querySelectorAll('script[src]'))
     if (s.src.endsWith('app.js')) return s.src.replace('app.js', '');
@@ -22,23 +21,54 @@ function openDB() {
 }
 function dbGet(key) {
   return new Promise((res, rej) => {
-    const req = db.transaction('settings','readonly').objectStore('settings').get(key);
-    req.onsuccess = e => res(e.target.result);
-    req.onerror   = e => rej(e.target.error);
+    const tx = db.transaction('settings','readonly').objectStore('settings').get(key);
+    tx.onsuccess = e => res(e.target.result);
+    tx.onerror   = e => rej(e.target.error);
   });
 }
 function dbSet(key, val) {
   return new Promise((res, rej) => {
-    const req = db.transaction('settings','readwrite').objectStore('settings').put(val, key);
-    req.onsuccess = () => res();
-    req.onerror   = e => rej(e.target.error);
+    const tx = db.transaction('settings','readwrite').objectStore('settings').put(val, key);
+    tx.onsuccess = () => res();
+    tx.onerror   = e => rej(e.target.error);
   });
 }
 
-// ── Auto-update: reload when SW signals an update ─────────────────────────────
+// ── PWA Update banner ─────────────────────────────────────────────────────────
+// Shows a non-intrusive banner instead of a hard reload so an active game
+// session isn't killed. User decides when to reload.
+let _bannerShown = false;
+function showUpdateBanner() {
+  if (_bannerShown) return;
+  _bannerShown = true;
+  const bar = document.createElement('div');
+  bar.id = 'update-banner';
+  bar.innerHTML = '<span>Update available</span>' +
+    '<button id="upd-reload">Reload now</button>' +
+    '<button id="upd-dismiss" aria-label="Dismiss">×</button>';
+  document.body.appendChild(bar);
+  document.getElementById('upd-reload').onclick   = () => location.reload();
+  document.getElementById('upd-dismiss').onclick  = () => { bar.remove(); _bannerShown = false; };
+}
+
 if ('serviceWorker' in navigator) {
+  // Route 1: activated SW posts SW_UPDATED message
   navigator.serviceWorker.addEventListener('message', e => {
-    if (e.data?.type === 'SW_UPDATED') window.location.reload();
+    if (e.data?.type === 'SW_UPDATED') showUpdateBanner();
+  });
+
+  // Route 2: new SW found while page is open (updatefound)
+  navigator.serviceWorker.ready.then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      if (!nw) return;
+      nw.addEventListener('statechange', () => {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller)
+          showUpdateBanner();
+      });
+    });
+    // Poll every 5 minutes so long-open sessions also catch updates
+    setInterval(() => reg.update(), 5 * 60 * 1000);
   });
 }
 
@@ -47,15 +77,11 @@ function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-
-// ── Theme ─────────────────────────────────────────────────────────────────────
 function applyTheme(dark) {
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   document.getElementById('home-theme-checkbox').checked  = dark;
   document.getElementById('setup-theme-checkbox').checked = dark;
 }
-
-// ── Loading bar ───────────────────────────────────────────────────────────────
 function runLoader(then) {
   show('screen-loading');
   const bar = document.getElementById('load-bar');
@@ -74,7 +100,6 @@ async function loadGames() {
     return (await r.json()).games || [];
   } catch { return []; }
 }
-
 function renderGames(games) {
   const grid = document.getElementById('game-grid');
   grid.innerHTML = '';
@@ -115,8 +140,6 @@ function renderGames(games) {
     grid.appendChild(card);
   });
 }
-
-// ── Patchlog overlay ──────────────────────────────────────────────────────────
 function openPatchlog(game) {
   const overlay = document.getElementById('patchlog-overlay');
   document.getElementById('patchlog-title').textContent = game.name;
@@ -138,21 +161,16 @@ function openPatchlog(game) {
   });
   overlay.classList.add('show');
 }
-
 document.getElementById('close-patchlog-btn').addEventListener('click', () =>
   document.getElementById('patchlog-overlay').classList.remove('show'));
 document.getElementById('patchlog-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('patchlog-overlay'))
     document.getElementById('patchlog-overlay').classList.remove('show');
 });
-
-// ── Launch game ───────────────────────────────────────────────────────────────
 function launchGame(game) {
   document.getElementById('game-frame').src = BASE + game.path;
   show('screen-runner');
 }
-
-// ── Close game ────────────────────────────────────────────────────────────────
 document.getElementById('close-game-btn').addEventListener('click', () =>
   document.getElementById('confirm-overlay').classList.add('show'));
 document.getElementById('cancel-close').addEventListener('click', () =>
@@ -162,8 +180,6 @@ document.getElementById('confirm-close').addEventListener('click', () => {
   document.getElementById('game-frame').src = 'about:blank';
   show('screen-home');
 });
-
-// ── Settings panel ────────────────────────────────────────────────────────────
 document.getElementById('open-settings-btn').addEventListener('click', () =>
   document.getElementById('settings-overlay').classList.add('show'));
 document.getElementById('close-settings-btn').addEventListener('click', () =>
@@ -172,16 +188,11 @@ document.getElementById('settings-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('settings-overlay'))
     document.getElementById('settings-overlay').classList.remove('show');
 });
-
-// ── Theme toggles ─────────────────────────────────────────────────────────────
 document.getElementById('home-theme-checkbox').addEventListener('change', async e => {
   applyTheme(e.target.checked);
   await dbSet('theme', e.target.checked ? 'dark' : 'light');
 });
-document.getElementById('setup-theme-checkbox').addEventListener('change', e =>
-  applyTheme(e.target.checked));
-
-// ── OS tabs ───────────────────────────────────────────────────────────────────
+document.getElementById('setup-theme-checkbox').addEventListener('change', e => applyTheme(e.target.checked));
 document.querySelectorAll('.os-tab').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.os-tab').forEach(b => b.classList.remove('active'));
@@ -192,8 +203,6 @@ document.querySelectorAll('.os-tab').forEach(btn => {
     });
   });
 });
-
-// ── Setup ─────────────────────────────────────────────────────────────────────
 document.getElementById('btn-setup-0').addEventListener('click', () => {
   const val = document.getElementById('input-username').value.trim();
   if (!val) { document.getElementById('input-username').focus(); return; }
@@ -202,21 +211,18 @@ document.getElementById('btn-setup-0').addEventListener('click', () => {
   document.getElementById('dot-0').classList.remove('active');
   document.getElementById('dot-1').classList.add('active');
 });
-
 document.getElementById('btn-setup-1').addEventListener('click', async () => {
   const consoleName = document.getElementById('input-console').value.trim();
   const username    = document.getElementById('input-username').value.trim();
   if (!consoleName) { document.getElementById('input-console').focus(); return; }
   const dark = document.getElementById('setup-theme-checkbox').checked;
-  await dbSet('username',    username);
+  await dbSet('username', username);
   await dbSet('consoleName', consoleName);
-  await dbSet('theme',       dark ? 'dark' : 'light');
-  await dbSet('setupDone',   true);
+  await dbSet('theme', dark ? 'dark' : 'light');
+  await dbSet('setupDone', true);
   applyTheme(dark);
   await goHome(username, consoleName);
 });
-
-// ── Home ──────────────────────────────────────────────────────────────────────
 async function goHome(username, consoleName) {
   document.getElementById('home-meta-label').textContent = username + '  \u00b7  ' + consoleName;
   document.getElementById('settings-profile-label').textContent = username;
@@ -225,8 +231,6 @@ async function goHome(username, consoleName) {
   renderGames(games);
   show('screen-home');
 }
-
-// ── Storage request ───────────────────────────────────────────────────────────
 document.getElementById('btn-allow-storage').addEventListener('click', async () => {
   if (navigator.storage?.persist) await navigator.storage.persist();
   await dbSet('storageAsked', true);
@@ -236,7 +240,6 @@ document.getElementById('btn-skip-storage').addEventListener('click', async () =
   await dbSet('storageAsked', true);
   runLoader(afterLoad);
 });
-
 async function afterLoad() {
   const [done, username, consoleName, theme] =
     await Promise.all([dbGet('setupDone'), dbGet('username'), dbGet('consoleName'), dbGet('theme')]);
@@ -244,12 +247,9 @@ async function afterLoad() {
   if (done) await goHome(username || 'Player', consoleName || 'My Game-Box');
   else show('screen-setup');
 }
-
-// ── Boot ──────────────────────────────────────────────────────────────────────
 async function boot() {
   db = await openDB();
-  const isPWA = window.matchMedia('(display-mode: standalone)').matches
-             || window.navigator.standalone === true;
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   if (!isPWA) { show('screen-nopwa'); return; }
   const storageAsked = await dbGet('storageAsked');
   if (!storageAsked) { show('screen-storage'); return; }
@@ -257,9 +257,7 @@ async function boot() {
   if (theme) applyTheme(theme === 'dark');
   runLoader(afterLoad);
 }
-
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register(BASE + 'sw.js').catch(() => {});
 }
-
 boot();

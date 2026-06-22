@@ -1,13 +1,10 @@
-// ── Game-Box sw.js v4 ────────────────────────────────────────────────────────
-// Strategy:
-//   Shell files (HTML/JS/CSS)  → Network-first, cache fallback
-//   Game assets (images/html)  → Cache-first, network fallback
-//   gamelist.json              → Network-first always (so new games show up)
-// Auto-update: when a new SW is detected, all open clients reload automatically.
+// ── Game-Box sw.js ────────────────────────────────────────────────────────────
+// Cache version = build timestamp — changes with EVERY commit so the browser
+// always detects a new SW and triggers the update flow.
 
-const CACHE_VERSION = 'gamebox-v4';
+const CACHE = 'gamebox-20260622_2145';
 
-const BASE = self.location.pathname.replace('sw.js', '');
+const BASE = self.location.pathname.replace(/sw\.js$/, '');
 
 const PRECACHE = [
   BASE,
@@ -20,7 +17,6 @@ const PRECACHE = [
 ];
 
 const SHELL_EXTS = ['.html', '.js', '.css', '.json'];
-
 function isShell(url) {
   const u = new URL(url);
   return SHELL_EXTS.some(ext => u.pathname.endsWith(ext)) || u.pathname.endsWith('/');
@@ -29,19 +25,23 @@ function isShell(url) {
 // ── Install ───────────────────────────────────────────────────────────────────
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_VERSION).then(cache => cache.addAll(PRECACHE))
+    caches.open(CACHE).then(c => c.addAll(PRECACHE))
   );
   self.skipWaiting();
 });
 
-// ── Activate: delete old caches + notify all clients to reload ────────────────
+// ── Activate: purge old caches → claim clients → notify update ─────────────────
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k))))
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+      ))
       .then(() => self.clients.claim())
-      .then(() => self.clients.matchAll({ type: 'window' }))
-      .then(clients => clients.forEach(client => client.postMessage({ type: 'SW_UPDATED' })))
+      .then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+      .then(clients => clients.forEach(c =>
+        c.postMessage({ type: 'SW_UPDATED', version: CACHE })
+      ))
   );
 });
 
@@ -50,33 +50,28 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = e.request.url;
   if (!url.startsWith(self.location.origin)) return;
-  if (isShell(url)) {
-    e.respondWith(networkFirst(e.request));
-  } else {
-    e.respondWith(cacheFirst(e.request));
-  }
+  e.respondWith(isShell(url) ? networkFirst(e.request) : cacheFirst(e.request));
 });
 
-async function networkFirst(request) {
-  const cache = await caches.open(CACHE_VERSION);
+async function networkFirst(req) {
+  const cache = await caches.open(CACHE);
   try {
-    const fresh = await fetch(request);
-    if (fresh.ok) cache.put(request, fresh.clone());
-    return fresh;
+    const res = await fetch(req);
+    if (res.ok) cache.put(req, res.clone());
+    return res;
   } catch {
-    const cached = await cache.match(request);
-    return cached || new Response('Offline', { status: 503 });
+    return (await cache.match(req)) || new Response('Offline', { status: 503 });
   }
 }
 
-async function cacheFirst(request) {
-  const cache  = await caches.open(CACHE_VERSION);
-  const cached = await cache.match(request);
+async function cacheFirst(req) {
+  const cache  = await caches.open(CACHE);
+  const cached = await cache.match(req);
   if (cached) return cached;
   try {
-    const fresh = await fetch(request);
-    if (fresh.ok) cache.put(request, fresh.clone());
-    return fresh;
+    const res = await fetch(req);
+    if (res.ok) cache.put(req, res.clone());
+    return res;
   } catch {
     return new Response('Offline', { status: 503 });
   }
