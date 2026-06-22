@@ -3,79 +3,73 @@
 function init() {
   loadGame();
   initCanvas();
-  buildBuildPanel();
-  buildResearchPanel();
-  updateNavHint();
 
-  // Bottom nav / build hint bar
-  const wrap = document.getElementById('grid-wrap').parentNode;
-  const nav  = document.createElement('div');
-  nav.id = 'build-hint';
-  wrap.appendChild(nav);
-  updateNavHint();
+  // Build bottom nav
+  const nav = document.createElement('div');
+  nav.id = 'bottom-nav';
+  document.body.appendChild(nav);
+  buildNavBar();
 
-  // Toolbar buttons
-  document.getElementById('btn-open-panel').onclick = () => togglePanel('build-panel');
-  document.getElementById('btn-open-research').onclick = () => { buildResearchPanel(); togglePanel('research-panel'); };
-  document.getElementById('btn-open-stats').onclick = () => { buildStatsPanel(); togglePanel('stats-panel'); };
+  // Toolbar save button (secondary, same as nav)
   document.getElementById('btn-save').onclick = saveGame;
 
-  // Close buttons
+  // Close buttons on panels
   document.querySelectorAll('.close-btn[data-close]').forEach(btn => {
     btn.onclick = () => closePanel(btn.dataset.close);
   });
 
-  // Close popup on backdrop
+  // Build panel: populate once
+  buildBuildPanel();
+
+  // Tap outside popup closes it
   document.addEventListener('pointerdown', e => {
     const popup = document.getElementById('tile-popup');
-    if (!popup.classList.contains('hidden') && !popup.contains(e.target) && e.target !== canvas) {
+    if (!popup.classList.contains('hidden') && !popup.contains(e.target)) {
       hideTilePopup();
     }
-  });
+  }, { capture: true });
 
-  // Auto-save every 60s
+  // Auto-save every 60 s
   setInterval(saveGame, 60000);
 
   // Game loop
   setInterval(() => {
     tick();
     updateHUD();
+    // Refresh open panel content
+    if (!document.getElementById('build-panel').classList.contains('hidden'))    buildBuildPanel();
+    if (!document.getElementById('research-panel').classList.contains('hidden')) buildResearchPanel();
   }, TICK_MS);
 
-  // Render loop
-  function loop() {
-    render();
-    requestAnimationFrame(loop);
-  }
-  requestAnimationFrame(loop);
+  // Render loop (60 fps)
+  (function loop() { render(); requestAnimationFrame(loop); })();
 
-  toast('Welcome to NanoFactory! Tap an ore patch to place a Miner.');
+  setMode('scroll');
+  toast('Welcome! Tap SCROLL to pan, BUILD to place. Tap a tile to inspect.');
 }
 
 function togglePanel(id) {
   const panels = ['build-panel', 'research-panel', 'stats-panel'];
-  panels.forEach(p => {
-    if (p === id) {
-      document.getElementById(p).classList.toggle('hidden');
-    } else {
-      document.getElementById(p).classList.add('hidden');
-    }
-  });
-  // backdrop
+  const el = document.getElementById(id);
+  const isOpen = !el.classList.contains('hidden');
+
+  panels.forEach(p => document.getElementById(p).classList.add('hidden'));
   let bd = document.getElementById('panel-backdrop');
-  const anyOpen = panels.some(p => !document.getElementById(p).classList.contains('hidden'));
-  if (anyOpen) {
-    if (!bd) {
-      bd = document.createElement('div');
-      bd.id = 'panel-backdrop';
-      bd.className = 'overlay-backdrop';
-      bd.onclick = () => panels.forEach(p => document.getElementById(p).classList.add('hidden')) || bd.remove();
-      document.body.appendChild(bd);
-    }
-  } else {
-    if (bd) bd.remove();
+  if (bd) bd.remove();
+
+  if (!isOpen) {
+    el.classList.remove('hidden');
+    bd = document.createElement('div');
+    bd.id = 'panel-backdrop';
+    bd.className = 'overlay-backdrop';
+    bd.onclick = () => {
+      panels.forEach(p => document.getElementById(p).classList.add('hidden'));
+      bd.remove();
+    };
+    document.body.appendChild(bd);
   }
 }
+
 function closePanel(id) {
   document.getElementById(id).classList.add('hidden');
   const bd = document.getElementById('panel-backdrop');
