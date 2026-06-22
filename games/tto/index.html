@@ -20,8 +20,7 @@
       --success:#4ade80;
       --shadow:0 20px 60px rgba(0,0,0,.35);
       --radius:28px;
-      --radius-sm:18px;
-      --cell-radius:22px;
+      --cell-radius:18px;
       --blur:18px;
       --special-angle:135deg;
       --special-overlay:transparent;
@@ -33,8 +32,8 @@
       margin:0;height:100%;
       font-family:var(--font);
       background:
-        radial-gradient(1200px 800px at 10% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%),
-        radial-gradient(900px 600px at 100% 0%, color-mix(in srgb, var(--accent-2) 14%, transparent), transparent 60%),
+        radial-gradient(900px 600px at 10% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 60%),
+        radial-gradient(700px 500px at 100% 0%, color-mix(in srgb, var(--accent-2) 12%, transparent), transparent 60%),
         linear-gradient(var(--special-angle), var(--bg), var(--bg-2));
       color:var(--text);
       overflow:hidden;
@@ -43,164 +42,166 @@
 
     body::before,body::after{
       content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
-      transition:opacity .5s ease, transform .6s ease, background .5s ease;
+      transition:opacity .5s ease,background .5s ease;
     }
     body::before{background:var(--special-overlay);opacity:.9}
     body::after{
       background:
-        linear-gradient(transparent 0 95%, rgba(255,255,255,.03) 95% 100%),
-        linear-gradient(90deg, transparent 0 95%, rgba(255,255,255,.03) 95% 100%);
-      background-size:42px 42px;
-      opacity:.06;
+        linear-gradient(transparent 0 95%,rgba(255,255,255,.03) 95% 100%),
+        linear-gradient(90deg,transparent 0 95%,rgba(255,255,255,.03) 95% 100%);
+      background-size:42px 42px;opacity:.05;
       transform:perspective(1000px) rotateX(72deg) translateY(-14%);
       transform-origin:center top;
     }
 
-    body[data-special="inverted"]::after{opacity:.14;background-size:28px 28px}
-    body[data-special="sunset"]::before{
-      background:
-        radial-gradient(circle at 50% 115%, rgba(255,192,111,.28), transparent 34%),
-        radial-gradient(circle at 20% 20%, rgba(255,105,135,.13), transparent 40%);
-    }
-    body[data-special="glacier"]::before{
-      background:
-        linear-gradient(120deg, rgba(255,255,255,.04), rgba(255,255,255,.01)),
-        radial-gradient(circle at 50% 0%, rgba(125,211,252,.16), transparent 38%);
-      backdrop-filter:blur(10px);
-    }
-    body[data-special="wolfi"]::before{
-      background:
-        radial-gradient(circle at 50% 50%, rgba(168,85,247,.12), transparent 30%),
-        repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 1px, transparent 1px 16px);
-    }
-    body[data-special="golden"]::before{
-      background:linear-gradient(120deg, rgba(255,215,0,.08), rgba(255,255,255,.02), rgba(255,215,0,.08));
-      animation:shine 8s linear infinite;
-    }
+    body[data-special="inverted"]::after{opacity:.12;background-size:28px 28px}
+    body[data-special="sunset"]::before{background:radial-gradient(circle at 50% 115%,rgba(255,192,111,.24),transparent 34%),radial-gradient(circle at 20% 20%,rgba(255,105,135,.1),transparent 40%)}
+    body[data-special="glacier"]::before{background:linear-gradient(120deg,rgba(255,255,255,.04),rgba(255,255,255,.01)),radial-gradient(circle at 50% 0%,rgba(125,211,252,.14),transparent 38%)}
+    body[data-special="wolfi"]::before{background:radial-gradient(circle at 50% 50%,rgba(168,85,247,.1),transparent 30%),repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 16px)}
+    body[data-special="golden"]::before{background:linear-gradient(120deg,rgba(255,215,0,.07),rgba(255,255,255,.02),rgba(255,215,0,.07));animation:shine 8s linear infinite}
+    @keyframes shine{0%{transform:translateX(-6%)}50%{transform:translateX(6%)}100%{transform:translateX(-6%)}}
 
-    @keyframes shine{0%{transform:translateX(-8%)}50%{transform:translateX(8%)}100%{transform:translateX(-8%)}}
-
-    .app{position:relative;z-index:1;min-height:100%;display:grid;place-items:center;padding:24px}
-
+    /* ── Screens ─────────────────────────────────── */
     .screen{
-      position:absolute;inset:0;padding:24px;
+      position:fixed;inset:0;padding:16px;
       display:grid;place-items:center;
-      opacity:0;transform:translateY(14px) scale(.985);
+      opacity:0;transform:translateY(10px) scale(.988);
       pointer-events:none;
-      transition:opacity .45s ease, transform .45s ease;
+      transition:opacity .4s ease,transform .4s ease;
+      z-index:1;overflow:auto;
     }
     .screen.active{opacity:1;transform:none;pointer-events:auto}
 
     .shell{
-      width:min(1120px,100%);
-      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      width:min(900px,100%);
+      background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04));
       border:1px solid var(--line);
-      border-radius:calc(var(--radius) + 4px);
+      border-radius:32px;
       box-shadow:var(--shadow);
       backdrop-filter:blur(var(--blur));
       overflow:hidden;
     }
-    .shell-inner{padding:28px}
+    .shell-inner{padding:20px}
 
-    /* ── Start ──────────────────────────────────────── */
+    /* ── Start ───────────────────────────────────── */
     .hero{
-      min-height:min(860px,calc(100vh - 48px));
       display:grid;
-      grid-template-columns:1.2fr .9fr;
-      gap:22px;
-      align-items:stretch;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      align-items:start;
     }
 
-    .left-col,.right-col{
+    .start-col{
       background:var(--surface);
       border:1px solid var(--line);
-      backdrop-filter:blur(10px);
-      border-radius:var(--radius);
-      padding:28px;
+      border-radius:24px;
+      padding:22px;
       position:relative;
       overflow:hidden;
     }
-    .left-col::before,.right-col::before{
+    .start-col::after{
       content:"";position:absolute;
-      inset:auto -20% -45% auto;
-      width:240px;height:240px;border-radius:50%;
-      background:radial-gradient(circle, color-mix(in srgb, var(--accent) 18%, transparent), transparent 65%);
-      filter:blur(20px);pointer-events:none;
+      right:-30px;bottom:-40px;
+      width:180px;height:180px;border-radius:50%;
+      background:radial-gradient(circle,color-mix(in srgb,var(--accent) 14%,transparent),transparent 65%);
+      filter:blur(18px);pointer-events:none;
     }
 
-    .hero-copy{display:grid;gap:18px;align-content:start}
-    h1{font-size:clamp(38px,6vw,72px);line-height:.95;letter-spacing:-.04em;margin:0}
-    h2{font-size:clamp(24px,3vw,34px);letter-spacing:-.03em;margin:0}
-    h3{font-size:16px;letter-spacing:-.02em;margin:0}
-    p{margin:0;color:var(--muted);line-height:1.55}
+    h1{font-size:clamp(32px,5vw,58px);line-height:.92;letter-spacing:-.05em;margin:0 0 8px}
+    h2{font-size:clamp(18px,2.2vw,26px);letter-spacing:-.03em;margin:0}
+    h3{font-size:15px;letter-spacing:-.02em;margin:0}
+    p{margin:0;color:var(--muted);line-height:1.5;font-size:13px}
 
-    .hero-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-    .menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-    .score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    .stack{display:grid;gap:14px}
-    .row{display:flex;gap:10px;align-items:center}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .stack{display:grid;gap:10px}
+    .row{display:flex;gap:8px;align-items:center}
+
+    .mode-card{
+      padding:14px;border-radius:18px;
+      border:1px solid var(--line);background:var(--surface);
+      cursor:pointer;text-align:left;
+      transition:transform .18s ease,border-color .25s ease,background .25s ease;
+    }
+    .mode-card.active{
+      border-color:color-mix(in srgb,var(--accent) 45%,transparent);
+      background:color-mix(in srgb,var(--accent) 10%,var(--surface));
+    }
+    .mode-card:hover{transform:translateY(-2px)}
+    .mode-card .mt{font-size:14px;font-weight:700;letter-spacing:-.02em;color:var(--text)}
+    .mode-card .md{margin-top:3px;font-size:12px}
+
+    .kpi{
+      padding:14px;border-radius:18px;
+      background:var(--surface);border:1px solid var(--line);
+      display:grid;gap:4px;
+    }
+    .kpi strong{font-size:22px;letter-spacing:-.05em}
+    .kpi span{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+
+    .section-title{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 
     .tiny-credit{
-      position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
+      text-align:center;margin-top:4px;
       font-size:10px;letter-spacing:.18em;text-transform:uppercase;
-      color:color-mix(in srgb, var(--muted) 70%, transparent);
-      user-select:none;cursor:pointer;opacity:.55;
-      transition:opacity .25s ease, color .25s ease;
+      color:color-mix(in srgb,var(--muted) 60%,transparent);
+      user-select:none;cursor:pointer;opacity:.5;
+      transition:opacity .2s ease,color .2s ease;
     }
     .tiny-credit:hover{opacity:1;color:var(--text)}
 
-    /* ── Game ───────────────────────────────────────── */
+    /* ── Game ────────────────────────────────────── */
     .game-layout{
-      min-height:min(860px,calc(100vh - 48px));
       display:grid;
       place-items:center;
     }
 
     .game-center{
       display:grid;
-      gap:18px;
+      gap:12px;
       align-items:center;
       justify-items:center;
       width:100%;
     }
 
     .topbar{
-      width:min(560px,100%);
+      width:min(440px,100%);
       background:var(--surface);
       border:1px solid var(--line);
-      border-radius:24px;
-      padding:14px 18px;
+      border-radius:20px;
+      padding:10px 14px;
       display:grid;
       grid-template-columns:1fr auto auto;
-      gap:12px;
+      gap:10px;
       align-items:center;
     }
 
     .status-card{
-      width:min(560px,100%);
-      border-radius:24px;
-      padding:16px 20px;
+      width:min(440px,100%);
+      border-radius:20px;
+      padding:12px 16px;
       background:var(--surface-2);
       border:1px solid var(--line);
-      display:grid;
-      gap:6px;
-      justify-items:center;
-      text-align:center;
+      display:grid;gap:3px;
+      justify-items:center;text-align:center;
     }
-    .status-main{font-size:clamp(22px,2.8vw,32px);font-weight:800;letter-spacing:-.04em}
-    .status-sub{font-size:13px}
+    .status-main{font-size:clamp(18px,2.4vw,26px);font-weight:800;letter-spacing:-.04em}
+    .status-sub{font-size:12px}
 
-    /* Board: feste quadratische Kacheln */
+    /* Board — feste quadratische Kacheln, kompakt */
     .board{
-      --cell-size:min(calc((min(82vw,520px) - 24px - 4 * 12px) / 3), 148px);
-      width:calc(var(--cell-size) * 3 + 12px * 2 + 24px);
+      --cell-size:min(
+        calc((min(76vw, 440px) - 20px - 2 * 10px) / 3),
+        112px
+      );
+      width:calc(var(--cell-size)*3 + 10px*2 + 20px);
       display:grid;
-      grid-template-columns:repeat(3, var(--cell-size));
-      grid-template-rows:repeat(3, var(--cell-size));
-      gap:12px;
-      padding:12px;
-      border-radius:30px;
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+      grid-template-columns:repeat(3,var(--cell-size));
+      grid-template-rows:repeat(3,var(--cell-size));
+      gap:10px;
+      padding:10px;
+      border-radius:26px;
+      background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
       border:1px solid var(--line);
       box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
     }
@@ -210,211 +211,166 @@
       height:var(--cell-size);
       cursor:pointer;
       border-radius:var(--cell-radius);
-      display:grid;
-      place-items:center;
-      font-size:calc(var(--cell-size) * .52);
-      font-weight:900;
-      letter-spacing:-.08em;
-      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      display:grid;place-items:center;
+      font-size:calc(var(--cell-size)*.5);
+      font-weight:900;letter-spacing:-.08em;
+      background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
       color:var(--text);
       border:1px solid var(--line);
-      box-shadow:0 10px 24px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.06);
+      box-shadow:0 8px 20px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.06);
       appearance:none;outline:none;
-      transition:transform .18s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
+      transition:transform .18s ease,background .25s ease,border-color .25s ease;
       position:relative;overflow:hidden;
     }
     .cell::before{
       content:"";position:absolute;inset:-40%;
-      background:radial-gradient(circle, color-mix(in srgb, var(--accent) 18%, transparent), transparent 55%);
+      background:radial-gradient(circle,color-mix(in srgb,var(--accent) 16%,transparent),transparent 55%);
       opacity:0;transition:opacity .25s ease;
     }
     .cell:hover:not(:disabled)::before{opacity:.8}
     .cell:hover:not(:disabled){transform:translateY(-1px)}
-    .cell:active:not(:disabled){transform:translateY(1px) scale(.99)}
+    .cell:active:not(:disabled){transform:scale(.97)}
     .cell.mark-x{color:var(--accent)}
     .cell.mark-o{color:var(--accent-2)}
-    .cell.locked,.cell:disabled{pointer-events:none}
+    .cell:disabled{pointer-events:none}
     .cell.win{
-      border-color:color-mix(in srgb, var(--success) 50%, transparent);
-      box-shadow:0 0 0 1px color-mix(in srgb, var(--success) 40%, transparent) inset, 0 14px 34px rgba(0,0,0,.2);
-      background:linear-gradient(180deg, color-mix(in srgb, var(--success) 18%, rgba(255,255,255,.04)), rgba(255,255,255,.04));
-    }
-
-    .toolbar{
-      width:min(560px,100%);
-      background:var(--surface);
-      border:1px solid var(--line);
-      border-radius:24px;
-      padding:14px;
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:10px;
+      border-color:color-mix(in srgb,var(--success) 50%,transparent);
+      background:linear-gradient(180deg,color-mix(in srgb,var(--success) 16%,rgba(255,255,255,.04)),rgba(255,255,255,.04));
+      box-shadow:0 0 0 1px color-mix(in srgb,var(--success) 36%,transparent) inset;
     }
 
     .score-row{
-      width:min(560px,100%);
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:12px;
+      width:min(440px,100%);
+      display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
     }
     .score{
-      background:var(--surface);
-      border:1px solid var(--line);
-      border-radius:22px;
-      padding:16px;
-      display:grid;
-      gap:6px;
+      background:var(--surface);border:1px solid var(--line);
+      border-radius:18px;padding:12px;display:grid;gap:4px;
     }
-    .score .value{font-size:26px;font-weight:800;letter-spacing:-.05em}
+    .score .value{font-size:22px;font-weight:800;letter-spacing:-.05em}
+    .score .slabel{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 
-    /* ── Shared ─────────────────────────────────────── */
-    .btn,.chip,.icon-btn,select{
+    .toolbar{
+      width:min(440px,100%);
+      background:var(--surface);border:1px solid var(--line);
+      border-radius:20px;padding:10px;
+      display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+    }
+
+    /* ── Buttons ─────────────────────────────────── */
+    .btn,.chip,.icon-btn{
       appearance:none;border:none;outline:none;
       color:var(--text);font:inherit;cursor:pointer;
-      transition:transform .18s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
-    }
-    .btn,.chip,.icon-btn{
       display:inline-flex;align-items:center;justify-content:center;gap:8px;
       border:1px solid var(--line);background:var(--surface-2);
-      border-radius:16px;min-height:48px;padding:0 16px;
-      font-weight:600;letter-spacing:-.02em;
+      border-radius:14px;min-height:42px;padding:0 14px;
+      font-weight:600;font-size:13px;letter-spacing:-.02em;
+      transition:transform .18s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease;
     }
-    .icon-btn{width:48px;min-width:48px;padding:0;border-radius:14px}
+    .icon-btn{width:42px;min-width:42px;padding:0;border-radius:12px}
     .btn:hover,.chip:hover,.icon-btn:hover{transform:translateY(-1px)}
-    .btn:active,.chip:active,.icon-btn:active{transform:translateY(1px) scale(.99)}
+    .btn:active,.chip:active,.icon-btn:active{transform:scale(.98)}
     .btn.primary{
-      background:linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent-2) 50%, var(--accent)));
+      background:linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent-2) 50%,var(--accent)));
       color:#09111f;border-color:transparent;
-      box-shadow:0 12px 30px color-mix(in srgb, var(--accent) 32%, transparent);
+      box-shadow:0 10px 24px color-mix(in srgb,var(--accent) 28%,transparent);
     }
     .btn.soft{background:var(--surface)}
-    .btn.ghost{background:transparent}
+    .btn.ghost{background:transparent;border-color:transparent}
+    .btn.ghost:hover{background:var(--surface)}
     .chip.active,.btn.active{
-      border-color:color-mix(in srgb, var(--accent) 45%, transparent);
-      box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent) inset;
-      background:color-mix(in srgb, var(--accent) 14%, var(--surface-2));
+      border-color:color-mix(in srgb,var(--accent) 45%,transparent);
+      background:color-mix(in srgb,var(--accent) 14%,var(--surface-2));
     }
+    body[data-special="golden"] .btn.primary{color:#111;background:linear-gradient(135deg,#ffe58a,#ffc933,#fff2b5);box-shadow:0 10px 28px rgba(255,191,0,.28)}
+    body[data-special="inverted"]{--cell-radius:8px}
+    body[data-special="wolfi"] .cell{text-shadow:0 0 20px color-mix(in srgb,var(--accent) 38%,transparent)}
 
-    .kpi{
-      padding:18px;border-radius:22px;
-      background:var(--surface);border:1px solid var(--line);
-      display:grid;gap:8px;
-    }
-    .kpi strong{font-size:28px;letter-spacing:-.05em}
-
-    .mode-card{
-      padding:18px;border-radius:22px;
-      border:1px solid var(--line);background:var(--surface);
-      cursor:pointer;text-align:left;
-      transition:transform .18s ease, border-color .25s ease, background .25s ease, box-shadow .25s ease;
-    }
-    .mode-card.active{
-      border-color:color-mix(in srgb, var(--accent) 45%, transparent);
-      background:color-mix(in srgb, var(--accent) 10%, var(--surface));
-      box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent) inset;
-    }
-    .mode-card:hover{transform:translateY(-2px)}
-    .mode-card .mode-title{font-size:17px;font-weight:700;letter-spacing:-.03em;color:var(--text)}
-    .mode-card .mode-desc{margin-top:6px;font-size:13px}
-
+    /* ── Panels ──────────────────────────────────── */
     .panel{
-      position:fixed;top:0;right:0;width:min(540px,100%);height:100%;
-      transform:translateX(105%);transition:transform .42s cubic-bezier(.22,.9,.22,1);
-      z-index:6;padding:16px;pointer-events:none;
+      position:fixed;top:0;right:0;width:min(520px,100%);height:100%;
+      transform:translateX(105%);transition:transform .4s cubic-bezier(.22,.9,.22,1);
+      z-index:6;padding:14px;pointer-events:none;
     }
     .panel.open{transform:translateX(0);pointer-events:auto}
     .panel-card{
-      height:100%;border-radius:30px;overflow:hidden;
+      height:100%;border-radius:28px;overflow:hidden;
       display:grid;grid-template-rows:auto 1fr;
       box-shadow:var(--shadow);
-      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
-      border:1px solid var(--line);
-      backdrop-filter:blur(var(--blur));
+      background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.04));
+      border:1px solid var(--line);backdrop-filter:blur(var(--blur));
     }
     .panel-head{
-      padding:20px;border-bottom:1px solid var(--line);
-      display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;
-      background:rgba(0,0,0,.08);
+      padding:18px;border-bottom:1px solid var(--line);
+      display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;
+      background:rgba(0,0,0,.06);
     }
-    .panel-body{padding:20px;overflow:auto;display:grid;gap:18px;align-content:start}
+    .panel-body{padding:18px;overflow:auto;display:grid;gap:14px;align-content:start}
 
-    .theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
-    .ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+    .ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
 
     .theme-card,.ach-card{
       background:var(--surface);border:1px solid var(--line);
-      border-radius:22px;padding:16px;display:grid;gap:10px;
-      position:relative;overflow:hidden;
+      border-radius:20px;padding:14px;display:grid;gap:8px;
+      position:relative;overflow:hidden;cursor:default;
     }
+    .theme-card[data-pick-theme]{cursor:pointer}
+    .theme-card[data-pick-theme]:hover{transform:translateY(-2px)}
     .theme-card::before,.ach-card::before{
       content:"";position:absolute;inset:0;
-      background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, transparent), transparent 60%);
-      opacity:.8;pointer-events:none;
+      background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 7%,transparent),transparent 60%);
+      pointer-events:none;
     }
-    .theme-card.locked,.ach-card.locked{opacity:.72}
-    .theme-card.unlocked{border-color:color-mix(in srgb, var(--accent) 30%, transparent)}
+    .theme-card.locked,.ach-card.locked{opacity:.68}
+    .theme-card.unlocked{border-color:color-mix(in srgb,var(--accent) 26%,transparent)}
     .theme-card.selected{
-      box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent) inset, 0 16px 28px rgba(0,0,0,.18);
-      background:color-mix(in srgb, var(--accent) 12%, var(--surface));
+      box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent) inset;
+      background:color-mix(in srgb,var(--accent) 10%,var(--surface));
     }
 
-    .meta{display:flex;flex-wrap:wrap;gap:8px}
+    .meta{display:flex;flex-wrap:wrap;gap:6px}
     .pill{
       display:inline-flex;align-items:center;justify-content:center;
-      min-height:26px;padding:0 10px;border-radius:999px;
-      font-size:11px;color:var(--muted);
+      min-height:22px;padding:0 8px;border-radius:999px;
+      font-size:10px;color:var(--muted);
       background:var(--surface-2);border:1px solid var(--line);
     }
-    .pill.special{
-      color:#0b1020;
-      background:linear-gradient(135deg, var(--accent), var(--accent-2));
-      border-color:transparent;font-weight:700;
-    }
+    .pill.special{color:#0b1020;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-color:transparent;font-weight:700}
 
-    .section-title{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
     .muted{color:var(--muted)}
-    .small{font-size:13px}
+    .small{font-size:12px}
     .separator{height:1px;background:var(--line);border-radius:999px}
 
     .toast-wrap{
-      position:fixed;top:18px;left:50%;transform:translateX(-50%);
-      display:grid;gap:10px;z-index:10;width:min(92vw,440px);pointer-events:none;
+      position:fixed;top:14px;left:50%;transform:translateX(-50%);
+      display:grid;gap:8px;z-index:10;width:min(92vw,400px);pointer-events:none;
     }
     .toast{
-      background:rgba(11,16,32,.84);border:1px solid rgba(255,255,255,.12);
-      backdrop-filter:blur(16px);border-radius:20px;padding:14px 16px;
-      box-shadow:var(--shadow);display:grid;gap:4px;
-      animation:toastIn .42s ease forwards;
+      background:rgba(11,16,32,.88);border:1px solid rgba(255,255,255,.12);
+      backdrop-filter:blur(14px);border-radius:18px;padding:12px 14px;
+      box-shadow:var(--shadow);display:grid;gap:3px;
+      animation:toastIn .38s ease forwards;
     }
-    @keyframes toastIn{from{opacity:0;transform:translateY(-10px) scale(.96)}to{opacity:1;transform:none}}
+    @keyframes toastIn{from{opacity:0;transform:translateY(-8px) scale(.96)}to{opacity:1;transform:none}}
 
     .overlay{
-      position:fixed;inset:0;background:rgba(0,0,0,.38);
-      backdrop-filter:blur(8px);opacity:0;pointer-events:none;
-      transition:opacity .32s ease;z-index:5;
+      position:fixed;inset:0;background:rgba(0,0,0,.36);
+      backdrop-filter:blur(7px);opacity:0;pointer-events:none;
+      transition:opacity .3s ease;z-index:5;
     }
     .overlay.show{opacity:1;pointer-events:auto}
 
-    /* Special theme overrides */
-    body[data-special="inverted"]{--radius:10px;--radius-sm:8px;--cell-radius:8px;--blur:0px}
-    body[data-special="golden"] .btn.primary{
-      color:#111;
-      background:linear-gradient(135deg, #ffe58a, #ffc933, #fff2b5);
-      box-shadow:0 12px 36px rgba(255,191,0,.3);
-    }
-    body[data-special="wolfi"] .cell{
-      text-shadow:0 0 24px color-mix(in srgb, var(--accent) 40%, transparent);
-    }
-
-    @media(max-width:980px){
+    @media(max-width:700px){
       .hero{grid-template-columns:1fr}
-      .menu-grid,.hero-actions{grid-template-columns:1fr}
-    }
-    @media(max-width:680px){
-      .screen{padding:12px}
-      .shell-inner{padding:14px}
+      .g2,.g3{grid-template-columns:1fr 1fr}
       .toolbar{grid-template-columns:repeat(2,1fr)}
-      .board{--cell-size:min(calc((96vw - 48px - 4 * 8px) / 3), 120px);gap:8px;padding:8px}
+      .board{--cell-size:min(calc((94vw - 20px - 2*10px)/3),100px)}
+    }
+    @media(max-width:420px){
+      .shell-inner{padding:12px}
+      .board{--cell-size:min(calc((94vw - 16px - 2*8px)/3),90px);gap:8px;padding:8px}
+      .toolbar{grid-template-columns:1fr 1fr}
     }
   </style>
 </head>
@@ -422,85 +378,72 @@
   <div class="toast-wrap" id="toastWrap"></div>
   <div class="overlay" id="overlay"></div>
 
-  <!-- START SCREEN -->
+  <!-- START -->
   <section class="screen active" id="startScreen">
     <div class="shell">
       <div class="shell-inner">
         <div class="hero">
-          <div class="left-col">
-            <div class="hero-copy">
-              <h1>TIC<br>TAC<br>TOE</h1>
-              <p>2 Spieler lokal oder gegen einen Bot.</p>
 
-              <div class="menu-grid">
-                <button class="mode-card active" data-mode-card="bot">
-                  <div class="mode-title">Gegen Bot</div>
-                  <div class="mode-desc muted">Stark, aber schlagbar.</div>
-                </button>
-                <button class="mode-card" data-mode-card="pvp">
-                  <div class="mode-title">2 Spieler</div>
-                  <div class="mode-desc muted">Lokal abwechselnd.</div>
-                </button>
-              </div>
+          <div class="start-col stack">
+            <h1>TIC TAC TOE</h1>
 
-              <div class="hero-actions">
-                <button class="btn primary" id="startBtn">Spiel starten</button>
-                <button class="btn soft" id="openThemesFromStart">Themes</button>
-              </div>
-
-              <div class="hero-actions">
-                <button class="btn ghost" id="openAchievementsFromStart">Achievements</button>
-                <button class="btn ghost" id="resetProgressBtn">Fortschritt reset</button>
-              </div>
-
-              <div class="score-grid">
-                <div class="kpi">
-                  <span class="muted small">Achievements</span>
-                  <strong id="startAchCount">0 / 25</strong>
-                </div>
-                <div class="kpi">
-                  <span class="muted small">Themes</span>
-                  <strong id="startThemeCount">3 / 15</strong>
-                </div>
-                <div class="kpi">
-                  <span class="muted small">Spiele</span>
-                  <strong id="startGameCount">0</strong>
-                </div>
-              </div>
+            <div class="g2">
+              <button class="mode-card active" data-mode-card="bot">
+                <div class="mt">Gegen Bot</div>
+                <div class="md muted">Stark, aber schlagbar.</div>
+              </button>
+              <button class="mode-card" data-mode-card="pvp">
+                <div class="mt">2 Spieler</div>
+                <div class="md muted">Lokal abwechselnd.</div>
+              </button>
             </div>
+
+            <button class="btn primary" id="startBtn" style="width:100%">Spiel starten</button>
+
+            <div class="g2">
+              <button class="btn soft" id="openThemesFromStart">Themes</button>
+              <button class="btn soft" id="openAchievementsFromStart">Achievements</button>
+            </div>
+
+            <button class="btn ghost" id="resetProgressBtn" style="width:100%;font-size:12px">Fortschritt reset</button>
+
             <div class="tiny-credit" id="wolfTrigger">@wolfikuproduction</div>
           </div>
 
-          <div class="right-col stack">
-            <div class="section-title">Aktiv</div>
-            <div style="padding:18px;border-radius:24px;background:var(--surface);border:1px solid var(--line);display:grid;gap:12px;">
-              <h2 id="activeThemeName">Black</h2>
-              <p id="activeThemeDesc">Dunkel, klar, modern.</p>
-              <div class="meta" id="activeThemeMeta"></div>
+          <div class="start-col stack">
+            <div>
+              <div class="section-title" style="margin-bottom:8px">Aktiv</div>
+              <div style="padding:14px;border-radius:18px;background:var(--surface-2);border:1px solid var(--line);display:grid;gap:6px">
+                <h2 id="activeThemeName">Black</h2>
+                <p id="activeThemeDesc">Dunkel, modern, clean.</p>
+                <div class="meta" id="activeThemeMeta"></div>
+              </div>
             </div>
 
-            <div class="section-title">Freischalt-System</div>
-            <div class="stack">
-              <div style="padding:16px;border-radius:22px;background:var(--surface);border:1px solid var(--line)">
-                <h3>15 Themes</h3>
-                <p>3 Standard · 5 Spielen · 5 Achievements · 1 Secret · 1 Golden</p>
+            <div class="separator"></div>
+
+            <div class="g3">
+              <div class="kpi">
+                <span>Ach.</span>
+                <strong id="startAchCount">0/25</strong>
               </div>
-              <div style="padding:16px;border-radius:22px;background:var(--surface);border:1px solid var(--line)">
-                <h3>25 Achievements</h3>
-                <p>Davon 10 versteckt.</p>
+              <div class="kpi">
+                <span>Themes</span>
+                <strong id="startThemeCount">3/15</strong>
               </div>
-              <div style="padding:16px;border-radius:22px;background:var(--surface);border:1px solid var(--line)">
-                <h3>5 Special Themes</h3>
-                <p>Ändern den Look besonders stark.</p>
+              <div class="kpi">
+                <span>Spiele</span>
+                <strong id="startGameCount">0</strong>
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
   </section>
 
-  <!-- GAME SCREEN -->
+  <!-- GAME -->
   <section class="screen" id="gameScreen">
     <div class="shell">
       <div class="shell-inner">
@@ -508,15 +451,15 @@
           <div class="game-center">
 
             <div class="topbar">
-              <div class="row" style="gap:12px">
-                <button class="chip active" data-mode-switch="bot" style="min-height:40px;font-size:13px">Bot</button>
-                <button class="chip" data-mode-switch="pvp" style="min-height:40px;font-size:13px">2 Spieler</button>
+              <div class="row">
+                <button class="chip active" data-mode-switch="bot">Bot</button>
+                <button class="chip" data-mode-switch="pvp">2P</button>
               </div>
               <button class="icon-btn" id="quickThemeBtn" aria-label="Themes">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3a9 9 0 1 0 9 9c0-1.38-1.12-2.5-2.5-2.5h-1.19a1.81 1.81 0 0 1-1.81-1.81 1.69 1.69 0 0 1 .5-1.19 2.5 2.5 0 0 0-1.77-4.27H12Z" stroke="currentColor" stroke-width="1.6"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3a9 9 0 1 0 9 9c0-1.38-1.12-2.5-2.5-2.5h-1.19a1.81 1.81 0 0 1-1.81-1.81 1.69 1.69 0 0 1 .5-1.19 2.5 2.5 0 0 0-1.77-4.27H12Z" stroke="currentColor" stroke-width="1.6"/></svg>
               </button>
               <button class="icon-btn" id="quickAchBtn" aria-label="Achievements">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 1 1-10 0V4Zm10 1h2a2 2 0 0 1 0 4h-2M7 5H5a2 2 0 0 0 0 4h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 1 1-10 0V4Zm10 1h2a2 2 0 0 1 0 4h-2M7 5H5a2 2 0 0 0 0 4h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
               </button>
             </div>
 
@@ -529,23 +472,23 @@
 
             <div class="score-row">
               <div class="score">
-                <span class="muted small" id="xLabel">X</span>
+                <div class="slabel" id="xLabel">X</div>
                 <div class="value" id="scoreX">0</div>
               </div>
               <div class="score">
-                <span class="muted small" id="oLabel">Bot</span>
+                <div class="slabel" id="oLabel">Bot</div>
                 <div class="value" id="scoreO">0</div>
               </div>
               <div class="score">
-                <span class="muted small">Remis</span>
+                <div class="slabel">Remis</div>
                 <div class="value" id="scoreD">0</div>
               </div>
             </div>
 
             <div class="toolbar">
-              <button class="btn primary" id="restartBtn">Neue Runde</button>
-              <button class="btn soft" id="themeInlineBtn">Themes</button>
-              <button class="btn soft" id="achievementBtn">Achievements</button>
+              <button class="btn primary" id="restartBtn">Neu</button>
+              <button class="btn soft" id="themeInlineBtn">Theme</button>
+              <button class="btn soft" id="achievementBtn">Ach.</button>
               <button class="btn ghost" id="homeBtn">Menü</button>
             </div>
 
@@ -561,10 +504,10 @@
       <div class="panel-head">
         <div>
           <h2>Themes</h2>
-          <p id="themeProgress">3 / 15 freigeschaltet</p>
+          <p id="themeProgress" class="muted small">3 / 15 freigeschaltet</p>
         </div>
         <button class="icon-btn" data-close-panel="themePanel">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
       </div>
       <div class="panel-body">
@@ -573,16 +516,16 @@
     </div>
   </aside>
 
-  <!-- ACHIEVEMENT PANEL -->
+  <!-- ACH PANEL -->
   <aside class="panel" id="achievementPanel">
     <div class="panel-card">
       <div class="panel-head">
         <div>
           <h2>Achievements</h2>
-          <p id="achievementProgress">0 / 25 freigeschaltet</p>
+          <p id="achievementProgress" class="muted small">0 / 25 freigeschaltet</p>
         </div>
         <button class="icon-btn" data-close-panel="achievementPanel">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
       </div>
       <div class="panel-body">
@@ -592,60 +535,26 @@
   </aside>
 
   <script>
-    const STORAGE_KEY = "ttt-modern-full-v1";
-
-    const THEMES = [
-      { id:"white", name:"White", type:"standard", special:false, unlockText:"Standard",
-        desc:"Hell, klar, ruhig.",
-        vars:{bg:"#f6f8ff",bg2:"#e9eefb",surface:"rgba(255,255,255,.7)",surface2:"rgba(255,255,255,.88)",surface3:"rgba(230,236,250,.9)",text:"#0f172a",muted:"#5b6785",line:"rgba(15,23,42,.08)",accent:"#375dfb",accent2:"#0f9f82",success:"#16a34a",danger:"#e11d48",shadow:"0 20px 60px rgba(23,37,84,.12)",angle:"135deg",overlay:"transparent"} },
-      { id:"black", name:"Black", type:"standard", special:false, unlockText:"Standard",
-        desc:"Dunkel, modern, clean.",
-        vars:{bg:"#0b1020",bg2:"#121934",surface:"rgba(255,255,255,.07)",surface2:"rgba(255,255,255,.1)",surface3:"rgba(255,255,255,.14)",text:"#eef2ff",muted:"#96a0c8",line:"rgba(255,255,255,.1)",accent:"#7c9cff",accent2:"#5eead4",success:"#4ade80",danger:"#ff6b7a",shadow:"0 20px 60px rgba(0,0,0,.35)",angle:"135deg",overlay:"transparent"} },
-      { id:"inverted", name:"Inverted", type:"standard", special:true, unlockText:"Standard",
-        desc:"Hart, kontrastreich, kantig.",
-        vars:{bg:"#ffffff",bg2:"#dfe5f3",surface:"rgba(0,0,0,.06)",surface2:"rgba(0,0,0,.08)",surface3:"rgba(0,0,0,.11)",text:"#05070d",muted:"#505a72",line:"rgba(0,0,0,.12)",accent:"#111827",accent2:"#334155",success:"#0f766e",danger:"#991b1b",shadow:"0 18px 50px rgba(17,24,39,.12)",angle:"180deg",overlay:"transparent"} },
-
-      { id:"ocean", name:"Ocean", type:"play", special:false, unlockText:"Spiele 1 Match",
-        desc:"Kühle Tiefen mit blaugrünem Glow.",
-        vars:{bg:"#07131e",bg2:"#0a2231",surface:"rgba(122,215,255,.08)",surface2:"rgba(122,215,255,.11)",surface3:"rgba(122,215,255,.16)",text:"#e7fbff",muted:"#7bbcca",line:"rgba(123,188,202,.16)",accent:"#33b5ff",accent2:"#54f1cf",success:"#35d399",danger:"#ff6a89",shadow:"0 22px 60px rgba(0,20,30,.42)",angle:"135deg",overlay:"transparent"} },
-      { id:"forest", name:"Forest", type:"play", special:false, unlockText:"Spiele 3 Matches",
-        desc:"Tiefes Grün mit ruhigem Kontrast.",
-        vars:{bg:"#07170f",bg2:"#0b2618",surface:"rgba(111,255,172,.06)",surface2:"rgba(111,255,172,.09)",surface3:"rgba(111,255,172,.14)",text:"#effff5",muted:"#8fb8a0",line:"rgba(144,255,181,.14)",accent:"#3ddc84",accent2:"#86efac",success:"#22c55e",danger:"#ff7b8e",shadow:"0 22px 60px rgba(0,24,10,.38)",angle:"145deg",overlay:"transparent"} },
-      { id:"rose", name:"Rose", type:"play", special:false, unlockText:"Spiele 7 Matches",
-        desc:"Weich, elegant, leicht neon.",
-        vars:{bg:"#180811",bg2:"#2a0c19",surface:"rgba(255,134,194,.08)",surface2:"rgba(255,134,194,.11)",surface3:"rgba(255,134,194,.16)",text:"#fff1f8",muted:"#c8a1b6",line:"rgba(255,182,218,.14)",accent:"#ff5ca8",accent2:"#ff9cc7",success:"#34d399",danger:"#fb7185",shadow:"0 22px 60px rgba(34,8,20,.38)",angle:"135deg",overlay:"transparent"} },
-      { id:"sunset", name:"Sunset", type:"play", special:true, unlockText:"Spiele 15 Matches",
-        desc:"Warm, filmisch, extra weich.",
-        vars:{bg:"#201019",bg2:"#48243a",surface:"rgba(255,178,102,.08)",surface2:"rgba(255,178,102,.12)",surface3:"rgba(255,138,123,.16)",text:"#fff5ee",muted:"#d6b2a1",line:"rgba(255,208,154,.16)",accent:"#ff8a65",accent2:"#ffc36f",success:"#86efac",danger:"#ff6b6b",shadow:"0 24px 64px rgba(48,22,23,.42)",angle:"160deg",overlay:"transparent"} },
-      { id:"steel", name:"Steel", type:"play", special:false, unlockText:"Spiele 30 Matches",
-        desc:"Kühl, technisch, nüchtern.",
-        vars:{bg:"#0a0f16",bg2:"#161d27",surface:"rgba(176,190,210,.08)",surface2:"rgba(176,190,210,.11)",surface3:"rgba(176,190,210,.16)",text:"#edf3fa",muted:"#94a3b8",line:"rgba(203,213,225,.12)",accent:"#8aa4ff",accent2:"#8bd3dd",success:"#4ade80",danger:"#fb7185",shadow:"0 20px 60px rgba(0,0,0,.42)",angle:"135deg",overlay:"transparent"} },
-
-      { id:"mint", name:"Mint", type:"achievement", special:false, unlockText:"Achievement: Erster Sieg",
-        desc:"Frisch und sauber.",
-        vars:{bg:"#061815",bg2:"#0c2d27",surface:"rgba(116,255,220,.07)",surface2:"rgba(116,255,220,.11)",surface3:"rgba(116,255,220,.15)",text:"#ebfffb",muted:"#9dc9c2",line:"rgba(152,255,226,.15)",accent:"#4adeb6",accent2:"#8bf5de",success:"#22c55e",danger:"#ff758f",shadow:"0 22px 60px rgba(0,22,18,.38)",angle:"140deg",overlay:"transparent"} },
-      { id:"coral", name:"Coral", type:"achievement", special:false, unlockText:"Achievement: Sammler I",
-        desc:"Warme Akzente, sanftes Rot.",
-        vars:{bg:"#1b0c0b",bg2:"#301413",surface:"rgba(255,140,120,.08)",surface2:"rgba(255,140,120,.12)",surface3:"rgba(255,140,120,.16)",text:"#fff5f2",muted:"#d6aba3",line:"rgba(255,184,169,.15)",accent:"#ff7b72",accent2:"#ffb199",success:"#4ade80",danger:"#fb7185",shadow:"0 22px 60px rgba(25,10,9,.4)",angle:"135deg",overlay:"transparent"} },
-      { id:"glacier", name:"Glacier", type:"achievement", special:true, unlockText:"Achievement: Taktiker",
-        desc:"Bright glass look mit Frost.",
-        vars:{bg:"#091018",bg2:"#132434",surface:"rgba(200,238,255,.09)",surface2:"rgba(200,238,255,.13)",surface3:"rgba(255,255,255,.18)",text:"#f4fbff",muted:"#9ebacd",line:"rgba(220,242,255,.18)",accent:"#8dd6ff",accent2:"#d7f2ff",success:"#86efac",danger:"#ff8da1",shadow:"0 24px 68px rgba(3,10,16,.42)",angle:"145deg",overlay:"rgba(255,255,255,.02)"} },
-      { id:"royal", name:"Royal", type:"achievement", special:false, unlockText:"Achievement: Doppelsieg",
-        desc:"Dunkles Violett mit Premium-Kontrast.",
-        vars:{bg:"#11081f",bg2:"#22103d",surface:"rgba(184,120,255,.08)",surface2:"rgba(184,120,255,.12)",surface3:"rgba(184,120,255,.16)",text:"#f6f0ff",muted:"#b6a4d5",line:"rgba(215,188,255,.16)",accent:"#a855f7",accent2:"#d8b4fe",success:"#4ade80",danger:"#ff7f9f",shadow:"0 24px 64px rgba(16,8,28,.42)",angle:"135deg",overlay:"transparent"} },
-      { id:"ember", name:"Ember", type:"achievement", special:false, unlockText:"Achievement: Bot-Jäger",
-        desc:"Heiß, tief und kontraststark.",
-        vars:{bg:"#160b08",bg2:"#33130d",surface:"rgba(255,132,0,.08)",surface2:"rgba(255,132,0,.12)",surface3:"rgba(255,132,0,.16)",text:"#fff4ec",muted:"#d0ad95",line:"rgba(255,190,120,.15)",accent:"#ff8c42",accent2:"#ffd166",success:"#86efac",danger:"#ff6b6b",shadow:"0 24px 68px rgba(26,12,6,.42)",angle:"150deg",overlay:"transparent"} },
-
-      { id:"wolfi", name:"Wolfi", type:"secret", special:true, unlockText:"Secret",
-        desc:"Neon, Raster, mehr Energie.",
-        vars:{bg:"#090811",bg2:"#1a1131",surface:"rgba(168,85,247,.08)",surface2:"rgba(168,85,247,.12)",surface3:"rgba(45,212,191,.15)",text:"#f7f3ff",muted:"#b6a8d8",line:"rgba(168,85,247,.18)",accent:"#a855f7",accent2:"#2dd4bf",success:"#4ade80",danger:"#fb7185",shadow:"0 28px 72px rgba(11,8,24,.48)",angle:"145deg",overlay:"transparent"} },
-      { id:"golden", name:"Golden", type:"golden", special:true, unlockText:"Sammle alle anderen Themes",
-        desc:"Die finale Variante.",
-        vars:{bg:"#120d05",bg2:"#2b1f08",surface:"rgba(255,215,0,.1)",surface2:"rgba(255,215,0,.14)",surface3:"rgba(255,239,158,.18)",text:"#fff7d6",muted:"#dfc982",line:"rgba(255,227,122,.2)",accent:"#ffcf33",accent2:"#fff0a6",success:"#c7f36b",danger:"#ff8f70",shadow:"0 30px 78px rgba(59,42,5,.54)",angle:"140deg",overlay:"rgba(255,215,0,.04)"} }
+    const STORAGE_KEY="ttt-modern-full-v1";
+    const THEMES=[
+      {id:"white",name:"White",type:"standard",special:false,unlockText:"Standard",desc:"Hell, klar, ruhig.",vars:{bg:"#f6f8ff",bg2:"#e9eefb",surface:"rgba(255,255,255,.7)",surface2:"rgba(255,255,255,.88)",surface3:"rgba(230,236,250,.9)",text:"#0f172a",muted:"#5b6785",line:"rgba(15,23,42,.08)",accent:"#375dfb",accent2:"#0f9f82",success:"#16a34a",danger:"#e11d48",shadow:"0 20px 60px rgba(23,37,84,.12)",angle:"135deg",overlay:"transparent"}},
+      {id:"black",name:"Black",type:"standard",special:false,unlockText:"Standard",desc:"Dunkel, modern, clean.",vars:{bg:"#0b1020",bg2:"#121934",surface:"rgba(255,255,255,.07)",surface2:"rgba(255,255,255,.1)",surface3:"rgba(255,255,255,.14)",text:"#eef2ff",muted:"#96a0c8",line:"rgba(255,255,255,.1)",accent:"#7c9cff",accent2:"#5eead4",success:"#4ade80",danger:"#ff6b7a",shadow:"0 20px 60px rgba(0,0,0,.35)",angle:"135deg",overlay:"transparent"}},
+      {id:"inverted",name:"Inverted",type:"standard",special:true,unlockText:"Standard",desc:"Hart, kontrastreich, kantig.",vars:{bg:"#ffffff",bg2:"#dfe5f3",surface:"rgba(0,0,0,.06)",surface2:"rgba(0,0,0,.08)",surface3:"rgba(0,0,0,.11)",text:"#05070d",muted:"#505a72",line:"rgba(0,0,0,.12)",accent:"#111827",accent2:"#334155",success:"#0f766e",danger:"#991b1b",shadow:"0 18px 50px rgba(17,24,39,.12)",angle:"180deg",overlay:"transparent"}},
+      {id:"ocean",name:"Ocean",type:"play",special:false,unlockText:"Spiele 1 Match",desc:"Kühle Tiefen mit blaugrünem Glow.",vars:{bg:"#07131e",bg2:"#0a2231",surface:"rgba(122,215,255,.08)",surface2:"rgba(122,215,255,.11)",surface3:"rgba(122,215,255,.16)",text:"#e7fbff",muted:"#7bbcca",line:"rgba(123,188,202,.16)",accent:"#33b5ff",accent2:"#54f1cf",success:"#35d399",danger:"#ff6a89",shadow:"0 22px 60px rgba(0,20,30,.42)",angle:"135deg",overlay:"transparent"}},
+      {id:"forest",name:"Forest",type:"play",special:false,unlockText:"Spiele 3 Matches",desc:"Tiefes Grün mit ruhigem Kontrast.",vars:{bg:"#07170f",bg2:"#0b2618",surface:"rgba(111,255,172,.06)",surface2:"rgba(111,255,172,.09)",surface3:"rgba(111,255,172,.14)",text:"#effff5",muted:"#8fb8a0",line:"rgba(144,255,181,.14)",accent:"#3ddc84",accent2:"#86efac",success:"#22c55e",danger:"#ff7b8e",shadow:"0 22px 60px rgba(0,24,10,.38)",angle:"145deg",overlay:"transparent"}},
+      {id:"rose",name:"Rose",type:"play",special:false,unlockText:"Spiele 7 Matches",desc:"Weich, elegant, leicht neon.",vars:{bg:"#180811",bg2:"#2a0c19",surface:"rgba(255,134,194,.08)",surface2:"rgba(255,134,194,.11)",surface3:"rgba(255,134,194,.16)",text:"#fff1f8",muted:"#c8a1b6",line:"rgba(255,182,218,.14)",accent:"#ff5ca8",accent2:"#ff9cc7",success:"#34d399",danger:"#fb7185",shadow:"0 22px 60px rgba(34,8,20,.38)",angle:"135deg",overlay:"transparent"}},
+      {id:"sunset",name:"Sunset",type:"play",special:true,unlockText:"Spiele 15 Matches",desc:"Warm, filmisch, extra weich.",vars:{bg:"#201019",bg2:"#48243a",surface:"rgba(255,178,102,.08)",surface2:"rgba(255,178,102,.12)",surface3:"rgba(255,138,123,.16)",text:"#fff5ee",muted:"#d6b2a1",line:"rgba(255,208,154,.16)",accent:"#ff8a65",accent2:"#ffc36f",success:"#86efac",danger:"#ff6b6b",shadow:"0 24px 64px rgba(48,22,23,.42)",angle:"160deg",overlay:"transparent"}},
+      {id:"steel",name:"Steel",type:"play",special:false,unlockText:"Spiele 30 Matches",desc:"Kühl, technisch, nüchtern.",vars:{bg:"#0a0f16",bg2:"#161d27",surface:"rgba(176,190,210,.08)",surface2:"rgba(176,190,210,.11)",surface3:"rgba(176,190,210,.16)",text:"#edf3fa",muted:"#94a3b8",line:"rgba(203,213,225,.12)",accent:"#8aa4ff",accent2:"#8bd3dd",success:"#4ade80",danger:"#fb7185",shadow:"0 20px 60px rgba(0,0,0,.42)",angle:"135deg",overlay:"transparent"}},
+      {id:"mint",name:"Mint",type:"achievement",special:false,unlockText:"Achievement: Erster Sieg",desc:"Frisch und sauber.",vars:{bg:"#061815",bg2:"#0c2d27",surface:"rgba(116,255,220,.07)",surface2:"rgba(116,255,220,.11)",surface3:"rgba(116,255,220,.15)",text:"#ebfffb",muted:"#9dc9c2",line:"rgba(152,255,226,.15)",accent:"#4adeb6",accent2:"#8bf5de",success:"#22c55e",danger:"#ff758f",shadow:"0 22px 60px rgba(0,22,18,.38)",angle:"140deg",overlay:"transparent"}},
+      {id:"coral",name:"Coral",type:"achievement",special:false,unlockText:"Achievement: Sammler I",desc:"Warme Akzente, sanftes Rot.",vars:{bg:"#1b0c0b",bg2:"#301413",surface:"rgba(255,140,120,.08)",surface2:"rgba(255,140,120,.12)",surface3:"rgba(255,140,120,.16)",text:"#fff5f2",muted:"#d6aba3",line:"rgba(255,184,169,.15)",accent:"#ff7b72",accent2:"#ffb199",success:"#4ade80",danger:"#fb7185",shadow:"0 22px 60px rgba(25,10,9,.4)",angle:"135deg",overlay:"transparent"}},
+      {id:"glacier",name:"Glacier",type:"achievement",special:true,unlockText:"Achievement: Taktiker",desc:"Bright glass look mit Frost.",vars:{bg:"#091018",bg2:"#132434",surface:"rgba(200,238,255,.09)",surface2:"rgba(200,238,255,.13)",surface3:"rgba(255,255,255,.18)",text:"#f4fbff",muted:"#9ebacd",line:"rgba(220,242,255,.18)",accent:"#8dd6ff",accent2:"#d7f2ff",success:"#86efac",danger:"#ff8da1",shadow:"0 24px 68px rgba(3,10,16,.42)",angle:"145deg",overlay:"rgba(255,255,255,.02)"}},
+      {id:"royal",name:"Royal",type:"achievement",special:false,unlockText:"Achievement: Doppelsieg",desc:"Dunkles Violett mit Premium-Kontrast.",vars:{bg:"#11081f",bg2:"#22103d",surface:"rgba(184,120,255,.08)",surface2:"rgba(184,120,255,.12)",surface3:"rgba(184,120,255,.16)",text:"#f6f0ff",muted:"#b6a4d5",line:"rgba(215,188,255,.16)",accent:"#a855f7",accent2:"#d8b4fe",success:"#4ade80",danger:"#ff7f9f",shadow:"0 24px 64px rgba(16,8,28,.42)",angle:"135deg",overlay:"transparent"}},
+      {id:"ember",name:"Ember",type:"achievement",special:false,unlockText:"Achievement: Bot-Jäger",desc:"Heiß, tief und kontraststark.",vars:{bg:"#160b08",bg2:"#33130d",surface:"rgba(255,132,0,.08)",surface2:"rgba(255,132,0,.12)",surface3:"rgba(255,132,0,.16)",text:"#fff4ec",muted:"#d0ad95",line:"rgba(255,190,120,.15)",accent:"#ff8c42",accent2:"#ffd166",success:"#86efac",danger:"#ff6b6b",shadow:"0 24px 68px rgba(26,12,6,.42)",angle:"150deg",overlay:"transparent"}},
+      {id:"wolfi",name:"Wolfi",type:"secret",special:true,unlockText:"Secret",desc:"Neon, Raster, mehr Energie.",vars:{bg:"#090811",bg2:"#1a1131",surface:"rgba(168,85,247,.08)",surface2:"rgba(168,85,247,.12)",surface3:"rgba(45,212,191,.15)",text:"#f7f3ff",muted:"#b6a8d8",line:"rgba(168,85,247,.18)",accent:"#a855f7",accent2:"#2dd4bf",success:"#4ade80",danger:"#fb7185",shadow:"0 28px 72px rgba(11,8,24,.48)",angle:"145deg",overlay:"transparent"}},
+      {id:"golden",name:"Golden",type:"golden",special:true,unlockText:"Sammle alle anderen Themes",desc:"Die finale Variante.",vars:{bg:"#120d05",bg2:"#2b1f08",surface:"rgba(255,215,0,.1)",surface2:"rgba(255,215,0,.14)",surface3:"rgba(255,239,158,.18)",text:"#fff7d6",muted:"#dfc982",line:"rgba(255,227,122,.2)",accent:"#ffcf33",accent2:"#fff0a6",success:"#c7f36b",danger:"#ff8f70",shadow:"0 30px 78px rgba(59,42,5,.54)",angle:"140deg",overlay:"rgba(255,215,0,.04)"}}
     ];
 
-    const ACHIEVEMENTS = [
+    const ACHIEVEMENTS=[
       {id:"first_game",name:"Erster Zug",desc:"Spiele 1 Match.",hidden:false,check:s=>s.stats.totalGames>=1},
       {id:"five_games",name:"Warmgelaufen",desc:"Spiele 5 Matches.",hidden:false,check:s=>s.stats.totalGames>=5},
       {id:"twentyfive_games",name:"Dauerlauf",desc:"Spiele 25 Matches.",hidden:false,check:s=>s.stats.totalGames>=25},
@@ -661,7 +570,6 @@
       {id:"mirror_master",name:"Doppelte Rolle",desc:"Gewinne einmal als X und einmal als O.",hidden:false,check:s=>s.stats.winsX>=1&&s.stats.winsO>=1},
       {id:"collector",name:"Sammler I",desc:"Schalte 5 Achievements frei.",hidden:false,check:s=>s.unlockedAchievements.length>=5},
       {id:"trendsetter",name:"Trendsetter",desc:"Schalte 5 Themes frei.",hidden:false,check:s=>s.themesUnlocked.length>=5},
-
       {id:"wolfi_secret",name:"Wolfsignal",desc:"Du hast etwas Kleines entdeckt.",hidden:true,check:s=>s.stats.secretClicks>=5},
       {id:"center_start",name:"Zentrumskontrolle",desc:"Gewinne nach einem Start im Zentrum.",hidden:true,check:s=>s.stats.centerWins>=1},
       {id:"diagonal_king",name:"Diagonal",desc:"Gewinne über eine Diagonale.",hidden:true,check:s=>s.stats.diagonalWins>=1},
@@ -674,35 +582,29 @@
       {id:"all_in",name:"All In",desc:"Schalte alle anderen Achievements frei.",hidden:true,check:s=>s.unlockedAchievements.length>=24}
     ];
 
-    const THEME_BY_ACH = {first_win:"mint",collector:"coral",strategist:"glacier",double_streak:"royal",bot_hunter:"ember"};
-    const PLAY_THEME_UNLOCKS = [{games:1,theme:"ocean"},{games:3,theme:"forest"},{games:7,theme:"rose"},{games:15,theme:"sunset"},{games:30,theme:"steel"}];
-    const WIN_LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    const SPECIAL_THEMES = new Set(["inverted","sunset","glacier","wolfi","golden"]);
+    const THEME_BY_ACH={first_win:"mint",collector:"coral",strategist:"glacier",double_streak:"royal",bot_hunter:"ember"};
+    const PLAY_THEME_UNLOCKS=[{games:1,theme:"ocean"},{games:3,theme:"forest"},{games:7,theme:"rose"},{games:15,theme:"sunset"},{games:30,theme:"steel"}];
+    const WIN_LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    const SPECIAL_THEMES=new Set(["inverted","sunset","glacier","wolfi","golden"]);
+    const $=sel=>document.querySelector(sel);
+    const $$=sel=>[...document.querySelectorAll(sel)];
 
-    const $ = sel => document.querySelector(sel);
-    const $$ = sel => [...document.querySelectorAll(sel)];
-
-    const defaultState = () => ({
-      mode:"bot",
-      currentTheme:"black",
+    const defaultState=()=>({
+      mode:"bot",currentTheme:"black",
       themesUnlocked:["white","black","inverted"],
       unlockedAchievements:[],
       scores:{X:0,O:0,D:0},
       board:Array(9).fill(""),
-      currentPlayer:"X",
-      gameOver:false,
-      winningLine:[],
+      currentPlayer:"X",gameOver:false,winningLine:[],
       round:{moves:0,startTime:Date.now(),firstMove:{X:null,O:null}},
       stats:{totalGames:0,totalMoves:0,totalWins:0,winsX:0,winsO:0,draws:0,pvpGames:0,botGames:0,pvpDraws:0,currentStreak:0,bestStreak:0,themeOpens:0,themeChanges:0,secretClicks:0,earlyWins:0,centerWins:0,diagonalWins:0,cornerWins:0,quickWins:0,botBeats:0}
     });
 
     function loadState(){
       try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if(!raw) return defaultState();
-        const p = JSON.parse(raw);
-        const b = defaultState();
-        const m = {...b,...p,scores:{...b.scores,...p.scores},round:{...b.round,...p.round,firstMove:{...b.round.firstMove,...(p.round?.firstMove||{})}},stats:{...b.stats,...p.stats}};
+        const raw=localStorage.getItem(STORAGE_KEY);if(!raw) return defaultState();
+        const p=JSON.parse(raw),b=defaultState();
+        const m={...b,...p,scores:{...b.scores,...p.scores},round:{...b.round,...p.round,firstMove:{...b.round.firstMove,...(p.round?.firstMove||{})}},stats:{...b.stats,...p.stats}};
         m.themesUnlocked=[...new Set(m.themesUnlocked.filter(id=>THEMES.some(t=>t.id===id)))];
         m.unlockedAchievements=[...new Set(m.unlockedAchievements.filter(id=>ACHIEVEMENTS.some(a=>a.id===id)))];
         if(!THEMES.some(t=>t.id===m.currentTheme&&m.themesUnlocked.includes(t.id))) m.currentTheme=m.themesUnlocked[0]||"black";
@@ -711,31 +613,22 @@
       }catch{return defaultState()}
     }
 
-    const state = loadState();
-
-    function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
-
-    function resetProgress(){
-      const f=defaultState();Object.keys(state).forEach(k=>delete state[k]);Object.assign(state,f);
-      applyTheme(state.currentTheme,true);renderAll();showScreen("start");toast("Fortschritt zurückgesetzt");saveState();
-    }
+    const state=loadState();
+    const save=()=>localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
 
     function applyTheme(id,silent=false){
       if(!state.themesUnlocked.includes(id)) return;
-      const t=THEMES.find(t=>t.id===id);
-      state.currentTheme=id;
-      const v=t.vars;
-      const r=document.documentElement.style;
+      const t=THEMES.find(t=>t.id===id);state.currentTheme=id;
+      const v=t.vars,r=document.documentElement.style;
       r.setProperty("--bg",v.bg);r.setProperty("--bg-2",v.bg2);
       r.setProperty("--surface",v.surface);r.setProperty("--surface-2",v.surface2);r.setProperty("--surface-3",v.surface3);
       r.setProperty("--text",v.text);r.setProperty("--muted",v.muted);r.setProperty("--line",v.line);
       r.setProperty("--accent",v.accent);r.setProperty("--accent-2",v.accent2);
       r.setProperty("--success",v.success);r.setProperty("--danger",v.danger);
       r.setProperty("--shadow",v.shadow);r.setProperty("--special-angle",v.angle);r.setProperty("--special-overlay",v.overlay);
-      document.body.dataset.theme=id;
-      document.body.dataset.special=SPECIAL_THEMES.has(id)?id:"";
-      if(!silent){state.stats.themeChanges++;checkAllUnlocks();saveState()}
-      renderThemeHeader();renderPanels();renderStats();
+      document.body.dataset.theme=id;document.body.dataset.special=SPECIAL_THEMES.has(id)?id:"";
+      if(!silent){state.stats.themeChanges++;checkAllUnlocks();save()}
+      renderThemeHeader();renderPanels();
     }
 
     function showScreen(n){
@@ -746,7 +639,7 @@
     function openPanel(id){
       $("#overlay").classList.add("show");
       document.getElementById(id).classList.add("open");
-      if(id==="themePanel"){state.stats.themeOpens++;checkAllUnlocks();saveState()}
+      if(id==="themePanel"){state.stats.themeOpens++;checkAllUnlocks();save()}
       renderPanels();
     }
 
@@ -756,51 +649,45 @@
     }
 
     function toast(title,text=""){
-      const wrap=$("#toastWrap");
-      const el=document.createElement("div");
-      el.className="toast";
-      el.innerHTML=`<strong>${title}</strong>${text?`<span class="muted small">${text}</span>`:""}`;
-      wrap.appendChild(el);
-      setTimeout(()=>{el.style.opacity="0";el.style.transform="translateY(-8px) scale(.97)"},2300);
-      setTimeout(()=>el.remove(),2800);
+      const el=document.createElement("div");el.className="toast";
+      el.innerHTML=`<strong style="font-size:13px">${title}</strong>${text?`<span class="muted small">${text}</span>`:""}`;
+      $("#toastWrap").appendChild(el);
+      setTimeout(()=>{el.style.opacity="0";el.style.transform="translateY(-6px) scale(.97)"},2200);
+      setTimeout(()=>el.remove(),2700);
     }
 
     function renderThemeHeader(){
       const t=THEMES.find(t=>t.id===state.currentTheme);
       $("#activeThemeName").textContent=t.name;
       $("#activeThemeDesc").textContent=t.desc;
-      $("#activeThemeMeta").innerHTML=`<span class="pill">${t.type}</span>${t.special?`<span class="pill special">special</span>`:``}<span class="pill">${state.themesUnlocked.length} / 15</span>`;
+      $("#activeThemeMeta").innerHTML=`<span class="pill">${t.type}</span>${t.special?`<span class="pill special">special</span>`:""}<span class="pill">${state.themesUnlocked.length}/15</span>`;
     }
 
-    function renderThemeCards(){
+    function renderPanels(){
       $("#themeProgress").textContent=`${state.themesUnlocked.length} / 15 freigeschaltet`;
+      $("#achievementProgress").textContent=`${state.unlockedAchievements.length} / 25 freigeschaltet`;
+      $("#startAchCount").textContent=`${state.unlockedAchievements.length}/25`;
+      $("#startThemeCount").textContent=`${state.themesUnlocked.length}/15`;
+      $("#startGameCount").textContent=`${state.stats.totalGames}`;
+      renderThemeHeader();
+
       $("#themeGrid").innerHTML=THEMES.map(t=>{
         const u=state.themesUnlocked.includes(t.id),s=state.currentTheme===t.id;
         return`<button class="theme-card ${u?"unlocked":"locked"} ${s?"selected":""}" ${u?`data-pick-theme="${t.id}"`:""}>
-          <div class="meta"><span class="pill">${t.name}</span><span class="pill">${t.type}</span>${t.special?`<span class="pill special">special</span>`:``}</div>
-          <h3>${u?t.name:"Locked"}</h3>
+          <div class="meta"><span class="pill">${t.name}</span><span class="pill">${t.type}</span>${t.special?`<span class="pill special">S</span>`:""}</div>
+          <h3 style="font-size:14px">${u?t.name:"Locked"}</h3>
           <p class="small">${u?t.desc:t.unlockText}</p>
         </button>`;
       }).join("");
-    }
 
-    function renderAchievementCards(){
-      $("#achievementProgress").textContent=`${state.unlockedAchievements.length} / 25 freigeschaltet`;
       $("#achievementGrid").innerHTML=ACHIEVEMENTS.map(a=>{
         const u=state.unlockedAchievements.includes(a.id);
         return`<div class="ach-card ${u?"unlocked":"locked"}">
           <div class="meta"><span class="pill">${u?"frei":"locked"}</span>${a.hidden?`<span class="pill">${u?"secret":"hidden"}</span>`:`<span class="pill">visible</span>`}</div>
-          <h3>${u||!a.hidden?a.name:"Verstecktes Achievement"}</h3>
+          <h3 style="font-size:14px">${u||!a.hidden?a.name:"Verstecktes Achievement"}</h3>
           <p class="small">${u||!a.hidden?a.desc:"???"}</p>
         </div>`;
       }).join("");
-    }
-
-    function renderPanels(){
-      renderThemeCards();renderAchievementCards();renderThemeHeader();
-      $("#startAchCount").textContent=`${state.unlockedAchievements.length} / 25`;
-      $("#startThemeCount").textContent=`${state.themesUnlocked.length} / 15`;
-      $("#startGameCount").textContent=`${state.stats.totalGames}`;
     }
 
     function renderMode(){
@@ -818,55 +705,46 @@
     function renderBoard(){
       $("#board").innerHTML=state.board.map((cell,i)=>{
         const cls=["cell",cell?`mark-${cell.toLowerCase()}`:"",state.gameOver?"locked":"",state.winningLine.includes(i)?"win":""].filter(Boolean).join(" ");
-        return`<button class="${cls}" data-cell="${i}" ${cell?"disabled":""}>${cell}</button>`;
+        return`<button class="${cls}" data-cell="${i}" ${cell||state.gameOver?"disabled":""}>${cell}</button>`;
       }).join("");
     }
 
     function updateStatus(){
       const main=$("#statusMain"),sub=$("#statusSub");
       if(state.gameOver){
-        if(state.winner){
-          const who=state.mode==="bot"&&state.winner==="O"?"Bot":state.winner;
-          main.textContent=`${who} gewinnt`;sub.textContent="Neue Runde starten oder weiterspielen.";
-        }else{main.textContent="Remis";sub.textContent="Das Board ist voll."}
+        if(state.winner){const who=state.mode==="bot"&&state.winner==="O"?"Bot":state.winner;main.textContent=`${who} gewinnt`;sub.textContent="Neue Runde oder weiterspielen."}
+        else{main.textContent="Remis";sub.textContent="Das Board ist voll."}
         return;
       }
       if(state.mode==="bot"&&state.currentPlayer==="O"){main.textContent="Bot denkt";sub.textContent="Kurz warten."}
-      else{
-        main.textContent=`${state.currentPlayer} ist dran`;
-        sub.textContent=state.mode==="bot"?(state.currentPlayer==="X"?"Du bist X.":"Bot ist O."):"Wechselt euch ab.";
-      }
+      else{main.textContent=`${state.currentPlayer} ist dran`;sub.textContent=state.mode==="bot"?(state.currentPlayer==="X"?"Du bist X.":"Bot ist O."):"Wechselt euch ab."}
     }
 
-    function renderAll(){renderMode();renderStats();renderBoard();updateStatus();renderPanels();saveState()}
+    function renderAll(){renderMode();renderStats();renderBoard();updateStatus();renderPanels();save()}
 
-    function setMode(mode){state.mode=mode;renderMode();restartRound();saveState()}
+    function setMode(mode){state.mode=mode;renderMode();restartRound();save()}
 
     function restartRound(){
       state.board=Array(9).fill("");state.currentPlayer="X";
       state.gameOver=false;state.winner=null;state.winningLine=[];
       state.round={moves:0,startTime:Date.now(),firstMove:{X:null,O:null}};
-      renderBoard();updateStatus();saveState();
+      renderBoard();updateStatus();save();
     }
 
     function evaluateBoard(board){
-      for(const line of WIN_LINES){
-        const[a,b,c]=line;
-        if(board[a]&&board[a]===board[b]&&board[b]===board[c]) return{winner:board[a],line};
-      }
+      for(const line of WIN_LINES){const[a,b,c]=line;if(board[a]&&board[a]===board[b]&&board[b]===board[c]) return{winner:board[a],line}}
       if(board.every(Boolean)) return{winner:null,line:[],draw:true};
       return{winner:null,line:[],draw:false};
     }
 
     function makeMove(index,symbol){
       if(state.board[index]||state.gameOver) return;
-      state.board[index]=symbol;
-      state.round.moves++;state.stats.totalMoves++;
+      state.board[index]=symbol;state.round.moves++;state.stats.totalMoves++;
       if(state.round.firstMove[symbol]===null) state.round.firstMove[symbol]=index;
       const result=evaluateBoard(state.board);
       if(result.winner||result.draw) finishRound(result);
       else state.currentPlayer=symbol==="X"?"O":"X";
-      renderBoard();updateStatus();renderStats();saveState();
+      renderBoard();updateStatus();renderStats();save();
     }
 
     function finishRound(result){
@@ -874,11 +752,9 @@
       state.stats.totalGames++;
       if(state.mode==="bot") state.stats.botGames++;else state.stats.pvpGames++;
       if(result.winner){
-        state.winner=result.winner;
-        state.scores[result.winner]++;state.stats.totalWins++;
+        state.winner=result.winner;state.scores[result.winner]++;state.stats.totalWins++;
         state.stats.currentStreak++;state.stats.bestStreak=Math.max(state.stats.bestStreak,state.stats.currentStreak);
-        if(result.winner==="X") state.stats.winsX++;
-        if(result.winner==="O") state.stats.winsO++;
+        if(result.winner==="X") state.stats.winsX++;if(result.winner==="O") state.stats.winsO++;
         if(state.mode==="bot"&&result.winner==="X") state.stats.botBeats++;
         if(state.round.moves<=6) state.stats.earlyWins++;
         const open=state.round.firstMove[result.winner];
@@ -896,13 +772,13 @@
     function unlockAchievement(id){
       if(state.unlockedAchievements.includes(id)) return false;
       const a=ACHIEVEMENTS.find(a=>a.id===id);if(!a) return false;
-      state.unlockedAchievements.push(id);toast("Achievement freigeschaltet",a.name);return true;
+      state.unlockedAchievements.push(id);toast("Achievement",a.name);return true;
     }
 
     function unlockTheme(id,silent=false){
       if(state.themesUnlocked.includes(id)) return false;
       const t=THEMES.find(t=>t.id===id);if(!t) return false;
-      state.themesUnlocked.push(id);if(!silent) toast("Theme freigeschaltet",t.name);return true;
+      state.themesUnlocked.push(id);if(!silent) toast("Theme frei",t.name);return true;
     }
 
     function checkAchievements(){
@@ -921,49 +797,35 @@
         if(THEMES.filter(t=>t.id!=="golden").every(t=>state.themesUnlocked.includes(t.id))&&unlockTheme("golden")) changed=true;
         loops++;
       }while(changed&&loops<10);
-      renderPanels();renderStats();saveState();
+      renderPanels();renderStats();save();
     }
 
     function botMove(){
       if(state.mode!=="bot"||state.currentPlayer!=="O"||state.gameOver) return;
-      const empty=state.board.map((v,i)=>v?null:i).filter(v=>v!==null);
-      if(!empty.length) return;
-      const precise=state.stats.totalGames<8?0.82:0.9;
+      const empty=state.board.map((v,i)=>v?null:i).filter(v=>v!==null);if(!empty.length) return;
+      const precise=state.stats.totalGames<8?.82:.9;
       const move=Math.random()>precise?empty[Math.floor(Math.random()*empty.length)]:bestBotMove(state.board);
       makeMove(move,"O");
     }
 
     function bestBotMove(board){
       let best=-Infinity,moves=[];
-      for(let i=0;i<9;i++){
-        if(board[i]) continue;
-        board[i]="O";const s=minimax(board,false,0);board[i]="";
-        if(s>best){best=s;moves=[i]}else if(s===best) moves.push(i);
-      }
+      for(let i=0;i<9;i++){if(board[i]) continue;board[i]="O";const s=minimax(board,false,0);board[i]="";if(s>best){best=s;moves=[i]}else if(s===best) moves.push(i)}
       return moves[Math.floor(Math.random()*moves.length)];
     }
 
     function minimax(board,isMax,depth){
       const r=evaluateBoard(board);
-      if(r.winner==="O") return 10-depth;
-      if(r.winner==="X") return depth-10;
-      if(r.draw) return 0;
-      if(isMax){
-        let b=-Infinity;
-        for(let i=0;i<9;i++){if(board[i]) continue;board[i]="O";b=Math.max(b,minimax(board,false,depth+1));board[i]=""}
-        return b;
-      }else{
-        let b=Infinity;
-        for(let i=0;i<9;i++){if(board[i]) continue;board[i]="X";b=Math.min(b,minimax(board,true,depth+1));board[i]=""}
-        return b;
-      }
+      if(r.winner==="O") return 10-depth;if(r.winner==="X") return depth-10;if(r.draw) return 0;
+      if(isMax){let b=-Infinity;for(let i=0;i<9;i++){if(board[i]) continue;board[i]="O";b=Math.max(b,minimax(board,false,depth+1));board[i]=""}return b}
+      else{let b=Infinity;for(let i=0;i<9;i++){if(board[i]) continue;board[i]="X";b=Math.min(b,minimax(board,true,depth+1));board[i]=""}return b}
     }
 
     function handleCell(index){
       if(state.gameOver||state.board[index]) return;
       if(state.mode==="bot"&&state.currentPlayer==="O") return;
       makeMove(index,state.currentPlayer);
-      if(state.mode==="bot"&&!state.gameOver&&state.currentPlayer==="O"){updateStatus();setTimeout(botMove,380)}
+      if(state.mode==="bot"&&!state.gameOver&&state.currentPlayer==="O"){updateStatus();setTimeout(botMove,360)}
     }
 
     document.addEventListener("click",e=>{
@@ -982,7 +844,6 @@
     $("#overlay").addEventListener("click",closePanels);
     $("#startBtn").addEventListener("click",()=>{restartRound();showScreen("game");renderAll()});
     $("#homeBtn").addEventListener("click",()=>showScreen("start"));
-    $("#homeInlineBtn")?.addEventListener("click",()=>showScreen("start"));
     $("#restartBtn").addEventListener("click",restartRound);
     $("#themeInlineBtn").addEventListener("click",()=>openPanel("themePanel"));
     $("#quickThemeBtn").addEventListener("click",()=>openPanel("themePanel"));
@@ -990,14 +851,14 @@
     $("#achievementBtn").addEventListener("click",()=>openPanel("achievementPanel"));
     $("#quickAchBtn").addEventListener("click",()=>openPanel("achievementPanel"));
     $("#openAchievementsFromStart").addEventListener("click",()=>openPanel("achievementPanel"));
-    $("#resetProgressBtn").addEventListener("click",resetProgress);
+    $("#resetProgressBtn").addEventListener("click",()=>{const f=defaultState();Object.keys(state).forEach(k=>delete state[k]);Object.assign(state,f);applyTheme(state.currentTheme,true);renderAll();showScreen("start");toast("Fortschritt zurückgesetzt");save()});
 
     $("#wolfTrigger").addEventListener("click",()=>{
       state.stats.secretClicks++;
-      if(state.stats.secretClicks<5){toast(`Secret ${state.stats.secretClicks}/5`)}
-      else if(!state.themesUnlocked.includes("wolfi")){unlockTheme("wolfi");checkAllUnlocks();applyTheme("wolfi",true);toast("Secret Theme","Wolfi freigeschaltet");saveState()}
-      else{toast("Schon freigeschaltet")}
-      checkAllUnlocks();saveState();
+      if(state.stats.secretClicks<5) toast(`Secret ${state.stats.secretClicks}/5`);
+      else if(!state.themesUnlocked.includes("wolfi")){unlockTheme("wolfi");checkAllUnlocks();applyTheme("wolfi",true);toast("Secret Theme","Wolfi freigeschaltet");save()}
+      else toast("Schon freigeschaltet");
+      checkAllUnlocks();save();
     });
 
     applyTheme(state.currentTheme,true);
