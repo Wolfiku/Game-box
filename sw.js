@@ -1,15 +1,14 @@
-// ── Game-Box sw.js v3 ────────────────────────────────────────────────────────
+// ── Game-Box sw.js v4 ────────────────────────────────────────────────────────
 // Strategy:
 //   Shell files (HTML/JS/CSS)  → Network-first, cache fallback
 //   Game assets (images/html)  → Cache-first, network fallback
 //   gamelist.json              → Network-first always (so new games show up)
+// Auto-update: when a new SW is detected, all open clients reload automatically.
 
-const CACHE_VERSION = 'gamebox-v3';
+const CACHE_VERSION = 'gamebox-v4';
 
-// Detect base path dynamically so the SW works on any host (GitHub Pages, Plesk, etc.)
 const BASE = self.location.pathname.replace('sw.js', '');
 
-// Files to pre-cache on install
 const PRECACHE = [
   BASE,
   BASE + 'index.html',
@@ -20,7 +19,6 @@ const PRECACHE = [
   BASE + 'icons/icon-512.png',
 ];
 
-// Shell file extensions — always try network first
 const SHELL_EXTS = ['.html', '.js', '.css', '.json'];
 
 function isShell(url) {
@@ -28,38 +26,33 @@ function isShell(url) {
   return SHELL_EXTS.some(ext => u.pathname.endsWith(ext)) || u.pathname.endsWith('/');
 }
 
-// ── Install: pre-cache shell ──────────────────────────────────────────────────
+// ── Install ───────────────────────────────────────────────────────────────────
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_VERSION).then(cache => cache.addAll(PRECACHE))
   );
-  self.skipWaiting(); // activate immediately
+  self.skipWaiting();
 });
 
-// ── Activate: delete old caches ───────────────────────────────────────────────
+// ── Activate: delete old caches + notify all clients to reload ────────────────
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k)))
-    )
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then(clients => clients.forEach(client => client.postMessage({ type: 'SW_UPDATED' })))
   );
-  self.clients.claim(); // take control of all open tabs immediately
 });
 
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-
   const url = e.request.url;
-
-  // Only handle same-origin requests
   if (!url.startsWith(self.location.origin)) return;
-
   if (isShell(url)) {
-    // Network-first: try to get a fresh copy, fall back to cache
     e.respondWith(networkFirst(e.request));
   } else {
-    // Cache-first: serve from cache (game assets, images, etc.)
     e.respondWith(cacheFirst(e.request));
   }
 });
@@ -68,12 +61,9 @@ async function networkFirst(request) {
   const cache = await caches.open(CACHE_VERSION);
   try {
     const fresh = await fetch(request);
-    if (fresh.ok) {
-      cache.put(request, fresh.clone()); // update cache with fresh copy
-    }
+    if (fresh.ok) cache.put(request, fresh.clone());
     return fresh;
   } catch {
-    // Offline — serve from cache
     const cached = await cache.match(request);
     return cached || new Response('Offline', { status: 503 });
   }
