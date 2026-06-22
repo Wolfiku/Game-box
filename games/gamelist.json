@@ -12,5 +12,11 @@
       "icon": "games/breakout-404/icon.png",
       "path": "games/breakout-404/index.html"
     }
+       {
+      "index": 2,
+      "name": "Tic Tac Toe",
+      "icon": "games/tto/icon.png",
+      "path": "games/tto/index.html"
+    }
   ]
 }
