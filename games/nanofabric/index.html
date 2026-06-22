@@ -2,154 +2,90 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>NanoFactory</title>
   <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="components.css">
   <link rel="stylesheet" href="screens.css">
 </head>
 <body>
-  <!-- START SCREEN -->
-  <div id="screen-start" class="screen screen-start active">
-    <div class="start-grid-bg"></div>
-    <div class="start-content">
-      <h1 class="start-title">NANOFACTORY</h1>
-      <p class="start-subtitle"><span class="typewriter">REBUILD. AUTOMATE. SURVIVE.</span></p>
-      <div class="start-buttons">
-        <button id="btn-new-game" class="btn btn-primary btn-large">NEW GAME</button>
-        <button id="btn-continue" class="btn btn-secondary btn-large" style="display:none">CONTINUE</button>
-      </div>
-    </div>
-    <div class="version-tag">v1.0</div>
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+  <div id="toolbar-left">
+    <span id="hud-power" class="hud-stat">⚡ 0/0 MW</span>
   </div>
-
-  <!-- GAME SCREEN -->
-  <div id="screen-game" class="screen screen-game">
-    <header class="game-header">
-      <div class="header-title">NANOFACTORY</div>
-      <div class="header-actions">
-        <span id="header-time" class="header-stat"></span>
-        <span id="header-prestige" class="header-stat muted"></span>
-        <button id="btn-save" class="btn btn-secondary btn-small">SAVE</button>
-        <button id="btn-export" class="btn btn-secondary btn-small">EXPORT</button>
-        <button id="btn-import" class="btn btn-secondary btn-small">IMPORT</button>
-        <button id="btn-reset" class="btn btn-danger btn-small">RESET</button>
-      </div>
-    </header>
-    <nav class="tab-bar">
-      <button class="tab-btn active" data-tab="factory">FACTORY</button>
-      <button class="tab-btn" data-tab="research">RESEARCH</button>
-      <button class="tab-btn" data-tab="stats">STATS</button>
-      <button class="tab-btn" data-tab="lore">LORE</button>
-    </nav>
-    <main class="tab-content">
-      <!-- FACTORY TAB -->
-      <div id="tab-factory" class="tab-panel active">
-        <div class="factory-grid">
-          <div class="factory-left">
-            <section class="panel">
-              <div class="section-header">RESOURCES</div>
-              <div id="resource-list"></div>
-            </section>
-            <section class="panel">
-              <div class="section-header">POWER GRID</div>
-              <div id="power-display"></div>
-            </section>
-            <section class="panel" id="collect-section">
-              <div class="section-header">COLLECT</div>
-              <button id="btn-collect" class="btn btn-primary btn-full">COLLECT</button>
-              <div id="collect-info" class="muted small mt4"></div>
-            </section>
-          </div>
-          <div class="factory-right">
-            <section class="panel">
-              <div class="section-header">BUILDINGS</div>
-              <div class="building-filters">
-                <button class="filter-btn active" data-filter="all">ALL</button>
-                <button class="filter-btn" data-filter="mining">MINING</button>
-                <button class="filter-btn" data-filter="processing">PROCESSING</button>
-                <button class="filter-btn" data-filter="power">POWER</button>
-                <button class="filter-btn" data-filter="storage">STORAGE</button>
-              </div>
-              <div id="building-list"></div>
-            </section>
-            <div id="prestige-bar" style="display:none" class="prestige-bar">
-              <button id="btn-prestige" class="btn btn-prestige btn-full">REBUILD</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RESEARCH TAB -->
-      <div id="tab-research" class="tab-panel">
-        <div class="research-header-bar">
-          <span class="section-header">RESEARCH</span>
-          <span id="rp-display" class="rp-counter"></span>
-        </div>
-        <div class="research-categories">
-          <button class="filter-btn active" data-rcat="all">ALL</button>
-          <button class="filter-btn" data-rcat="production">PRODUCTION</button>
-          <button class="filter-btn" data-rcat="automation">AUTOMATION</button>
-          <button class="filter-btn" data-rcat="energy">ENERGY</button>
-          <button class="filter-btn" data-rcat="expansion">EXPANSION</button>
-        </div>
-        <div id="research-list"></div>
-      </div>
-
-      <!-- STATS TAB -->
-      <div id="tab-stats" class="tab-panel">
-        <div class="stats-grid">
-          <section class="panel">
-            <div class="section-header">SESSION</div>
-            <div id="stats-session"></div>
-          </section>
-          <section class="panel">
-            <div class="section-header">TOTALS</div>
-            <div id="stats-totals"></div>
-          </section>
-          <section class="panel">
-            <div class="section-header">ACHIEVEMENTS</div>
-            <div id="stats-achievements"></div>
-          </section>
-          <section class="panel" id="lp-shop-panel" style="display:none">
-            <div class="section-header">LEGACY SHOP</div>
-            <div id="lp-shop"></div>
-          </section>
-        </div>
-      </div>
-
-      <!-- LORE TAB -->
-      <div id="tab-lore" class="tab-panel">
-        <section class="panel">
-          <div class="section-header">TRANSMISSIONS</div>
-          <div id="lore-list"></div>
-        </section>
-      </div>
-    </main>
+  <div id="toolbar-center">
+    <span id="toolbar-title">NANOFACTORY</span>
   </div>
-
-  <!-- MODALS -->
-  <div id="modal-overlay" class="modal-overlay hidden">
-    <div id="modal-box" class="modal-box">
-      <div id="modal-title" class="modal-title"></div>
-      <div id="modal-body" class="modal-body"></div>
-      <div id="modal-actions" class="modal-actions"></div>
-    </div>
+  <div id="toolbar-right">
+    <button id="btn-open-panel" class="tb-btn" title="Build Panel">🏗</button>
+    <button id="btn-open-research" class="tb-btn" title="Research">🔬</button>
+    <button id="btn-open-stats" class="tb-btn" title="Stats">📊</button>
+    <button id="btn-save" class="tb-btn" title="Save">💾</button>
   </div>
+</div>
 
-  <!-- TOAST CONTAINER -->
-  <div id="toast-container" class="toast-container"></div>
+<!-- RESOURCES BAR -->
+<div id="res-bar"></div>
 
-  <!-- TOOLTIP -->
-  <div id="tooltip" class="tooltip hidden"></div>
+<!-- GRID CANVAS -->
+<div id="grid-wrap">
+  <canvas id="grid-canvas"></canvas>
+</div>
 
-  <script src="icons.js"></script>
-  <script src="config.js"></script>
-  <script src="state.js"></script>
-  <script src="engine.js"></script>
-  <script src="save.js"></script>
-  <script src="achievements.js"></script>
-  <script src="ui.js"></script>
-  <script src="main.js"></script>
+<!-- BUILD PANEL (slide-up) -->
+<div id="build-panel" class="side-panel hidden">
+  <div class="panel-header">
+    <span>BUILD</span>
+    <button class="close-btn" data-close="build-panel">✕</button>
+  </div>
+  <div class="tool-section">
+    <div class="tool-label">TOOLS</div>
+    <div id="tool-buttons"></div>
+  </div>
+  <div class="tool-section">
+    <div class="tool-label">BUILDINGS</div>
+    <div id="building-buttons"></div>
+  </div>
+</div>
+
+<!-- RESEARCH PANEL -->
+<div id="research-panel" class="side-panel hidden">
+  <div class="panel-header">
+    <span>RESEARCH</span>
+    <button class="close-btn" data-close="research-panel">✕</button>
+  </div>
+  <div id="rp-bar" class="rp-bar"></div>
+  <div id="research-list"></div>
+</div>
+
+<!-- STATS PANEL -->
+<div id="stats-panel" class="side-panel hidden">
+  <div class="panel-header">
+    <span>STATS</span>
+    <button class="close-btn" data-close="stats-panel">✕</button>
+  </div>
+  <div id="stats-content"></div>
+</div>
+
+<!-- TILE INFO POPUP -->
+<div id="tile-popup" class="tile-popup hidden">
+  <div id="tile-popup-title"></div>
+  <div id="tile-popup-body"></div>
+  <div id="tile-popup-actions"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<script src="icons.js"></script>
+<script src="config.js"></script>
+<script src="state.js"></script>
+<script src="engine.js"></script>
+<script src="save.js"></script>
+<script src="achievements.js"></script>
+<script src="ui.js"></script>
+<script src="main.js"></script>
 </body>
 </html>

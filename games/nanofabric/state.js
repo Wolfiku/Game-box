@@ -1,102 +1,112 @@
-/* NanoFactory — state.js
- * gameState object, defaultState(), deepClone()
- */
+/* NanoFactory — state.js */
 
 function defaultState() {
-  const resources = {};
-  for (const r of RESOURCES) {
-    resources[r.id] = {
-      amount: 0,
-      cap: r.defaultCap === Infinity ? Infinity : r.defaultCap,
-      totalProduced: 0,
-      perSecond: 0,
-      _rateBuffer: [0, 0, 0, 0]
-    };
-  }
+  // Build initial grid with ore patches scattered around
+  const tiles  = new Array(GRID_COLS * GRID_ROWS).fill(T.EMPTY);
+  const items  = new Array(GRID_COLS * GRID_ROWS).fill(null);  // item on each belt tile
+  const meta   = new Array(GRID_COLS * GRID_ROWS).fill(null);  // machine state
 
-  const buildings = {};
-  for (const b of BUILDINGS) {
-    buildings[b.id] = 0;
+  // Scatter ore patches
+  const patches = [
+    // Iron patches
+    { x:4,  y:4,  type: T.PATCH_IRON },
+    { x:5,  y:4,  type: T.PATCH_IRON },
+    { x:4,  y:5,  type: T.PATCH_IRON },
+    { x:6,  y:3,  type: T.PATCH_IRON },
+    { x:12, y:8,  type: T.PATCH_IRON },
+    { x:13, y:8,  type: T.PATCH_IRON },
+    { x:12, y:9,  type: T.PATCH_IRON },
+    { x:20, y:15, type: T.PATCH_IRON },
+    { x:21, y:15, type: T.PATCH_IRON },
+    { x:20, y:16, type: T.PATCH_IRON },
+    // Copper patches
+    { x:8,  y:2,  type: T.PATCH_COPPER },
+    { x:9,  y:2,  type: T.PATCH_COPPER },
+    { x:8,  y:3,  type: T.PATCH_COPPER },
+    { x:16, y:6,  type: T.PATCH_COPPER },
+    { x:17, y:6,  type: T.PATCH_COPPER },
+    { x:25, y:10, type: T.PATCH_COPPER },
+    { x:26, y:10, type: T.PATCH_COPPER },
+    // Coal patches
+    { x:2,  y:10, type: T.PATCH_COAL },
+    { x:3,  y:10, type: T.PATCH_COAL },
+    { x:2,  y:11, type: T.PATCH_COAL },
+    { x:10, y:14, type: T.PATCH_COAL },
+    { x:11, y:14, type: T.PATCH_COAL },
+    { x:30, y:20, type: T.PATCH_COAL },
+    { x:31, y:20, type: T.PATCH_COAL },
+  ];
+  for (const p of patches) {
+    if (p.x >= 0 && p.x < GRID_COLS && p.y >= 0 && p.y < GRID_ROWS)
+      tiles[p.y * GRID_COLS + p.x] = p.type;
   }
 
   return {
-    version: 1,
-    lastSave: Date.now(),
-    timePlayed: 0,
-    tickCount: 0,
-
-    resources,
-    buildings,
-    completedResearch: [],
-    unlockedLore: ['start'],
-    achievements: [],
-
+    tiles,
+    items,
+    meta,      // per-tile machine state: { progress, inputBuffer, outputBuffer }
+    inventory: {},   // global storage (chests + output)
     power: { generated: 0, consumed: 0, ratio: 1 },
-
+    completedResearch: [],
+    achievements: [],
+    unlockedLore: [],
+    totalMined: {},
+    totalBelts: 0,
+    timePlayed: 0,
+    lastSave: Date.now(),
     stats: {
-      manualCollects: 0,
-      rpSpent: 0,
-      totalBuildings: 0,
-      buildingsBought: {},
+      minersPlaced: 0,
+      generatorsBuilt: 0,
+      buildingsPlaced: 0,
     },
-
-    prestigeCount: 0,
-    legacyPoints: 0,
-    lpUpgradesBought: [],
-    totalEnergyCellsEver: 0,
-
-    ui: {
-      buildingFilter: 'all',
-      researchFilter: 'all',
-      activeTab: 'factory',
-    }
   };
 }
 
-function deepClone(obj) {
-  if (obj === null || typeof obj !== 'object') return obj;
-  if (Array.isArray(obj)) return obj.map(deepClone);
-  const out = {};
-  for (const k in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, k)) {
-      out[k] = deepClone(obj[k]);
-    }
-  }
-  return out;
-}
-
-function migrateState(loaded) {
-  // Fill missing resources/buildings from defaults
-  const def = defaultState();
-  if (!loaded.resources) loaded.resources = def.resources;
-  for (const r of RESOURCES) {
-    if (!loaded.resources[r.id]) {
-      loaded.resources[r.id] = def.resources[r.id];
-    } else {
-      if (loaded.resources[r.id]._rateBuffer === undefined) {
-        loaded.resources[r.id]._rateBuffer = [0,0,0,0];
-      }
-    }
-  }
-  if (!loaded.buildings) loaded.buildings = def.buildings;
-  for (const b of BUILDINGS) {
-    if (loaded.buildings[b.id] === undefined) loaded.buildings[b.id] = 0;
-  }
-  if (!loaded.completedResearch) loaded.completedResearch = [];
-  if (!loaded.unlockedLore) loaded.unlockedLore = ['start'];
-  if (!loaded.achievements) loaded.achievements = [];
-  if (!loaded.power) loaded.power = { generated: 0, consumed: 0, ratio: 1 };
-  if (!loaded.stats) loaded.stats = def.stats;
-  if (loaded.stats.manualCollects === undefined) loaded.stats.manualCollects = 0;
-  if (loaded.stats.rpSpent === undefined) loaded.stats.rpSpent = 0;
-  if (!loaded.stats.buildingsBought) loaded.stats.buildingsBought = {};
-  if (loaded.prestigeCount === undefined) loaded.prestigeCount = 0;
-  if (loaded.legacyPoints === undefined) loaded.legacyPoints = 0;
-  if (!loaded.lpUpgradesBought) loaded.lpUpgradesBought = [];
-  if (loaded.totalEnergyCellsEver === undefined) loaded.totalEnergyCellsEver = 0;
-  if (!loaded.ui) loaded.ui = def.ui;
-  return loaded;
-}
-
-// Singleton
 let gameState = defaultState();
+
+function getInv(id) { return gameState.inventory[id] || 0; }
+function addInv(id, amt) {
+  gameState.inventory[id] = (gameState.inventory[id] || 0) + amt;
+}
+function takeInv(id, amt) {
+  const have = getInv(id);
+  const take = Math.min(have, amt);
+  gameState.inventory[id] = have - take;
+  return take;
+}
+
+function getTile(x, y) {
+  if (x < 0 || x >= GRID_COLS || y < 0 || y >= GRID_ROWS) return -1;
+  return gameState.tiles[y * GRID_COLS + x];
+}
+function setTile(x, y, type) {
+  if (x < 0 || x >= GRID_COLS || y < 0 || y >= GRID_ROWS) return;
+  gameState.tiles[y * GRID_COLS + x] = type;
+}
+function getItem(x, y) {
+  if (x < 0 || x >= GRID_COLS || y < 0 || y >= GRID_ROWS) return null;
+  return gameState.items[y * GRID_COLS + x];
+}
+function setItem(x, y, item) {
+  if (x < 0 || x >= GRID_COLS || y < 0 || y >= GRID_ROWS) return;
+  gameState.items[y * GRID_COLS + x] = item;
+}
+function getMeta(x, y) {
+  if (x < 0 || x >= GRID_COLS || y < 0 || y >= GRID_ROWS) return null;
+  return gameState.meta[y * GRID_COLS + x];
+}
+function setMeta(x, y, val) {
+  if (x < 0 || x >= GRID_COLS || y < 0 || y >= GRID_ROWS) return;
+  gameState.meta[y * GRID_COLS + x] = val;
+}
+
+function initMeta(x, y, tileType) {
+  const b = BUILDING_BY_TYPE[tileType];
+  if (!b) return;
+  setMeta(x, y, {
+    progress: 0,
+    inputBuffer:  {},  // { resourceId: amount }
+    outputBuffer: null, // { id, amt } — item ready to push to belt
+    fuelBuffer:   0,
+  });
+}

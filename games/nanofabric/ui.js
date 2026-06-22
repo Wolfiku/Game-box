@@ -1,455 +1,516 @@
-/* NanoFactory — ui.js
- * renderUI(), tab switching, all DOM update functions
- */
+/* NanoFactory — ui.js (grid renderer + interaction) */
 
-/* ── Formatting ───────────────────────────────────────────── */
-function fmt(n) {
-  if (n === undefined || n === null || isNaN(n)) return '0';
-  if (!isFinite(n)) return '∞';
-  const abs = Math.abs(n);
-  if (abs >= 1e9) return (n / 1e9).toFixed(2) + 'G';
-  if (abs >= 1e6) return (n / 1e6).toFixed(2) + 'M';
-  if (abs >= 1e3) return (n / 1e3).toFixed(2) + 'K';
-  if (abs < 10 && abs > 0) return n.toFixed(1);
-  return Math.floor(n).toString();
+// ── Canvas setup ─────────────────────────────────────────────────────────────
+let canvas, ctx;
+let camX = 0, camY = 0;  // camera offset in pixels
+let isDragging = false, dragStartX = 0, dragStartY = 0, camStartX = 0, camStartY = 0;
+let isPainting = false, paintStartX = 0, paintStartY = 0;  // for drag-to-place belts
+let touchStartDist = 0;  // for pinch zoom
+
+let selectedTool = null;   // { tileType } or 'remove'
+let selectedBuildingId = null;
+
+const TILE_COLORS = {
+  [T.EMPTY]:        '#0d0d14',
+  [T.PATCH_IRON]:   '#2a2d3a',
+  [T.PATCH_COPPER]: '#2e2018',
+  [T.PATCH_COAL]:   '#1a1a1a',
+  [T.BELT_R]:       '#1e2235',
+  [T.BELT_L]:       '#1e2235',
+  [T.BELT_U]:       '#1e2235',
+  [T.BELT_D]:       '#1e2235',
+  [T.MINER]:        '#2a3a2a',
+  [T.SMELTER]:      '#3a2a1a',
+  [T.WIRE_MILL]:    '#1a2a3a',
+  [T.FORGE]:        '#3a1a1a',
+  [T.ASSEMBLY]:     '#1a3a1a',
+  [T.BATTERY_PLANT]:'#2a1a3a',
+  [T.CELL_FACTORY]: '#3a1a2a',
+  [T.LAB]:          '#1a3a3a',
+  [T.COAL_GEN]:     '#2a2a1a',
+  [T.SOLAR]:        '#1a2a1a',
+  [T.NUCLEAR]:      '#1a3a1a',
+  [T.CHEST]:        '#2a2420',
+};
+
+const TILE_ICONS = {
+  [T.PATCH_IRON]:   '🪨',
+  [T.PATCH_COPPER]: '🟤',
+  [T.PATCH_COAL]:   '⬛',
+  [T.BELT_R]:       '→',
+  [T.BELT_L]:       '←',
+  [T.BELT_U]:       '↑',
+  [T.BELT_D]:       '↓',
+  [T.MINER]:        '⛏',
+  [T.SMELTER]:      '🔥',
+  [T.WIRE_MILL]:    '🌀',
+  [T.FORGE]:        '🏭',
+  [T.ASSEMBLY]:     '⚙',
+  [T.BATTERY_PLANT]:'🔋',
+  [T.CELL_FACTORY]: '⚡',
+  [T.LAB]:          '🔬',
+  [T.COAL_GEN]:     '🏗',
+  [T.SOLAR]:        '☀',
+  [T.NUCLEAR]:      '☢',
+  [T.CHEST]:        '📦',
+};
+
+function initCanvas() {
+  canvas = document.getElementById('grid-canvas');
+  ctx    = canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // Touch events
+  canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+  canvas.addEventListener('touchmove',  onTouchMove,  { passive: false });
+  canvas.addEventListener('touchend',   onTouchEnd,   { passive: false });
+
+  // Mouse events
+  canvas.addEventListener('mousedown',  onMouseDown);
+  canvas.addEventListener('mousemove',  onMouseMove);
+  canvas.addEventListener('mouseup',    onMouseUp);
+  canvas.addEventListener('contextmenu', onContextMenu);
 }
 
-function fmtRate(n) {
-  if (n === 0) return '';
-  const s = (n > 0 ? '+' : '') + n.toFixed(2) + '/s';
-  return s;
+function resizeCanvas() {
+  const wrap = document.getElementById('grid-wrap');
+  canvas.width  = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
 }
 
-function fmtTime(s) {
-  s = Math.floor(s);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${sec}s`;
-  return `${sec}s`;
+// ── Coordinate helpers ───────────────────────────────────────────────────────
+function screenToTile(sx, sy) {
+  return {
+    x: Math.floor((sx + camX) / TILE_SIZE),
+    y: Math.floor((sy + camY) / TILE_SIZE),
+  };
+}
+function tileToScreen(tx, ty) {
+  return {
+    sx: tx * TILE_SIZE - camX,
+    sy: ty * TILE_SIZE - camY,
+  };
+}
+function clampCamera() {
+  const maxX = GRID_COLS * TILE_SIZE - canvas.width;
+  const maxY = GRID_ROWS * TILE_SIZE - canvas.height;
+  camX = Math.max(0, Math.min(camX, maxX));
+  camY = Math.max(0, Math.min(camY, maxY));
 }
 
-function fmtCost(costObj) {
-  return Object.entries(costObj)
-    .map(([id, amt]) => `${fmt(amt)} ${getResName(id)}`)
-    .join('  ');
-}
+// ── Render ───────────────────────────────────────────────────────────────────
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-function getResName(id) {
-  const r = RESOURCES.find(x => x.id === id);
-  return r ? r.name : id;
-}
+  const startX = Math.floor(camX / TILE_SIZE);
+  const startY = Math.floor(camY / TILE_SIZE);
+  const endX   = Math.min(GRID_COLS, startX + Math.ceil(canvas.width  / TILE_SIZE) + 1);
+  const endY   = Math.min(GRID_ROWS, startY + Math.ceil(canvas.height / TILE_SIZE) + 1);
 
-/* ── MODAL ───────────────────────────────────────────────── */
-function showModal(title, body, buttons) {
-  document.getElementById('modal-title').textContent = title;
-  document.getElementById('modal-body').innerHTML = body.replace(/\n/g, '<br>');
-  const actionsEl = document.getElementById('modal-actions');
-  actionsEl.innerHTML = '';
-  for (const btn of buttons) {
-    const el = document.createElement('button');
-    el.className = `btn ${btn.cls}`;
-    el.textContent = btn.label;
-    el.addEventListener('click', btn.action);
-    actionsEl.appendChild(el);
+  ctx.font = Math.floor(TILE_SIZE * 0.45) + 'px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
+      const sx = x * TILE_SIZE - camX;
+      const sy = y * TILE_SIZE - camY;
+      const t  = getTile(x, y);
+
+      // Background
+      ctx.fillStyle = TILE_COLORS[t] || '#0d0d14';
+      ctx.fillRect(sx, sy, TILE_SIZE, TILE_SIZE);
+
+      // Grid line
+      ctx.strokeStyle = '#1a1a2a';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(sx + 0.5, sy + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
+
+      // Icon
+      const icon = TILE_ICONS[t];
+      if (icon) {
+        ctx.fillStyle = '#fff';
+        ctx.fillText(icon, sx + TILE_SIZE/2, sy + TILE_SIZE/2);
+      }
+
+      // Belt direction stripe
+      if (BELT_SET.has(t)) {
+        drawBeltArrow(ctx, sx, sy, t);
+      }
+
+      // Item on belt
+      const item = getItem(x, y);
+      if (item) {
+        ctx.fillStyle = ITEM_COLOR[item] || '#fff';
+        ctx.beginPath();
+        ctx.arc(sx + TILE_SIZE/2, sy + TILE_SIZE/2, TILE_SIZE * 0.14, 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      // Machine progress bar
+      const meta = getMeta(x, y);
+      if (meta && meta.progress > 0) {
+        ctx.fillStyle = 'rgba(79,142,247,0.25)';
+        ctx.fillRect(sx, sy + TILE_SIZE - 4, TILE_SIZE * meta.progress, 4);
+        ctx.fillStyle = '#4f8ef7';
+        ctx.fillRect(sx, sy + TILE_SIZE - 4, TILE_SIZE * meta.progress - 1, 3);
+      }
+    }
   }
-  document.getElementById('modal-overlay').classList.remove('hidden');
+
+  // Hover highlight
+  if (hoverTile) {
+    const { sx, sy } = tileToScreen(hoverTile.x, hoverTile.y);
+    ctx.strokeStyle = selectedTool === 'remove' ? '#e94560' : '#4f8ef7';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(sx + 1, sy + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+  }
 }
 
-function closeModal() {
-  document.getElementById('modal-overlay').classList.add('hidden');
+function drawBeltArrow(ctx, sx, sy, t) {
+  ctx.fillStyle = 'rgba(100,120,200,0.35)';
+  const cx = sx + TILE_SIZE/2, cy = sy + TILE_SIZE/2;
+  const s  = TILE_SIZE * 0.18;
+  ctx.save();
+  ctx.translate(cx, cy);
+  const rot = { [T.BELT_R]: 0, [T.BELT_D]: Math.PI/2, [T.BELT_L]: Math.PI, [T.BELT_U]: -Math.PI/2 };
+  ctx.rotate(rot[t] || 0);
+  ctx.beginPath();
+  ctx.moveTo(s, 0);
+  ctx.lineTo(-s, -s*0.7);
+  ctx.lineTo(-s,  s*0.7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }
 
-/* ── TAB SWITCHING ───────────────────────────────────────── */
-function switchTab(tabId) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-  if (btn) btn.classList.add('active');
-  const panel = document.getElementById(`tab-${tabId}`);
-  if (panel) panel.classList.add('active');
-  gameState.ui.activeTab = tabId;
-  if (tabId === 'research')  renderResearchTab();
-  if (tabId === 'stats')     renderStatsTab();
-  if (tabId === 'lore')      renderLoreTab();
+// ── Input ────────────────────────────────────────────────────────────────────
+let hoverTile = null;
+let dragMoved = false;
+const DRAG_THRESHOLD = 8;
+
+function onMouseDown(e) {
+  if (e.button === 1) return;
+  dragStartX = e.clientX; dragStartY = e.clientY;
+  camStartX  = camX;      camStartY  = camY;
+  dragMoved  = false;
+  if (e.button === 2) { isPainting = true; return; }
+  isDragging = true;
+}
+function onMouseMove(e) {
+  const rect = canvas.getBoundingClientRect();
+  hoverTile = screenToTile(e.clientX - rect.left, e.clientY - rect.top);
+
+  if (isDragging) {
+    const dx = e.clientX - dragStartX, dy = e.clientY - dragStartY;
+    if (!dragMoved && Math.hypot(dx, dy) > DRAG_THRESHOLD) dragMoved = true;
+    camX = camStartX - dx;
+    camY = camStartY - dy;
+    clampCamera();
+  }
+  if (isPainting && selectedTool && BELT_SET.has(selectedTool.tileType)) {
+    placeTile(hoverTile.x, hoverTile.y, selectedTool.tileType);
+  }
+}
+function onMouseUp(e) {
+  if (e.button === 2) { isPainting = false; return; }
+  if (!dragMoved) {
+    const rect = canvas.getBoundingClientRect();
+    handleTap(e.clientX - rect.left, e.clientY - rect.top);
+  }
+  isDragging = false;
+  dragMoved  = false;
+}
+function onContextMenu(e) { e.preventDefault(); }
+
+// Touch
+let touchId = null, touch2Id = null;
+let lastTouchX = 0, lastTouchY = 0;
+let pinchStartDist = 0;
+
+function getTouchById(touches, id) {
+  for (const t of touches) if (t.identifier === id) return t;
+  return null;
+}
+function onTouchStart(e) {
+  e.preventDefault();
+  if (e.touches.length === 1) {
+    const t = e.touches[0];
+    touchId    = t.identifier;
+    dragStartX = t.clientX; dragStartY = t.clientY;
+    camStartX  = camX;      camStartY  = camY;
+    lastTouchX = t.clientX; lastTouchY = t.clientY;
+    dragMoved  = false;
+    isPainting = selectedTool && (BELT_SET.has(selectedTool.tileType) || selectedTool === 'remove');
+  } else if (e.touches.length === 2) {
+    isPainting = false;
+    pinchStartDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+  }
+}
+function onTouchMove(e) {
+  e.preventDefault();
+  if (e.touches.length === 1) {
+    const t = getTouchById(e.touches, touchId);
+    if (!t) return;
+    const dx = t.clientX - dragStartX, dy = t.clientY - dragStartY;
+    if (!dragMoved && Math.hypot(dx, dy) > DRAG_THRESHOLD) dragMoved = true;
+    if (!isPainting) {
+      camX = camStartX - dx;
+      camY = camStartY - dy;
+      clampCamera();
+    } else {
+      const rect = canvas.getBoundingClientRect();
+      const tile = screenToTile(t.clientX - rect.left, t.clientY - rect.top);
+      if (selectedTool === 'remove') {
+        removeTile(tile.x, tile.y);
+      } else if (selectedTool) {
+        placeTile(tile.x, tile.y, selectedTool.tileType);
+      }
+    }
+    lastTouchX = t.clientX; lastTouchY = t.clientY;
+  }
+}
+function onTouchEnd(e) {
+  e.preventDefault();
+  if (!dragMoved) {
+    const t = e.changedTouches[0];
+    const rect = canvas.getBoundingClientRect();
+    handleTap(t.clientX - rect.left, t.clientY - rect.top);
+  }
+  isPainting = false;
+  touchId    = null;
+  dragMoved  = false;
 }
 
-/* ── TOOLTIP ─────────────────────────────────────────────── */
-const tooltip = document.getElementById('tooltip');
+// ── Tap action ───────────────────────────────────────────────────────────────
+function handleTap(sx, sy) {
+  const tile = screenToTile(sx, sy);
+  if (tile.x < 0 || tile.x >= GRID_COLS || tile.y < 0 || tile.y >= GRID_ROWS) return;
 
-function showTooltip(e, html) {
-  tooltip.innerHTML = html;
-  tooltip.classList.remove('hidden');
-  positionTooltip(e);
+  if (selectedTool === 'remove') {
+    removeTile(tile.x, tile.y);
+    return;
+  }
+  if (selectedTool) {
+    const placed = placeTile(tile.x, tile.y, selectedTool.tileType);
+    if (!placed) toast('Cannot place here');
+    return;
+  }
+  // No tool: show tile info
+  showTilePopup(tile.x, tile.y, sx, sy);
 }
 
-function positionTooltip(e) {
-  const tw = tooltip.offsetWidth;
-  const th = tooltip.offsetHeight;
-  let x = e.clientX + 12;
-  let y = e.clientY + 12;
-  if (x + tw > window.innerWidth)  x = e.clientX - tw - 8;
-  if (y + th > window.innerHeight) y = e.clientY - th - 8;
-  tooltip.style.left = x + 'px';
-  tooltip.style.top  = y + 'px';
+// ── Tile popup ───────────────────────────────────────────────────────────────
+function showTilePopup(tx, ty, sx, sy) {
+  const t    = getTile(tx, ty);
+  const b    = BUILDING_BY_TYPE[t];
+  const meta = getMeta(tx, ty);
+  const popup = document.getElementById('tile-popup');
+  const title  = document.getElementById('tile-popup-title');
+  const body   = document.getElementById('tile-popup-body');
+  const acts   = document.getElementById('tile-popup-actions');
+
+  if (t === T.EMPTY) { hideTilePopup(); return; }
+
+  title.textContent = b ? b.name : (TILE_ICONS[t] || '?') + ' Tile';
+  let info = '';
+  if (t === T.PATCH_IRON)   info = 'Iron Ore deposit';
+  if (t === T.PATCH_COPPER) info = 'Copper Ore deposit';
+  if (t === T.PATCH_COAL)   info = 'Coal deposit';
+  if (BELT_SET.has(t)) {
+    const item = getItem(tx, ty);
+    info = 'Belt ' + (BELT_LABELS[t] || '') + (item ? '<br>Carrying: <b>' + (RES_BY_ID[item]?.name || item) + '</b>' : '<br>Empty');
+  }
+  if (b && b.category === 'processing') {
+    info = b.description + '<br>';
+    if (meta) {
+      info += 'Progress: ' + Math.floor(meta.progress * 100) + '%<br>';
+      const inBuf = Object.entries(meta.inputBuffer || {}).filter(([,v])=>v>0).map(([k,v])=>(RES_BY_ID[k]?.name||k)+': '+Math.floor(v)).join(', ');
+      if (inBuf) info += 'In buffer: ' + inBuf + '<br>';
+      if (meta.outputBuffer) info += 'Output ready: ' + (RES_BY_ID[meta.outputBuffer.id]?.name || meta.outputBuffer.id);
+    }
+  }
+  if (t === T.MINER && meta) {
+    const resId = PATCH_RES[meta.patch];
+    info = 'Mining: <b>' + (RES_BY_ID[resId]?.name || resId || '?') + '</b><br>Progress: ' + Math.floor(meta.progress * 100) + '%';
+  }
+  if (t === T.CHEST && meta) {
+    const contents = Object.entries(meta.inputBuffer || {}).filter(([,v])=>v>0).map(([k,v])=>(RES_BY_ID[k]?.name||k)+': '+Math.floor(v)).join('<br>');
+    info = 'Chest contents:<br>' + (contents || 'Empty');
+  }
+  if (b && b.category === 'power') {
+    info = b.description + '<br>Generating: ' + (b.powerOut || 0) + ' MW';
+  }
+
+  body.innerHTML = info || b?.description || '';
+
+  acts.innerHTML = '';
+  if (t !== T.PATCH_IRON && t !== T.PATCH_COPPER && t !== T.PATCH_COAL) {
+    const btn = document.createElement('button');
+    btn.textContent = '🗑 Remove';
+    btn.className = 'btn-danger';
+    btn.onclick = () => { removeTile(tx, ty); hideTilePopup(); };
+    acts.appendChild(btn);
+  }
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = 'Close';
+  closeBtn.onclick = hideTilePopup;
+  acts.appendChild(closeBtn);
+
+  // Position popup near tap but keep on screen
+  popup.classList.remove('hidden');
+  const pw = 200, ph = 160;
+  let px = sx + 10, py = sy + 10;
+  if (px + pw > canvas.width)  px = sx - pw - 10;
+  if (py + ph > canvas.height) py = sy - ph - 10;
+  const wrap = document.getElementById('grid-wrap');
+  const wRect = wrap.getBoundingClientRect();
+  popup.style.left = (wRect.left + Math.max(0, px)) + 'px';
+  popup.style.top  = (wRect.top  + Math.max(0, py)) + 'px';
+}
+function hideTilePopup() {
+  document.getElementById('tile-popup').classList.add('hidden');
 }
 
-function hideTooltip() { tooltip.classList.add('hidden'); }
-
-/* ── RESOURCES ───────────────────────────────────────────── */
-function renderResourceList() {
-  const el = document.getElementById('resource-list');
-  if (!el) return;
-  let html = '';
+// ── HUD / UI updates ─────────────────────────────────────────────────────────
+function buildResBar() {
+  const bar = document.getElementById('res-bar');
+  bar.innerHTML = '';
   for (const r of RESOURCES) {
-    if (r.category === 'special') continue; // RP shown in research tab
-    const res  = gameState.resources[r.id];
-    const pct  = res.cap < Infinity ? Math.min(100, (res.amount / res.cap) * 100) : 0;
-    const atCap = res.cap < Infinity && res.amount >= res.cap;
-    const rateStr = fmtRate(res.perSecond);
-    const rateCls = res.perSecond === 0 ? 'zero' : (atCap ? 'cap' : '');
-    const capStr  = res.cap < Infinity ? fmt(res.cap) : '∞';
-
-    html += `
-    <div class="resource-row">
-      <div class="resource-line">
-        <div class="resource-name">${ICONS[r.id] || ''}<span>${r.name}</span></div>
-        <div class="resource-amounts">${fmt(res.amount)} / ${capStr}${atCap ? ' <span class="accent">MAX</span>' : ''}</div>
-        <div class="resource-rate ${rateCls}">${atCap ? 'MAX' : (rateStr || '0/s')}</div>
-      </div>
-      ${res.cap < Infinity ? `<div class="progress-wrap"><div class="progress-fill" style="width:${pct}%;background:${r.color}"></div></div>` : ''}
-    </div>`;
+    const amt = getInv(r.id);
+    if (amt === 0 && r.id !== 'iron_ore' && r.id !== 'copper_ore' && r.id !== 'coal') continue;
+    const chip = document.createElement('div');
+    chip.className = 'res-chip';
+    chip.innerHTML = `<span class="res-chip-dot" style="background:${r.color}"></span>
+      <span class="res-chip-val">${fmtNum(amt)}</span>
+      <span class="res-chip-rate muted">${r.name.substring(0,6)}</span>`;
+    bar.appendChild(chip);
   }
-  el.innerHTML = html;
 }
 
-/* ── POWER ───────────────────────────────────────────────── */
-function renderPower() {
-  const el = document.getElementById('power-display');
-  if (!el) return;
-  const { generated, consumed, ratio } = gameState.power;
-  const pct = consumed > 0 ? Math.min(100, (generated / consumed) * 100) : 100;
-  const shortage = ratio < 1;
-  const overPct  = shortage ? Math.min(100, ((consumed - generated) / consumed) * 100) : 0;
-
-  el.innerHTML = `
-    <div class="power-bar-wrap">
-      <div class="power-bar-track">
-        <div class="power-bar-gen" style="width:${Math.min(100, (generated / Math.max(consumed,1)) * 100).toFixed(1)}%"></div>
-        ${shortage ? `<div class="power-bar-con" style="width:${overPct.toFixed(1)}%"></div>` : ''}
-      </div>
-      <div class="power-bar-label">
-        <span class="${shortage ? 'power-shortage' : 'blue'}">${fmt(generated)} / ${fmt(consumed)} MW</span>
-        <span class="${shortage ? 'danger' : 'muted'}">${shortage ? '[!] SHORTAGE' : (ratio*100).toFixed(0)+'%'}</span>
-      </div>
-    </div>`;
+function updateHUD() {
+  const p = gameState.power;
+  document.getElementById('hud-power').textContent =
+    '⚡ ' + fmtNum(p.generated) + '/' + fmtNum(p.consumed) + ' MW';
+  buildResBar();
 }
 
-/* ── BUILDINGS ───────────────────────────────────────────── */
-function renderBuildingList() {
-  const el = document.getElementById('building-list');
-  if (!el) return;
-  const filter = gameState.ui.buildingFilter || 'all';
-  let html = '';
+function buildBuildPanel() {
+  const toolBtns = document.getElementById('tool-buttons');
+  const bldBtns  = document.getElementById('building-buttons');
+  toolBtns.innerHTML = bldBtns.innerHTML = '';
+
+  // Remove tool
+  const rem = document.createElement('button');
+  rem.className = 'build-btn' + (selectedTool === 'remove' ? ' active' : '');
+  rem.innerHTML = '<span class="build-btn-icon">🗑</span><span>Remove</span>';
+  rem.onclick = () => { selectedTool = selectedTool === 'remove' ? null : 'remove'; buildBuildPanel(); updateNavHint(); };
+  toolBtns.appendChild(rem);
 
   for (const b of BUILDINGS) {
-    if (filter !== 'all' && b.category !== filter) continue;
+    const isLocked = b.unlockedByResearch && !gameState.completedResearch.includes(b.unlockedByResearch);
+    const isActive = selectedTool && selectedTool.tileType === b.tileType;
 
-    // Check unlock
-    const locked = b.unlockedByResearch && !gameState.completedResearch.includes(b.unlockedByResearch);
-    if (locked) continue; // hide entirely until unlocked
-
-    const owned = gameState.buildings[b.id] || 0;
-    const cost1 = getBuildingCostDisplay(b.id, 1);
-    const canBuy1 = !!canAffordBuilding(b.id, 1);
-    const costStr = fmtCost(cost1);
-
-    const tooltipHtml = buildingTooltipHtml(b, owned);
-
-    html += `
-    <div class="building-card"
-         data-bid="${b.id}"
-         data-tooltip="${encodeURIComponent(tooltipHtml)}">
-      <div class="building-line1">
-        <div class="building-name">${ICONS[b.id] || ICONS.building || ''}<span>${b.name.toUpperCase()}</span></div>
-        <div class="building-owned">${owned > 0 ? 'x' + owned : ''}</div>
-      </div>
-      <div class="building-line2">
-        <div class="building-cost ${canBuy1 ? '' : 'cant-afford'}">${costStr}</div>
-        <div class="building-buy-btns">
-          <button class="btn btn-buy" data-bid="${b.id}" data-qty="1" ${canBuy1 ? '' : 'disabled'}>x1</button>
-          <button class="btn btn-buy" data-bid="${b.id}" data-qty="10" ${canAffordBuilding(b.id,10) ? '' : 'disabled'}>x10</button>
-          <button class="btn btn-buy" data-bid="${b.id}" data-qty="max" ${canBuy1 ? '' : 'disabled'}>MAX</button>
-        </div>
-      </div>
-    </div>`;
-  }
-
-  if (!html) html = '<div class="muted small" style="padding:8px">Nothing available yet.</div>';
-  el.innerHTML = html;
-
-  // Attach tooltip listeners
-  el.querySelectorAll('.building-card').forEach(card => {
-    const rawHtml = decodeURIComponent(card.dataset.tooltip || '');
-    card.addEventListener('mouseenter', e => showTooltip(e, rawHtml));
-    card.addEventListener('mousemove',  e => positionTooltip(e));
-    card.addEventListener('mouseleave', hideTooltip);
-  });
-}
-
-function buildingTooltipHtml(b, owned) {
-  let rows = '';
-  if (b.input) {
-    for (const [rid, rps] of Object.entries(b.input)) {
-      rows += `<div class="tooltip-row"><span class="tooltip-label">In</span><span class="tooltip-val">${rps}/s ${getResName(rid)}</span></div>`;
+    let costHtml = '';
+    if (b.placeCost) {
+      const parts = Object.entries(b.placeCost).map(([rid, amt]) => {
+        const have = getInv(rid);
+        const cls  = have >= amt ? 'build-btn-canafford' : 'build-btn-cantafford';
+        return `<span class="${cls}">${fmtNum(amt)} ${RES_BY_ID[rid]?.name || rid}</span>`;
+      });
+      costHtml = '<div class="build-btn-cost">' + parts.join(' ') + '</div>';
     }
-  }
-  if (b.output) {
-    for (const [rid, rps] of Object.entries(b.output)) {
-      if (rid === 'mw') {
-        rows += `<div class="tooltip-row"><span class="tooltip-label">Gen</span><span class="tooltip-val">+${rps} MW</span></div>`;
-      } else {
-        rows += `<div class="tooltip-row"><span class="tooltip-label">Out</span><span class="tooltip-val">${rps}/s ${getResName(rid)}</span></div>`;
-      }
-    }
-  }
-  if (b.energyCost > 0) {
-    rows += `<div class="tooltip-row"><span class="tooltip-label">PWR</span><span class="tooltip-val">${b.energyCost} MW</span></div>`;
-  }
-  if (owned > 0 && b.output) {
-    for (const [rid, rps] of Object.entries(b.output)) {
-      if (rid !== 'mw') {
-        rows += `<div class="tooltip-row"><span class="tooltip-label">Rate</span><span class="tooltip-val">+${(rps*owned).toFixed(2)}/s</span></div>`;
-      }
-    }
-  }
-  return rows || '<span class="muted">Storage building</span>';
-}
 
-/* ── COLLECT ─────────────────────────────────────────────── */
-function renderCollectSection() {
-  const sec = document.getElementById('collect-section');
-  if (!sec) return;
-  const autoUnlocked = gameState.completedResearch.includes('auto_collector');
-  sec.style.display = autoUnlocked ? 'none' : '';
-  const info = document.getElementById('collect-info');
-  if (info) {
-    info.textContent = '+10 ore / +5 coal per click';
+    const btn = document.createElement('button');
+    btn.className = 'build-btn' + (isActive ? ' active' : '') + (isLocked ? ' locked' : '');
+    btn.innerHTML = `<span class="build-btn-icon">${b.icon}</span><span>${b.name}</span>${costHtml}`;
+    btn.onclick = () => {
+      if (isLocked) { toast('Locked — needs research'); return; }
+      selectedTool = isActive ? null : { tileType: b.tileType };
+      buildBuildPanel();
+      updateNavHint();
+    };
+
+    const container = b.category === 'belt' ? toolBtns : bldBtns;
+    container.appendChild(btn);
   }
 }
 
-/* ── RESEARCH TAB ────────────────────────────────────────── */
-function renderResearchTab() {
-  const el = document.getElementById('research-list');
-  const rpEl = document.getElementById('rp-display');
-  if (!el) return;
-
-  const rp = gameState.resources.research_points.amount;
-  if (rpEl) rpEl.textContent = `${fmt(rp)} RP`;
-
-  const filter = gameState.ui.researchFilter || 'all';
-  let html = '';
+function buildResearchPanel() {
+  const list = document.getElementById('research-list');
+  list.innerHTML = '';
+  document.getElementById('rp-bar').textContent = '🔬 Research Points: ' + fmtNum(getInv('research_points'));
 
   for (const r of RESEARCH) {
-    if (filter !== 'all' && r.category !== filter) continue;
+    const done  = gameState.completedResearch.includes(r.id);
+    const locked = r.requires && !gameState.completedResearch.includes(r.requires);
+    const afford = getInv('research_points') >= r.cost_rp;
 
-    const done   = gameState.completedResearch.includes(r.id);
-    const prereqMet = !r.requires || gameState.completedResearch.includes(r.requires);
-    const locked = !prereqMet;
-    const canBuy = prereqMet && !done && rp >= r.cost_rp;
-
-    let cls = 'research-card';
-    if (done)   cls += ' done';
-    if (locked) cls += ' locked';
-
-    html += `
-    <div class="${cls}">
-      <div class="research-line1">
-        <div class="research-name">${r.name.toUpperCase()}</div>
-        <div class="research-cost">${r.cost_rp} RP</div>
-      </div>
-      <div class="research-desc">${r.description}</div>
-      ${done
-        ? `<div class="research-status">DONE</div>`
-        : locked
-          ? `<div class="muted small">Req: ${r.requires}</div>`
-          : `<button class="btn btn-buy" data-rid="${r.id}" ${canBuy ? '' : 'disabled'}>${canBuy ? 'RESEARCH' : 'NEED ' + fmt(r.cost_rp - rp) + ' RP'}</button>`
-      }
-    </div>`;
-  }
-
-  el.innerHTML = html || '<div class="muted small" style="padding:8px">Nothing in this category.</div>';
-  el.querySelectorAll('[data-rid]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (buyResearch(btn.dataset.rid)) {
-        renderResearchTab();
-        renderBuildingList(); // update locked buildings
-      }
-    });
-  });
-}
-
-/* ── STATS TAB ───────────────────────────────────────────── */
-function renderStatsTab() {
-  const sess = document.getElementById('stats-session');
-  const tots = document.getElementById('stats-totals');
-  const achEl = document.getElementById('stats-achievements');
-  const lpShop = document.getElementById('lp-shop-panel');
-  const lpEl   = document.getElementById('lp-shop');
-
-  if (sess) {
-    sess.innerHTML = `
-      <div class="stat-row"><span class="stat-label">Time Played</span><span class="stat-val">${fmtTime(gameState.timePlayed)}</span></div>
-      <div class="stat-row"><span class="stat-label">Manual Collects</span><span class="stat-val">${gameState.stats.manualCollects}</span></div>
-      <div class="stat-row"><span class="stat-label">Research Done</span><span class="stat-val">${gameState.completedResearch.length}</span></div>
-      <div class="stat-row"><span class="stat-label">Buildings Owned</span><span class="stat-val">${Object.values(gameState.buildings).reduce((a,b)=>a+b,0)}</span></div>
-      <div class="stat-row"><span class="stat-label">Power</span><span class="stat-val">${fmt(gameState.power.generated)} MW gen</span></div>
-      <div class="stat-row"><span class="stat-label">Prestiges</span><span class="stat-val">${gameState.prestigeCount}</span></div>
-      <div class="stat-row"><span class="stat-label">Legacy Points</span><span class="stat-val accent">${gameState.legacyPoints} LP</span></div>
-    `;
-  }
-
-  if (tots) {
-    let rows = '';
-    for (const r of RESOURCES) {
-      if (r.category === 'special') continue;
-      const res = gameState.resources[r.id];
-      if (res.totalProduced > 0) {
-        rows += `<div class="stat-row"><span class="stat-label">${r.name}</span><span class="stat-val">${fmt(res.totalProduced)}</span></div>`;
-      }
+    const card = document.createElement('div');
+    card.className = 'res-card' + (done ? ' done' : locked ? ' locked' : afford ? ' affordable' : '');
+    card.innerHTML = `<div class="res-card-name">${done ? '✓ ' : ''}${r.name}</div>
+      <div class="res-card-desc">${r.description}</div>
+      <div class="res-card-cost">${done ? 'Completed' : r.cost_rp + ' RP'}</div>`;
+    if (!done && !locked) {
+      card.onclick = () => {
+        if (buyResearch(r.id)) { toast('Researched: ' + r.name); buildResearchPanel(); }
+        else toast('Not enough RP');
+      };
     }
-    tots.innerHTML = rows || '<div class="muted small">No production yet.</div>';
-  }
-
-  if (achEl) {
-    let html = '<div class="achievement-grid">';
-    for (const a of ACHIEVEMENTS) {
-      const done = gameState.achievements.includes(a.id);
-      html += `<div class="achievement-badge ${done ? 'unlocked' : ''}" title="${a.desc}">${a.name}</div>`;
-    }
-    html += '</div>';
-    achEl.innerHTML = html;
-  }
-
-  if (lpShop) {
-    if (gameState.prestigeCount >= 1) {
-      lpShop.style.display = '';
-      if (lpEl) {
-        let html = `<div class="stat-row"><span class="stat-label">LP Available</span><span class="stat-val accent">${gameState.legacyPoints}</span></div>`;
-        for (const u of LP_UPGRADES) {
-          const bought = gameState.lpUpgradesBought.includes(u.id);
-          html += `
-          <div class="lp-item">
-            <span class="lp-desc">${u.desc}</span>
-            <span>
-              <span class="lp-cost">${u.cost} LP</span>
-              <button class="btn btn-buy btn-small" data-lpid="${u.id}" ${bought || gameState.legacyPoints < u.cost ? 'disabled' : ''}>
-                ${bought ? 'OWNED' : 'BUY'}
-              </button>
-            </span>
-          </div>`;
-        }
-        lpEl.innerHTML = html;
-        lpEl.querySelectorAll('[data-lpid]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            if (buyLPUpgrade(btn.dataset.lpid)) renderStatsTab();
-          });
-        });
-      }
-    } else {
-      lpShop.style.display = 'none';
-    }
+    list.appendChild(card);
   }
 }
 
-/* ── LORE TAB ────────────────────────────────────────────── */
-function renderLoreTab() {
-  const el = document.getElementById('lore-list');
-  if (!el) return;
-  let html = '';
-  for (const entry of LORE) {
-    const unlocked = gameState.unlockedLore.includes(entry.id);
-    if (unlocked) {
-      html += `
-      <div class="lore-entry">
-        <div class="lore-title">${entry.title.toUpperCase()}</div>
-        <div class="lore-text">${entry.text}</div>
-      </div>`;
-    } else {
-      html += `<div class="lore-locked">— TRANSMISSION LOCKED —</div>`;
-    }
-  }
-  el.innerHTML = html || '<div class="muted small">No transmissions yet.</div>';
+function buildStatsPanel() {
+  const el = document.getElementById('stats-content');
+  const p  = gameState.power;
+  const mined = Object.entries(gameState.totalMined).map(([k,v])=>`${RES_BY_ID[k]?.name||k}: ${fmtNum(v)}`).join('<br>') || '—';
+  const inv   = Object.entries(gameState.inventory).filter(([,v])=>v>0).map(([k,v])=>`${RES_BY_ID[k]?.name||k}: ${fmtNum(v)}`).join('<br>') || '—';
+  el.innerHTML = `
+    <b>Power</b><br>Generated: ${fmtNum(p.generated)} MW<br>Consumed: ${fmtNum(p.consumed)} MW<br><br>
+    <b>Total Mined</b><br>${mined}<br><br>
+    <b>Inventory</b><br>${inv}<br><br>
+    <b>Time Played</b><br>${fmtTime(gameState.timePlayed)}<br><br>
+    <b>Achievements</b><br>${gameState.achievements.length} / ${ACHIEVEMENTS.length}<br><br>
+    <b>Research</b><br>${gameState.completedResearch.length} / ${RESEARCH.length} done<br><br>
+    <button onclick="if(confirm('Reset everything?')) { resetGame(); location.reload(); }" style="color:var(--accent);border-color:var(--accent);padding:6px 12px;margin-top:8px">Reset Game</button>
+  `;
 }
 
-/* ── PRESTIGE ────────────────────────────────────────────── */
-function renderPrestigeBar() {
-  const bar = document.getElementById('prestige-bar');
-  if (!bar) return;
-  bar.style.display = canPrestige() ? '' : 'none';
+function updateNavHint() {
+  const hint = document.getElementById('build-hint');
+  if (!hint) return;
+  const tools = [
+    { icon: selectedTool === 'remove' ? '🗑' : (selectedTool ? BUILDINGS.find(b=>b.tileType===selectedTool.tileType)?.icon || '?' : '👆'), label: selectedTool === 'remove' ? 'REMOVE' : (selectedTool ? BUILDINGS.find(b=>b.tileType===selectedTool.tileType)?.name || '?' : 'SELECT'), active: !!selectedTool },
+    { icon: '↔', label: 'SCROLL', active: !selectedTool },
+  ];
+  hint.innerHTML = tools.map(t=>
+    `<div class="hint-tool ${t.active?'active':''}">
+       <span class="hint-tool-icon">${t.icon}</span>
+       <span>${t.label}</span>
+     </div>`
+  ).join('');
 }
 
-function showPrestigeModal() {
-  const lpGain = getPrestigeLPGain();
-  showModal(
-    'NEW ERA',
-    `Legacy Points earned: ${lpGain}\nAll progress resets.`,
-    [
-      { label: 'CONFIRM REBUILD', cls: 'btn-primary', action: () => {
-        closeModal();
-        const gained = doPrestige();
-        showToast('PRESTIGE', 'New Era', `+${gained} LP gained`);
-        renderUI();
-      }},
-      { label: 'CANCEL', cls: 'btn-secondary', action: () => closeModal() }
-    ]
-  );
+// ── Utility ──────────────────────────────────────────────────────────────────
+function fmtNum(n) {
+  n = Math.floor(n);
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return n.toString();
 }
-
-/* ── HEADER ──────────────────────────────────────────────── */
-function renderHeader() {
-  const timeEl     = document.getElementById('header-time');
-  const prestigeEl = document.getElementById('header-prestige');
-  if (timeEl)     timeEl.textContent     = fmtTime(gameState.timePlayed);
-  if (prestigeEl) prestigeEl.textContent = gameState.prestigeCount > 0 ? `ERA ${gameState.prestigeCount}` : '';
+function fmtTime(s) {
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+  return h + 'h ' + m + 'm';
 }
-
-/* ── FULL RENDER ─────────────────────────────────────────── */
-function renderUI() {
-  renderHeader();
-  renderResourceList();
-  renderPower();
-  renderBuildingList();
-  renderCollectSection();
-  renderPrestigeBar();
-
-  if (gameState.ui.activeTab === 'research') renderResearchTab();
-  if (gameState.ui.activeTab === 'stats')    renderStatsTab();
-  if (gameState.ui.activeTab === 'lore')     renderLoreTab();
-}
-
-/* ── OFFLINE MODAL ───────────────────────────────────────── */
-function showOfflineModal(result) {
-  if (result.skipped) return;
-  const elapsed = result.elapsed;
-  const h = Math.floor(elapsed / 3600);
-  const m = Math.floor((elapsed % 3600) / 60);
-  const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
-
-  let table = '<table class="offline-table">';
-  for (const r of RESOURCES) {
-    if (r.category === 'special') continue;
-    const gained = (result.after[r.id] || 0) - (result.before[r.id] || 0);
-    if (gained > 0.1) {
-      table += `<tr><td>${r.name}</td><td>+${fmt(gained)}</td></tr>`;
-    }
-  }
-  table += '</table>';
-
-  showModal(
-    'WELCOME BACK',
-    `Away: ${timeStr}<br>Produced while offline:<br>${table}`,
-    [{ label: 'CONTINUE', cls: 'btn-primary', action: () => closeModal() }]
-  );
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 2100);
 }

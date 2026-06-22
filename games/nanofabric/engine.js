@@ -1,421 +1,330 @@
-/* NanoFactory — engine.js
- * tick(), powerCalc(), productionCalc(), offline catch-up
- */
-
-const TICK_INTERVAL = 250;   // ms
-const TICK_DELTA   = 0.25;   // seconds per tick
-const MAX_OFFLINE  = 28800;  // 8 hours in seconds
-
-function getResearchMultiplier(researchId) {
-  return gameState.completedResearch.includes(researchId) ? 2.0 : 1.0;
-}
+/* NanoFactory — engine.js (grid edition) */
 
 function getMineMultiplier() {
-  let mult = 1.0;
-  if (gameState.completedResearch.includes('efficient_mining_1')) mult += 0.25;
-  if (gameState.completedResearch.includes('efficient_mining_2')) mult += 0.50;
-  if (gameState.completedResearch.includes('efficient_mining_3')) mult += 1.00;
-  // LP boost
-  if (gameState.lpUpgradesBought.includes('prod_boost')) mult += 0.1;
-  return mult;
+  let m = 1.0;
+  if (gameState.completedResearch.includes('efficient_mining_1')) m += 0.5;
+  if (gameState.completedResearch.includes('efficient_mining_2')) m += 1.0;
+  return m;
+}
+function getGenMultiplier() {
+  return gameState.completedResearch.includes('grid_optimization') ? 1.2 : 1.0;
+}
+function getCraftMultiplier(tileType) {
+  let m = 1.0;
+  if (tileType === T.SMELTER && gameState.completedResearch.includes('advanced_smelting')) m *= 2;
+  if (tileType === T.FORGE   && gameState.completedResearch.includes('alloy_mastery'))     m *= 2;
+  if (gameState.completedResearch.includes('stack_inserter')) m *= 2;
+  return m;
+}
+function getBeltSpeed() {
+  if (gameState.completedResearch.includes('belt_speed_2')) return 4;
+  if (gameState.completedResearch.includes('belt_speed_1')) return 2;
+  return 1;
 }
 
-function getGeneratorMultiplier() {
-  let mult = 1.0;
-  if (gameState.completedResearch.includes('grid_optimization')) mult += 0.2;
-  return mult;
-}
-
-function getProcessingMultiplier(buildingId) {
-  let mult = 1.0;
-  if (buildingId === 'smelter' && gameState.completedResearch.includes('advanced_smelting')) mult *= 2.0;
-  if (buildingId === 'forge' && gameState.completedResearch.includes('alloy_mastery')) mult *= 2.0;
-  if (gameState.completedResearch.includes('bulk_production')) mult += (1 / 4); // +1/tick = +0.25/s per building effectively
-  if (gameState.lpUpgradesBought.includes('prod_boost')) mult += 0.1;
-  return mult;
-}
-
-function getResourceCap(resourceId) {
-  const res = RESOURCES.find(r => r.id === resourceId);
-  if (!res || res.defaultCap === Infinity) return Infinity;
-
-  let cap = res.defaultCap;
-  // Storage depots
-  cap += (gameState.buildings.storage_depot || 0) * 500;
-  // Research
-  if (gameState.completedResearch.includes('extended_storage_1')) cap += 1000;
-  if (gameState.completedResearch.includes('extended_storage_2')) cap += 5000;
-  return cap;
-}
-
-function syncCaps() {
-  for (const r of RESOURCES) {
-    if (r.defaultCap !== Infinity) {
-      gameState.resources[r.id].cap = getResourceCap(r.id);
-    }
-  }
-}
-
+// ── Power Calculation ────────────────────────────────────────────────────────
 function powerCalc() {
-  let generated = 0;
-  let consumed  = 0;
-
-  const genMult = getGeneratorMultiplier();
-
-  for (const b of BUILDINGS) {
-    const owned = gameState.buildings[b.id] || 0;
-    if (owned === 0) continue;
-
-    if (b.category === 'power' && b.output && b.output.mw) {
-      let gen = b.output.mw * owned * genMult;
-
-      // Fuel check for coal generators
-      if (b.id === 'coal_generator') {
-        const coalNeeded = b.input.coal * owned * TICK_DELTA;
-        const coalAvail  = gameState.resources.coal.amount;
-        const ratio = coalNeeded > 0 ? Math.min(1, coalAvail / coalNeeded) : 1;
-        gen *= ratio;
-      }
-      // Nuclear fuel check
-      if (b.id === 'nuclear_reactor') {
-        const fuelNeeded = b.input.energy_cell * owned * TICK_DELTA;
-        const fuelAvail  = gameState.resources.energy_cell.amount;
-        const ratio = fuelNeeded > 0 ? Math.min(1, fuelAvail / fuelNeeded) : 1;
-        gen *= ratio;
-      }
-
-      generated += gen;
-    }
-
-    if (b.energyCost > 0) {
-      consumed += b.energyCost * owned;
+  let gen = 0, con = 0;
+  const gm = getGenMultiplier();
+  for (let y = 0; y < GRID_ROWS; y++) {
+    for (let x = 0; x < GRID_COLS; x++) {
+      const t = getTile(x, y);
+      const b = BUILDING_BY_TYPE[t];
+      if (!b) continue;
+      if (b.powerOut) gen += b.powerOut * gm;
+      if (b.energyCost) con += b.energyCost;
     }
   }
-
-  const ratio = consumed === 0 ? 1.0 : (generated >= consumed ? 1.0 : generated / consumed);
-  gameState.power = { generated, consumed, ratio };
+  const ratio = con === 0 ? 1 : Math.min(1, gen / con);
+  gameState.power = { generated: gen, consumed: con, ratio };
 }
 
-function productionCalc(delta) {
-  syncCaps();
-  powerCalc();
-
-  const ratio = gameState.power.ratio;
-
-  // Track per-second rates
-  const produced = {};
-  const consumed = {};
-  for (const r of RESOURCES) {
-    produced[r.id] = 0;
-    consumed[r.id] = 0;
-  }
-
-  for (const b of BUILDINGS) {
-    const owned = gameState.buildings[b.id] || 0;
-    if (owned === 0) continue;
-
-    // MINES
-    if (b.category === 'mining' && b.output) {
-      const mult = getMineMultiplier();
-      for (const [rid, rps] of Object.entries(b.output)) {
-        if (rid === 'mw') continue;
-        const gain = rps * owned * mult * delta;
-        const res  = gameState.resources[rid];
-        if (!res) continue;
-        const actual = Math.min(gain, res.cap - res.amount);
-        if (actual > 0) {
-          res.amount += actual;
-          res.totalProduced += actual;
-          produced[rid] += actual / delta;
-        }
-      }
-    }
-
-    // PROCESSING (including lab)
-    if ((b.category === 'processing') && b.output) {
-      const mult = getProcessingMultiplier(b.id);
-      const effectiveRatio = b.energyCost > 0 ? ratio : 1.0;
-
-      // Check inputs available
-      let inputRatio = 1.0;
-      if (b.input) {
-        for (const [rid, rps] of Object.entries(b.input)) {
-          if (rid === 'mw') continue;
-          const needed = rps * owned * delta;
-          const avail  = gameState.resources[rid] ? gameState.resources[rid].amount : 0;
-          if (needed > 0) {
-            inputRatio = Math.min(inputRatio, avail / needed);
-          }
-        }
-      }
-      inputRatio = Math.max(0, inputRatio);
-      const finalRatio = effectiveRatio * inputRatio;
-
-      // Consume inputs
-      if (b.input && finalRatio > 0) {
-        for (const [rid, rps] of Object.entries(b.input)) {
-          if (rid === 'mw') continue;
-          const consume = rps * owned * delta * finalRatio;
-          if (gameState.resources[rid]) {
-            gameState.resources[rid].amount = Math.max(0, gameState.resources[rid].amount - consume);
-            consumed[rid] += consume / delta;
-          }
-        }
-      }
-
-      // Produce outputs
-      if (finalRatio > 0) {
-        for (const [rid, rps] of Object.entries(b.output)) {
-          if (rid === 'mw') continue;
-          const gain = rps * owned * mult * finalRatio * delta;
-          const res  = gameState.resources[rid];
-          if (!res) continue;
-          const cap = rid === 'research_points' ? Infinity : res.cap;
-          const actual = Math.min(gain, cap - res.amount);
-          if (actual > 0) {
-            res.amount  += actual;
-            if (rid !== 'research_points') res.totalProduced += actual;
-            produced[rid] += actual / delta;
-          }
-        }
-      }
-    }
-
-    // POWER buildings — consume fuel
-    if (b.category === 'power' && b.input) {
-      if (b.id === 'coal_generator') {
-        const coalNeeded = b.input.coal * owned * delta;
-        const coalAvail  = gameState.resources.coal.amount;
-        const actual = Math.min(coalNeeded, coalAvail);
-        gameState.resources.coal.amount = Math.max(0, gameState.resources.coal.amount - actual);
-        consumed['coal'] += actual / delta;
-      }
-      if (b.id === 'nuclear_reactor') {
-        const fuelNeeded = b.input.energy_cell * owned * delta;
-        const fuelAvail  = gameState.resources.energy_cell.amount;
-        const actual = Math.min(fuelNeeded, fuelAvail);
-        gameState.resources.energy_cell.amount = Math.max(0, gameState.resources.energy_cell.amount - actual);
-        consumed['energy_cell'] += actual / delta;
-      }
+// ── Belt tick: move items one step forward ───────────────────────────────────
+function beltTick() {
+  const speed = getBeltSpeed();
+  // We need to process in order of direction to avoid double-moving
+  // Simple approach: collect all (pos, item) to move, then apply
+  const moves = [];
+  for (let y = 0; y < GRID_ROWS; y++) {
+    for (let x = 0; x < GRID_COLS; x++) {
+      const t = getTile(x, y);
+      if (!BELT_SET.has(t)) continue;
+      const item = getItem(x, y);
+      if (!item) continue;
+      const [dx, dy] = DIR_OFFSET[t];
+      const nx = x + dx, ny = y + dy;
+      moves.push({ x, y, nx, ny, item });
     }
   }
-
-  // Update rolling rate buffers
-  const tick = gameState.tickCount % 4;
-  for (const r of RESOURCES) {
-    const res = gameState.resources[r.id];
-    const net = (produced[r.id] || 0) - (consumed[r.id] || 0);
-    res._rateBuffer[tick] = net;
-    res.perSecond = res._rateBuffer.reduce((a,b)=>a+b,0) / 4;
+  // process each move
+  for (let s = 0; s < speed; s++) {
+    for (const m of moves) {
+      const { x, y, nx, ny, item } = m;
+      if (getItem(x, y) !== item) continue; // already moved
+      const nt = getTile(nx, ny);
+      if (nt === -1) {
+        // off-grid: drop item into inventory
+        addInv(item, 1);
+        setItem(x, y, null);
+        continue;
+      }
+      if (BELT_SET.has(nt)) {
+        // move to next belt only if empty
+        if (getItem(nx, ny) === null) {
+          setItem(nx, ny, item);
+          setItem(x, y, null);
+          m.x = nx; m.y = ny; // update for next speed iteration
+        }
+      } else if (BUILDING_BY_TYPE[nt]) {
+        // feed into machine input buffer
+        const meta = getMeta(nx, ny);
+        if (meta) {
+          const b = BUILDING_BY_TYPE[nt];
+          if (b.input && b.input[item] !== undefined) {
+            const bufAmt = meta.inputBuffer[item] || 0;
+            if (bufAmt < 10) {
+              meta.inputBuffer[item] = bufAmt + 1;
+              setItem(x, y, null);
+            }
+          } else if (nt === T.CHEST) {
+            const bufAmt = meta.inputBuffer[item] || 0;
+            if (bufAmt < (BUILDING_BY_TYPE[T.CHEST].capacity || 200)) {
+              meta.inputBuffer[item] = bufAmt + 1;
+              setItem(x, y, null);
+            }
+          }
+        }
+      }
+    }
   }
 }
 
+// ── Machine tick: advance crafting progress ──────────────────────────────────
+function machineTick(delta) {
+  const powerRatio = gameState.power.ratio;
+  for (let y = 0; y < GRID_ROWS; y++) {
+    for (let x = 0; x < GRID_COLS; x++) {
+      const t = getTile(x, y);
+      const b = BUILDING_BY_TYPE[t];
+      if (!b || b.category === 'belt') continue;
+      const meta = getMeta(x, y);
+      if (!meta) continue;
+
+      // MINER
+      if (t === T.MINER) {
+        // Find patch below miner
+        const patch = getTile(x, y); // miner is ON the patch after placement
+        const patchBelow = meta.patch;
+        if (!patchBelow) continue;
+        const resId = PATCH_RES[patchBelow];
+        if (!resId) continue;
+        meta.progress += getMineMultiplier() * delta / 1.0; // 1 item/s base
+        if (meta.progress >= 1) {
+          meta.progress -= 1;
+          gameState.totalMined[resId] = (gameState.totalMined[resId] || 0) + 1;
+          // Try to push output to adjacent belt
+          if (!pushOutput(x, y, resId)) {
+            // drop to inventory if no belt
+            addInv(resId, 1);
+          }
+        }
+        continue;
+      }
+
+      // POWER buildings (coal gen, nuclear)
+      if (b.category === 'power') {
+        if (b.input) {
+          // Consume fuel from inputBuffer or inventory each tick
+          for (const [rid, rps] of Object.entries(b.input)) {
+            if (rid === 'mw') continue;
+            const needed = rps * delta;
+            const fromBuf = Math.min(meta.inputBuffer[rid] || 0, needed);
+            meta.inputBuffer[rid] = (meta.inputBuffer[rid] || 0) - fromBuf;
+            const remain = needed - fromBuf;
+            if (remain > 0) takeInv(rid, remain);
+          }
+        }
+        continue;
+      }
+
+      // CHEST
+      if (t === T.CHEST) continue;
+
+      // PROCESSING machines
+      if (!b.input || !b.output) continue;
+      if (b.energyCost > 0 && powerRatio < 0.1) continue;
+
+      const cm = getCraftMultiplier(t);
+      const speed = (1.0 / b.craftTime) * cm * (b.energyCost > 0 ? powerRatio : 1);
+
+      // Check if we have enough input in buffer
+      let canCraft = true;
+      if (meta.outputBuffer) {
+        canCraft = false; // wait until output is pushed
+      } else {
+        for (const [rid, amt] of Object.entries(b.input)) {
+          const have = meta.inputBuffer[rid] || 0;
+          if (have < amt) { canCraft = false; break; }
+        }
+      }
+
+      if (canCraft) {
+        meta.progress += speed * delta;
+        if (meta.progress >= 1) {
+          meta.progress -= 1;
+          // Consume inputs
+          for (const [rid, amt] of Object.entries(b.input)) {
+            meta.inputBuffer[rid] = (meta.inputBuffer[rid] || 0) - amt;
+          }
+          // Queue output
+          for (const [rid, amt] of Object.entries(b.output)) {
+            if (rid === 'mw') continue;
+            if (rid === 'research_points') {
+              addInv(rid, amt);
+            } else {
+              meta.outputBuffer = { id: rid, amt };
+            }
+          }
+        }
+      }
+
+      // Try to push output buffer onto adjacent belt
+      if (meta.outputBuffer) {
+        const { id: rid, amt } = meta.outputBuffer;
+        for (let i = 0; i < amt; i++) {
+          if (pushOutput(x, y, rid)) {
+            meta.outputBuffer = null;
+          } else {
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Push one item of 'resId' from tile (x,y) to any adjacent belt
+function pushOutput(x, y, resId) {
+  const neighbors = [[1,0],[-1,0],[0,1],[0,-1]];
+  for (const [dx, dy] of neighbors) {
+    const nx = x+dx, ny = y+dy;
+    const nt = getTile(nx, ny);
+    if (!BELT_SET.has(nt)) continue;
+    if (getItem(nx, ny) !== null) continue;
+    setItem(nx, ny, resId);
+    return true;
+  }
+  return false;
+}
+
+// ── Master tick ──────────────────────────────────────────────────────────────
 function tick() {
-  gameState.tickCount++;
-  productionCalc(TICK_DELTA);
+  powerCalc();
+  beltTick();
+  machineTick(TICK_DELTA);
   checkAchievements();
   checkLore();
   gameState.timePlayed += TICK_DELTA;
-
-  // Sync totalEnergyCellsEver
-  gameState.totalEnergyCellsEver = Math.max(
-    gameState.totalEnergyCellsEver,
-    gameState.resources.energy_cell.totalProduced
-  );
 }
 
-function offlineCatchUp(elapsed) {
-  elapsed = Math.min(elapsed, MAX_OFFLINE);
-  if (elapsed < 1) return { skipped: true };
+// ── Place tile ───────────────────────────────────────────────────────────────
+function placeTile(x, y, tileType) {
+  const existing = getTile(x, y);
+  const b = BUILDING_BY_TYPE[tileType];
 
-  // Snapshot resources before catchup
-  const before = {};
-  for (const r of RESOURCES) {
-    before[r.id] = gameState.resources[r.id].amount;
+  // Can't place on ore patches (except miners)
+  const isPatch = existing === T.PATCH_IRON || existing === T.PATCH_COPPER || existing === T.PATCH_COAL;
+  if (isPatch && tileType !== T.MINER) return false;
+  if (!isPatch && existing !== T.EMPTY) return false;
+
+  // Check placement cost
+  if (b && b.placeCost) {
+    for (const [rid, amt] of Object.entries(b.placeCost)) {
+      if (getInv(rid) < amt) return false;
+    }
+    for (const [rid, amt] of Object.entries(b.placeCost)) {
+      takeInv(rid, amt);
+    }
   }
 
-  // Run in batches for performance
-  const maxIter = 1000;
-  const totalTicks = elapsed / TICK_DELTA;
-  const batchSize  = Math.ceil(totalTicks / maxIter);
-  const batchDelta = batchSize * TICK_DELTA;
-  const iters      = Math.ceil(totalTicks / batchSize);
-
-  for (let i = 0; i < iters; i++) {
-    productionCalc(batchDelta);
-    gameState.timePlayed += batchDelta;
-    gameState.tickCount++;
+  // Check research lock
+  if (b && b.unlockedByResearch && !gameState.completedResearch.includes(b.unlockedByResearch)) {
+    return false;
   }
 
-  const after = {};
-  for (const r of RESOURCES) {
-    after[r.id] = gameState.resources[r.id].amount;
+  if (isPatch && tileType === T.MINER) {
+    // Store patch type in meta
+    setTile(x, y, T.MINER);
+    setMeta(x, y, { progress: 0, inputBuffer: {}, outputBuffer: null, patch: existing });
+  } else {
+    setTile(x, y, tileType);
+    if (BELT_SET.has(tileType)) {
+      gameState.totalBelts++;
+    } else {
+      initMeta(x, y, tileType);
+    }
   }
 
-  return { elapsed, before, after };
+  // Stats
+  if (b) {
+    if (tileType === T.MINER) gameState.stats.minersPlaced++;
+    if (b.category === 'power') gameState.stats.generatorsBuilt++;
+    gameState.stats.buildingsPlaced++;
+  }
+  return true;
 }
 
-function manualCollect() {
-  const gains = {};
-  // Give 5s worth of mine production
-  for (const b of BUILDINGS) {
-    if (b.category !== 'mining' || !b.output) continue;
-    const owned = gameState.buildings[b.id] || 0;
-    if (owned === 0) continue;
-    const mult = getMineMultiplier();
-    for (const [rid, rps] of Object.entries(b.output)) {
-      if (rid === 'mw') continue;
-      const gain = rps * owned * mult * 5;
-      const res  = gameState.resources[rid];
-      if (!res) continue;
-      const actual = Math.min(gain, res.cap - res.amount);
-      if (actual > 0) {
-        res.amount += actual;
-        res.totalProduced += actual;
-        gains[rid] = (gains[rid] || 0) + actual;
-      }
+function removeTile(x, y) {
+  const t = getTile(x, y);
+  if (t === T.EMPTY || t === T.PATCH_IRON || t === T.PATCH_COPPER || t === T.PATCH_COAL) return false;
+
+  // Refund item on belt
+  const item = getItem(x, y);
+  if (item) { addInv(item, 1); setItem(x, y, null); }
+
+  // Refund buffers
+  const meta = getMeta(x, y);
+  if (meta && meta.inputBuffer) {
+    for (const [rid, amt] of Object.entries(meta.inputBuffer)) {
+      if (amt > 0) addInv(rid, Math.floor(amt));
     }
   }
-  // If no mines, give flat iron/copper/coal
-  if (Object.keys(gains).length === 0) {
-    const flat = { iron_ore: 10, copper_ore: 10, coal: 5 };
-    for (const [rid, amt] of Object.entries(flat)) {
-      const res = gameState.resources[rid];
-      const actual = Math.min(amt, res.cap - res.amount);
-      if (actual > 0) {
-        res.amount += actual;
-        res.totalProduced += actual;
-        gains[rid] = actual;
-      }
-    }
+  if (meta && meta.outputBuffer) {
+    addInv(meta.outputBuffer.id, meta.outputBuffer.amt);
   }
-  gameState.stats.manualCollects++;
-  return gains;
+
+  if (BELT_SET.has(t)) gameState.totalBelts = Math.max(0, gameState.totalBelts - 1);
+
+  // Restore patch if miner
+  if (t === T.MINER && meta && meta.patch) {
+    setTile(x, y, meta.patch);
+  } else {
+    setTile(x, y, T.EMPTY);
+  }
+  setMeta(x, y, null);
+  setItem(x, y, null);
+  return true;
+}
+
+// ── Research ─────────────────────────────────────────────────────────────────
+function canAffordResearch(id) {
+  const r = RESEARCH.find(x => x.id === id);
+  if (!r || gameState.completedResearch.includes(id)) return false;
+  if (r.requires && !gameState.completedResearch.includes(r.requires)) return false;
+  return getInv('research_points') >= r.cost_rp;
+}
+function buyResearch(id) {
+  if (!canAffordResearch(id)) return false;
+  const r = RESEARCH.find(x => x.id === id);
+  takeInv('research_points', r.cost_rp);
+  gameState.completedResearch.push(id);
+  return true;
 }
 
 function checkLore() {
-  for (const entry of LORE) {
-    if (!gameState.unlockedLore.includes(entry.id)) {
-      try {
-        if (entry.unlockCondition(gameState)) {
-          gameState.unlockedLore.push(entry.id);
-        }
-      } catch(e) {}
+  for (const e of LORE) {
+    if (!gameState.unlockedLore.includes(e.id)) {
+      try { if (e.unlockCondition(gameState)) gameState.unlockedLore.push(e.id); } catch(e){}
     }
   }
-}
-
-function canAffordBuilding(buildingId, qty) {
-  const b = BUILDINGS.find(x => x.id === buildingId);
-  if (!b) return false;
-  const owned = gameState.buildings[buildingId] || 0;
-  let totalCost = {};
-  for (let i = 0; i < qty; i++) {
-    const mult = Math.pow(b.costMultiplier, owned + i);
-    for (const [rid, base] of Object.entries(b.baseCost)) {
-      totalCost[rid] = (totalCost[rid] || 0) + Math.ceil(base * mult);
-    }
-  }
-  for (const [rid, needed] of Object.entries(totalCost)) {
-    if (!gameState.resources[rid] || gameState.resources[rid].amount < needed) return false;
-  }
-  return totalCost;
-}
-
-function buyBuilding(buildingId, qty) {
-  if (qty === 'max') {
-    let n = 0;
-    while (canAffordBuilding(buildingId, n + 1)) n++;
-    if (n === 0) return false;
-    qty = n;
-  }
-  const cost = canAffordBuilding(buildingId, qty);
-  if (!cost) return false;
-  for (const [rid, needed] of Object.entries(cost)) {
-    gameState.resources[rid].amount -= needed;
-  }
-  gameState.buildings[buildingId] = (gameState.buildings[buildingId] || 0) + qty;
-  gameState.stats.buildingsBought[buildingId] = (gameState.stats.buildingsBought[buildingId] || 0) + qty;
-  syncCaps();
-  return true;
-}
-
-function getBuildingCostDisplay(buildingId, qty) {
-  const b = BUILDINGS.find(x => x.id === buildingId);
-  if (!b) return {};
-  const owned = gameState.buildings[buildingId] || 0;
-  let totalCost = {};
-  for (let i = 0; i < qty; i++) {
-    const mult = Math.pow(b.costMultiplier, owned + i);
-    for (const [rid, base] of Object.entries(b.baseCost)) {
-      totalCost[rid] = (totalCost[rid] || 0) + Math.ceil(base * mult);
-    }
-  }
-  return totalCost;
-}
-
-function canAffordResearch(researchId) {
-  const r = RESEARCH.find(x => x.id === researchId);
-  if (!r) return false;
-  if (gameState.completedResearch.includes(researchId)) return false;
-  if (r.requires && !gameState.completedResearch.includes(r.requires)) return false;
-  return gameState.resources.research_points.amount >= r.cost_rp;
-}
-
-function buyResearch(researchId) {
-  if (!canAffordResearch(researchId)) return false;
-  const r = RESEARCH.find(x => x.id === researchId);
-  gameState.resources.research_points.amount -= r.cost_rp;
-  gameState.stats.rpSpent += r.cost_rp;
-  gameState.completedResearch.push(researchId);
-  return true;
-}
-
-function getPrestigeLPGain() {
-  const total = gameState.totalEnergyCellsEver;
-  return Math.floor(Math.log10(total + 1));
-}
-
-function canPrestige() {
-  return gameState.resources.energy_cell.totalProduced >= 1;
-}
-
-function doPrestige() {
-  const lpGain = getPrestigeLPGain();
-  const newPrestige = gameState.prestigeCount + 1;
-  const newLP = gameState.legacyPoints + lpGain;
-  const lpBought = [...gameState.lpUpgradesBought];
-  const achievements = [...gameState.achievements];
-  const loreUnlocked = [...gameState.unlockedLore];
-  const totalCells = gameState.totalEnergyCellsEver + gameState.resources.energy_cell.totalProduced;
-
-  const fresh = defaultState();
-  fresh.prestigeCount = newPrestige;
-  fresh.legacyPoints  = newLP;
-  fresh.lpUpgradesBought = lpBought;
-  fresh.achievements  = achievements;
-  fresh.unlockedLore  = loreUnlocked;
-  fresh.totalEnergyCellsEver = totalCells;
-
-  // Starting resource boost from LP upgrade
-  if (lpBought.includes('start_res')) {
-    for (const r of RESOURCES) {
-      if (r.category === 'raw') {
-        fresh.resources[r.id].amount = 20;
-      }
-    }
-  }
-
-  gameState = fresh;
-  return lpGain;
-}
-
-function buyLPUpgrade(upgradeId) {
-  const upg = LP_UPGRADES.find(u => u.id === upgradeId);
-  if (!upg) return false;
-  if (gameState.lpUpgradesBought.includes(upgradeId)) return false;
-  if (gameState.legacyPoints < upg.cost) return false;
-  gameState.legacyPoints -= upg.cost;
-  gameState.lpUpgradesBought.push(upgradeId);
-  return true;
 }

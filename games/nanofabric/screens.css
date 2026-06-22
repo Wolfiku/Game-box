@@ -1,122 +1,42 @@
-/* NanoFactory — screens.css */
-
-/* START SCREEN */
-.screen-start {
-  background: var(--bg);
-  flex-direction: column;
+/* Bottom nav */
+#bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: flex;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  justify-content: space-around;
+  z-index: 100;
 }
-
-/* PERSPECTIVE GRID BACKGROUND */
-.start-grid-bg {
-  position: absolute;
-  inset: 0;
-  perspective: 400px;
-  overflow: hidden;
-}
-
-.start-grid-bg::before,
-.start-grid-bg::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%) rotateX(55deg);
-  width: 300%;
-  height: 300%;
-  top: -50%;
-  background-image:
-    linear-gradient(rgba(200,168,75,0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200,168,75,0.08) 1px, transparent 1px);
-  background-size: 50px 50px;
-  animation: gridMove 8s linear infinite;
-}
-
-.start-grid-bg::after {
-  background-image:
-    linear-gradient(rgba(75,143,200,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(75,143,200,0.04) 1px, transparent 1px);
-  background-size: 200px 200px;
-  animation-duration: 20s;
-}
-
-@keyframes gridMove {
-  from { background-position: 0 0; }
-  to   { background-position: 0 50px; }
-}
-
-/* START CONTENT */
-.start-content {
-  position: relative;
-  z-index: 2;
-  text-align: center;
+.nav-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-}
-
-.start-title {
-  font-size: clamp(32px, 6vw, 64px);
-  font-weight: bold;
-  letter-spacing: 0.3em;
-  color: var(--accent);
-  text-shadow: 0 0 40px rgba(200,168,75,0.3);
-}
-
-.start-subtitle {
-  font-size: clamp(11px, 2vw, 14px);
-  letter-spacing: 0.2em;
-  color: var(--muted);
-  height: 20px;
-}
-
-/* TYPEWRITER */
-.typewriter {
-  overflow: hidden;
-  display: inline-block;
-  white-space: nowrap;
-  border-right: 2px solid var(--accent);
-  width: 0;
-  animation:
-    typing 1.5s steps(28, end) 0.5s forwards,
-    blink 0.8s step-end infinite 2s;
-}
-
-@keyframes typing {
-  from { width: 0; }
-  to   { width: 100%; }
-}
-
-@keyframes blink {
-  50% { border-color: transparent; }
-}
-
-.start-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
-  margin-top: 8px;
-}
-
-/* VERSION */
-.version-tag {
-  position: absolute;
-  bottom: 16px;
-  right: 20px;
+  gap: 2px;
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
   font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 0.1em;
-  z-index: 2;
+  color: var(--text-dim);
+  transition: all 0.15s;
+  min-width: 52px;
 }
-
-/* GAME SCREEN */
-.screen-game {
-  display: none;
+.nav-btn.active {
+  border-color: var(--accent);
+  color: var(--text);
 }
+.nav-btn-icon { font-size: 20px; }
 
-.screen-game.active {
-  display: flex;
+/* Belt direction indicator on tile */
+.belt-arrow { pointer-events: none; }
+
+/* Overlay backdrop */
+.overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 190;
 }
