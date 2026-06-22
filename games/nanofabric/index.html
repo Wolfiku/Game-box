@@ -4,82 +4,217 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>NanoFactory</title>
-  <link rel="stylesheet" href="base.css">
-  <link rel="stylesheet" href="components.css">
-  <link rel="stylesheet" href="screens.css">
+  <style>
+    :root {
+      --tb:  44px;
+      --rb:  36px;
+      --nb:  60px;
+      --bg:  #0a0a10;
+      --bg2: #111118;
+      --bg3: #1a1a24;
+      --bd:  #2a2a3a;
+      --tx:  #e0e0f0;
+      --dim: #9090a8;
+      --mut: #55556a;
+      --acc: #e94560;
+      --blu: #4f8ef7;
+      --grn: #4caf7d;
+      --orn: #f5a623;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:'Courier New',monospace}
+    button{cursor:pointer;background:transparent;border:none;color:var(--tx);font-family:inherit}
+    .hidden{display:none!important}
+
+    /* TOOLBAR */
+    #toolbar{
+      position:fixed;top:0;left:0;right:0;height:var(--tb);
+      background:var(--bg2);border-bottom:1px solid var(--bd);
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 10px;z-index:100;
+    }
+    #toolbar-title{font-size:13px;font-weight:bold;letter-spacing:3px;color:var(--acc)}
+    #hud-power{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:4px}
+    #btn-save{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;border:1px solid transparent}
+    #btn-save:active{background:var(--bg3)}
+
+    /* RESOURCE BAR */
+    #res-bar{
+      position:fixed;top:var(--tb);left:0;right:0;height:var(--rb);
+      background:var(--bg2);border-bottom:1px solid var(--bd);
+      display:flex;align-items:center;padding:0 6px;gap:6px;
+      overflow-x:auto;z-index:99;scrollbar-width:none;
+    }
+    #res-bar::-webkit-scrollbar{display:none}
+    .rc{display:flex;align-items:center;gap:4px;white-space:nowrap;font-size:11px;
+        padding:2px 6px;background:var(--bg3);border-radius:4px;border:1px solid var(--bd);flex-shrink:0}
+    .rc b{color:var(--tx)}
+
+    /* MODE BADGE */
+    #mode-badge{
+      position:fixed;top:calc(var(--tb) + var(--rb) + 8px);left:50%;transform:translateX(-50%);
+      background:var(--bg2);border:1px solid var(--blu);border-radius:20px;
+      padding:4px 14px;font-size:11px;color:var(--blu);letter-spacing:1px;
+      z-index:98;pointer-events:none;transition:opacity 0.3s;opacity:0;
+    }
+    #mode-badge.show{opacity:1}
+
+    /* GRID */
+    #grid-wrap{
+      position:fixed;
+      top:calc(var(--tb) + var(--rb));
+      left:0;right:0;
+      bottom:var(--nb);
+      overflow:hidden;background:var(--bg);
+    }
+    #grid-canvas{display:block;touch-action:none}
+
+    /* BOTTOM NAV */
+    #bottom-nav{
+      position:fixed;bottom:0;left:0;right:0;height:var(--nb);
+      background:var(--bg2);border-top:1px solid var(--bd);
+      display:flex;align-items:center;justify-content:space-around;
+      padding:0 4px;z-index:100;
+    }
+    .nb{
+      display:flex;flex-direction:column;align-items:center;gap:2px;
+      padding:6px 8px;border:1px solid transparent;border-radius:10px;
+      font-size:9px;color:var(--dim);min-width:52px;letter-spacing:0.5px;
+    }
+    .nb.act{border-color:var(--acc);color:var(--tx);background:rgba(233,69,96,.08)}
+    .nb.act-blu{border-color:var(--blu);color:var(--tx);background:rgba(79,142,247,.08)}
+
+    /* PANELS */
+    .panel{
+      position:fixed;bottom:var(--nb);left:0;right:0;
+      max-height:65vh;background:var(--bg2);
+      border-top:1px solid var(--bd);border-radius:14px 14px 0 0;
+      z-index:200;display:flex;flex-direction:column;overflow:hidden;
+      animation:slideUp .22s ease;
+    }
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .ph{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:12px 16px 10px;border-bottom:1px solid var(--bd);
+      font-weight:bold;letter-spacing:2px;font-size:12px;flex-shrink:0;
+    }
+    .cbtn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px}
+    .cbtn:active{background:var(--bg3)}
+    .psec{padding:10px 12px 4px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+    .plbl{font-size:10px;color:var(--mut);letter-spacing:2px;margin-bottom:8px}
+
+    /* BUILD BUTTONS */
+    #tool-buttons,#building-buttons{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+    .bb{
+      display:flex;flex-direction:column;align-items:center;gap:3px;
+      padding:9px 7px 7px;background:var(--bg3);border:1.5px solid var(--bd);
+      border-radius:8px;font-size:10px;color:var(--dim);
+      min-width:64px;flex:1;max-width:88px;position:relative;
+    }
+    .bb.act{border-color:var(--acc);background:rgba(233,69,96,.1);color:var(--tx)}
+    .bb.lck{opacity:.35;pointer-events:none}
+    .bb-name{font-weight:bold;font-size:10px;text-align:center;color:var(--tx)}
+    .rrow{display:flex;align-items:center;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:2px}
+    .rarr{color:var(--mut);font-size:10px;margin:0 1px}
+    .ctag{font-size:9px;padding:1px 4px;border-radius:3px;margin-top:2px;text-align:center;display:flex;gap:2px;align-items:center}
+    .cok{color:var(--grn);background:rgba(76,175,125,.12)}
+    .cbad{color:var(--acc);background:rgba(233,69,96,.12)}
+
+    /* RESEARCH */
+    #rp-bar{padding:8px 14px;border-bottom:1px solid var(--bd);font-size:12px;color:var(--grn);display:flex;align-items:center;gap:6px;flex-shrink:0}
+    #research-list{overflow-y:auto;flex:1;padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;-webkit-overflow-scrolling:touch}
+    .rcard{
+      background:var(--bg3);border:1.5px solid var(--bd);border-radius:8px;
+      padding:10px 12px;min-width:140px;flex:1;cursor:pointer;
+    }
+    .rcard.done{border-color:var(--grn);opacity:.5;pointer-events:none}
+    .rcard.lck{opacity:.35;pointer-events:none}
+    .rcard.aff{border-color:var(--grn)}
+    .rcard-n{font-size:11px;font-weight:bold;margin-bottom:3px}
+    .rcard-d{font-size:10px;color:var(--dim);margin-bottom:5px}
+    .rcard-c{font-size:10px;color:var(--orn)}
+
+    /* TILE POPUP */
+    #tile-popup{
+      position:fixed;background:var(--bg2);border:1.5px solid var(--bd);
+      border-radius:10px;padding:14px;z-index:300;
+      min-width:180px;max-width:260px;
+      box-shadow:0 6px 24px rgba(0,0,0,.6);
+    }
+    #tpt{font-size:12px;font-weight:bold;letter-spacing:1px;margin-bottom:8px;color:var(--acc)}
+    #tpb{font-size:11px;color:var(--dim);margin-bottom:10px;line-height:1.8}
+    #tpa{display:flex;gap:6px;flex-wrap:wrap}
+    #tpa button{font-size:11px;padding:6px 12px;border:1px solid var(--bd);border-radius:6px;flex:1}
+    .bdng{border-color:var(--acc)!important;color:var(--acc)!important}
+    .prec{display:flex;align-items:center;gap:5px;background:var(--bg3);border-radius:6px;padding:6px 8px;margin-bottom:6px;flex-wrap:wrap}
+
+    /* STATS */
+    #stats-content{overflow-y:auto;flex:1;padding:14px;font-size:11px;line-height:2;color:var(--dim);-webkit-overflow-scrolling:touch}
+
+    /* TOAST */
+    #toast-container{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none}
+    .toast{background:var(--bg2);border:1px solid var(--bd);color:var(--tx);padding:7px 16px;border-radius:20px;font-size:11px;white-space:nowrap;
+      animation:tIn .2s ease, tOut .3s ease 1.7s forwards}
+    @keyframes tIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes tOut{to{opacity:0;transform:translateY(-6px)}}
+
+    /* BACKDROP */
+    .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:190}
+  </style>
 </head>
 <body>
 
-<!-- TOOLBAR -->
 <div id="toolbar">
-  <div id="toolbar-left">
-    <span id="hud-power" class="hud-stat"></span>
-  </div>
-  <div id="toolbar-center">
-    <span id="toolbar-title">NANOFACTORY</span>
-  </div>
-  <div id="toolbar-right">
-    <button id="btn-save" class="tb-btn" title="Save"></button>
-  </div>
+  <span id="hud-power"></span>
+  <span id="toolbar-title">NANOFACTORY</span>
+  <button id="btn-save" title="Save"></button>
 </div>
 
-<!-- RESOURCES BAR -->
 <div id="res-bar"></div>
-
-<!-- MODE BADGE -->
 <div id="mode-badge"></div>
 
-<!-- GRID CANVAS -->
 <div id="grid-wrap">
   <canvas id="grid-canvas"></canvas>
 </div>
 
-<!-- BOTTOM NAV -->
 <div id="bottom-nav"></div>
 
-<!-- BUILD PANEL (slide-up) -->
-<div id="build-panel" class="side-panel hidden">
-  <div class="panel-header">
+<div id="build-panel" class="panel hidden">
+  <div class="ph">
     <span>BUILD</span>
-    <button class="close-btn" data-close="build-panel"></button>
+    <button class="cbtn" data-close="build-panel"></button>
   </div>
-  <div class="tool-section">
-    <div class="tool-label">TOOLS</div>
+  <div class="psec">
+    <div class="plbl">TOOLS</div>
     <div id="tool-buttons"></div>
-  </div>
-  <div class="tool-section">
-    <div class="tool-label">BUILDINGS</div>
+    <div class="plbl">BUILDINGS</div>
     <div id="building-buttons"></div>
   </div>
 </div>
 
-<!-- RESEARCH PANEL -->
-<div id="research-panel" class="side-panel hidden">
-  <div class="panel-header">
+<div id="research-panel" class="panel hidden">
+  <div class="ph">
     <span>RESEARCH</span>
-    <button class="close-btn" data-close="research-panel"></button>
+    <button class="cbtn" data-close="research-panel"></button>
   </div>
-  <div id="rp-bar" class="rp-bar"></div>
+  <div id="rp-bar"></div>
   <div id="research-list"></div>
 </div>
 
-<!-- STATS PANEL -->
-<div id="stats-panel" class="side-panel hidden">
-  <div class="panel-header">
+<div id="stats-panel" class="panel hidden">
+  <div class="ph">
     <span>STATS</span>
-    <button class="close-btn" data-close="stats-panel"></button>
+    <button class="cbtn" data-close="stats-panel"></button>
   </div>
   <div id="stats-content"></div>
 </div>
 
-<!-- TILE INFO POPUP -->
-<div id="tile-popup" class="tile-popup hidden">
-  <div id="tile-popup-title"></div>
-  <div id="tile-popup-body"></div>
-  <div id="tile-popup-actions"></div>
+<div id="tile-popup" class="hidden">
+  <div id="tpt"></div>
+  <div id="tpb"></div>
+  <div id="tpa"></div>
 </div>
 
-<!-- TOAST -->
 <div id="toast-container"></div>
 
 <script src="icons.js"></script>
