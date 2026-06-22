@@ -1,5 +1,10 @@
-// ── Game-Box app.js v2.2 ──────────────────────────────────────────────────────
-const BASE = '/Game-box/';
+// ── Game-Box app.js v2.3 ──────────────────────────────────────────────────────
+// Detect base path dynamically so the app works on any host (GitHub Pages, Plesk, etc.)
+const BASE = (() => {
+  for (const s of document.querySelectorAll('script[src]'))
+    if (s.src.endsWith('app.js')) return s.src.replace('app.js', '');
+  return window.location.href.replace(/[^/]*$/, '');
+})();
 
 const DB_NAME = 'gamebox-db', DB_VER = 1;
 let db;
@@ -27,6 +32,13 @@ function dbSet(key, val) {
     const req = db.transaction('settings','readwrite').objectStore('settings').put(val, key);
     req.onsuccess = () => res();
     req.onerror   = e => rej(e.target.error);
+  });
+}
+
+// ── Auto-update: reload when SW signals an update ─────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data?.type === 'SW_UPDATED') window.location.reload();
   });
 }
 
@@ -86,16 +98,13 @@ function renderGames(games) {
       <div class="game-name">${game.name}</div>
       ${hasPatch ? `<div class="game-version">${game.patchlogs[0].version}</div>` : ''}
     `;
-    // Left click → play
     card.addEventListener('click', () => launchGame(game));
-    // Long-press or right-click → patchlog
     if (hasPatch) {
       let pressTimer;
       card.addEventListener('contextmenu', e => { e.preventDefault(); openPatchlog(game); });
       card.addEventListener('touchstart', () => { pressTimer = setTimeout(() => openPatchlog(game), 500); }, { passive: true });
       card.addEventListener('touchend',   () => clearTimeout(pressTimer));
       card.addEventListener('touchmove',  () => clearTimeout(pressTimer));
-      // Info button
       const info = document.createElement('button');
       info.className = 'game-info-btn';
       info.title = 'Patch Notes';
@@ -116,8 +125,7 @@ function openPatchlog(game) {
   (game.patchlogs || []).forEach(entry => {
     const item = document.createElement('div');
     item.className = 'patchlog-entry';
-    const changesHtml = (entry.changes || [])
-      .map(c => `<li>${c}</li>`).join('');
+    const changesHtml = (entry.changes || []).map(c => `<li>${c}</li>`).join('');
     item.innerHTML = `
       <div class="patchlog-ver">
         <span class="patchlog-badge">${entry.version}</span>
