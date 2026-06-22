@@ -17,6 +17,12 @@
       "name": "Tic Tac Toe",
       "icon": "games/tto/icon.png",
       "path": "games/tto/index.html"
+    },
+        {
+      "index": 3,
+      "name": "nano Fabric",
+      "icon": "games/nanofabric/icon.png",
+      "path": "games/nanofabric/index.html"
     }
   ]
 }
