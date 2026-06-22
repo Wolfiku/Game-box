@@ -1,9 +1,5 @@
-// ── Game-Box app.js v2 ──────────────────────────────────────────────────────
-
-const BASE = (() => {
-  const m = location.pathname.match(/^\/[^\/]+\//);
-  return m ? m[0] : '/';
-})();
+// ── Game-Box app.js v2.2 ──────────────────────────────────────────────────────
+const BASE = '/Game-box/';
 
 const DB_NAME = 'gamebox-db', DB_VER = 1;
 let db;
@@ -34,7 +30,7 @@ function dbSet(key, val) {
   });
 }
 
-// ── Screens ──────────────────────────────────────────────────────────────────
+// ── Screens ───────────────────────────────────────────────────────────────────
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -47,7 +43,7 @@ function applyTheme(dark) {
   document.getElementById('setup-theme-checkbox').checked = dark;
 }
 
-// ── Loading bar (3 s) ─────────────────────────────────────────────────────────
+// ── Loading bar ───────────────────────────────────────────────────────────────
 function runLoader(then) {
   show('screen-loading');
   const bar = document.getElementById('load-bar');
@@ -80,18 +76,69 @@ function renderGames(games) {
   games.forEach(game => {
     const card = document.createElement('div');
     card.className = 'game-card';
+    const hasPatch = game.patchlogs && game.patchlogs.length > 0;
     card.innerHTML = `
       <img class="game-icon" src="${BASE}${game.icon}" alt="${game.name}"
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
       <div class="game-icon-fallback" style="display:none">
         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M8 10v4M6 12h4"/><circle cx="16" cy="11" r="1" fill="currentColor" stroke="none"/><circle cx="18" cy="13" r="1" fill="currentColor" stroke="none"/></svg>
       </div>
-      <div class="game-name">${game.name}</div>`;
+      <div class="game-name">${game.name}</div>
+      ${hasPatch ? `<div class="game-version">${game.patchlogs[0].version}</div>` : ''}
+    `;
+    // Left click → play
     card.addEventListener('click', () => launchGame(game));
+    // Long-press or right-click → patchlog
+    if (hasPatch) {
+      let pressTimer;
+      card.addEventListener('contextmenu', e => { e.preventDefault(); openPatchlog(game); });
+      card.addEventListener('touchstart', () => { pressTimer = setTimeout(() => openPatchlog(game), 500); }, { passive: true });
+      card.addEventListener('touchend',   () => clearTimeout(pressTimer));
+      card.addEventListener('touchmove',  () => clearTimeout(pressTimer));
+      // Info button
+      const info = document.createElement('button');
+      info.className = 'game-info-btn';
+      info.title = 'Patch Notes';
+      info.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+      info.addEventListener('click', e => { e.stopPropagation(); openPatchlog(game); });
+      card.appendChild(info);
+    }
     grid.appendChild(card);
   });
 }
 
+// ── Patchlog overlay ──────────────────────────────────────────────────────────
+function openPatchlog(game) {
+  const overlay = document.getElementById('patchlog-overlay');
+  document.getElementById('patchlog-title').textContent = game.name;
+  const list = document.getElementById('patchlog-list');
+  list.innerHTML = '';
+  (game.patchlogs || []).forEach(entry => {
+    const item = document.createElement('div');
+    item.className = 'patchlog-entry';
+    const changesHtml = (entry.changes || [])
+      .map(c => `<li>${c}</li>`).join('');
+    item.innerHTML = `
+      <div class="patchlog-ver">
+        <span class="patchlog-badge">${entry.version}</span>
+        ${entry.date ? `<span class="patchlog-date">${entry.date}</span>` : ''}
+      </div>
+      ${entry.title ? `<div class="patchlog-etitle">${entry.title}</div>` : ''}
+      ${changesHtml ? `<ul class="patchlog-changes">${changesHtml}</ul>` : ''}
+    `;
+    list.appendChild(item);
+  });
+  overlay.classList.add('show');
+}
+
+document.getElementById('close-patchlog-btn').addEventListener('click', () =>
+  document.getElementById('patchlog-overlay').classList.remove('show'));
+document.getElementById('patchlog-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('patchlog-overlay'))
+    document.getElementById('patchlog-overlay').classList.remove('show');
+});
+
+// ── Launch game ───────────────────────────────────────────────────────────────
 function launchGame(game) {
   document.getElementById('game-frame').src = BASE + game.path;
   show('screen-runner');
@@ -203,7 +250,6 @@ async function boot() {
   runLoader(afterLoad);
 }
 
-// ── Service Worker ────────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register(BASE + 'sw.js').catch(() => {});
 }

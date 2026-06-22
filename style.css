@@ -327,3 +327,129 @@ body {
 .confirm-row { display:flex;gap:10px;justify-content:center; }
 .btn-danger { background:#c0392b;color:#fff;border:none; }
 .btn-cancel { background:var(--surface2);color:var(--text);border:1px solid var(--border); }
+
+/* ===== SETTINGS: smaller theme toggle ===== */
+.settings-row .theme-switch {
+  --toggle-size: 16px;
+}
+
+/* ===== GAME CARD: version + info btn ===== */
+.game-version {
+  font-size: .7rem;
+  color: var(--muted);
+  background: var(--surface2);
+  border-radius: 6px;
+  padding: 2px 7px;
+  margin-top: -4px;
+}
+.game-info-btn {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity .15s, background .15s;
+  z-index: 2;
+}
+.game-card { position: relative; }
+.game-card:hover .game-info-btn { opacity: 1; }
+.game-info-btn:hover { background: var(--border); color: var(--text); }
+
+/* ===== PATCHLOG OVERLAY ===== */
+#patchlog-overlay { align-items: flex-end; justify-content: center; }
+.patchlog-panel {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 480px;
+  padding: 24px 20px 36px;
+  border-top: 1px solid var(--border);
+  animation: slideup .22s ease;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+.patchlog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  flex-shrink: 0;
+}
+.patchlog-header-title {
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+}
+.patchlog-close {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted);
+}
+#patchlog-list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.patchlog-entry {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: var(--surface2);
+}
+.patchlog-ver {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.patchlog-badge {
+  background: rgba(192,57,43,.15);
+  color: #c0392b;
+  border: 1px solid rgba(192,57,43,.25);
+  border-radius: 6px;
+  font-size: .75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+}
+.patchlog-date {
+  font-size: .75rem;
+  color: var(--muted);
+}
+.patchlog-etitle {
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.patchlog-changes {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.patchlog-changes li {
+  font-size: .82rem;
+  color: var(--muted);
+  padding-left: 14px;
+  position: relative;
+  line-height: 1.5;
+}
+.patchlog-changes li::before {
+  content: "–";
+  position: absolute;
+  left: 0;
+  color: #c0392b;
+}
