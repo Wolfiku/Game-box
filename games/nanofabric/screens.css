@@ -1,0 +1,122 @@
+/* NanoFactory — screens.css */
+
+/* START SCREEN */
+.screen-start {
+  background: var(--bg);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* PERSPECTIVE GRID BACKGROUND */
+.start-grid-bg {
+  position: absolute;
+  inset: 0;
+  perspective: 400px;
+  overflow: hidden;
+}
+
+.start-grid-bg::before,
+.start-grid-bg::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%) rotateX(55deg);
+  width: 300%;
+  height: 300%;
+  top: -50%;
+  background-image:
+    linear-gradient(rgba(200,168,75,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,168,75,0.08) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: gridMove 8s linear infinite;
+}
+
+.start-grid-bg::after {
+  background-image:
+    linear-gradient(rgba(75,143,200,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(75,143,200,0.04) 1px, transparent 1px);
+  background-size: 200px 200px;
+  animation-duration: 20s;
+}
+
+@keyframes gridMove {
+  from { background-position: 0 0; }
+  to   { background-position: 0 50px; }
+}
+
+/* START CONTENT */
+.start-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.start-title {
+  font-size: clamp(32px, 6vw, 64px);
+  font-weight: bold;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-shadow: 0 0 40px rgba(200,168,75,0.3);
+}
+
+.start-subtitle {
+  font-size: clamp(11px, 2vw, 14px);
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  height: 20px;
+}
+
+/* TYPEWRITER */
+.typewriter {
+  overflow: hidden;
+  display: inline-block;
+  white-space: nowrap;
+  border-right: 2px solid var(--accent);
+  width: 0;
+  animation:
+    typing 1.5s steps(28, end) 0.5s forwards,
+    blink 0.8s step-end infinite 2s;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+@keyframes blink {
+  50% { border-color: transparent; }
+}
+
+.start-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+/* VERSION */
+.version-tag {
+  position: absolute;
+  bottom: 16px;
+  right: 20px;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  z-index: 2;
+}
+
+/* GAME SCREEN */
+.screen-game {
+  display: none;
+}
+
+.screen-game.active {
+  display: flex;
+}

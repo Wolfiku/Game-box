@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NanoFactory</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/screens.css">
+</head>
+<body>
+  <!-- START SCREEN -->
+  <div id="screen-start" class="screen screen-start active">
+    <div class="start-grid-bg"></div>
+    <div class="start-content">
+      <h1 class="start-title">NANOFACTORY</h1>
+      <p class="start-subtitle"><span class="typewriter">REBUILD. AUTOMATE. SURVIVE.</span></p>
+      <div class="start-buttons">
+        <button id="btn-new-game" class="btn btn-primary btn-large">NEW GAME</button>
+        <button id="btn-continue" class="btn btn-secondary btn-large" style="display:none">CONTINUE</button>
+      </div>
+    </div>
+    <div class="version-tag">v1.0</div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="screen-game" class="screen screen-game">
+    <header class="game-header">
+      <div class="header-title">NANOFACTORY</div>
+      <div class="header-actions">
+        <span id="header-time" class="header-stat"></span>
+        <span id="header-prestige" class="header-stat muted"></span>
+        <button id="btn-save" class="btn btn-secondary btn-small">SAVE</button>
+        <button id="btn-export" class="btn btn-secondary btn-small">EXPORT</button>
+        <button id="btn-import" class="btn btn-secondary btn-small">IMPORT</button>
+        <button id="btn-reset" class="btn btn-danger btn-small">RESET</button>
+      </div>
+    </header>
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="factory">FACTORY</button>
+      <button class="tab-btn" data-tab="research">RESEARCH</button>
+      <button class="tab-btn" data-tab="stats">STATS</button>
+      <button class="tab-btn" data-tab="lore">LORE</button>
+    </nav>
+    <main class="tab-content">
+      <!-- FACTORY TAB -->
+      <div id="tab-factory" class="tab-panel active">
+        <div class="factory-grid">
+          <div class="factory-left">
+            <section class="panel">
+              <div class="section-header">RESOURCES</div>
+              <div id="resource-list"></div>
+            </section>
+            <section class="panel">
+              <div class="section-header">POWER GRID</div>
+              <div id="power-display"></div>
+            </section>
+            <section class="panel" id="collect-section">
+              <div class="section-header">COLLECT</div>
+              <button id="btn-collect" class="btn btn-primary btn-full">COLLECT</button>
+              <div id="collect-info" class="muted small mt4"></div>
+            </section>
+          </div>
+          <div class="factory-right">
+            <section class="panel">
+              <div class="section-header">BUILDINGS</div>
+              <div class="building-filters">
+                <button class="filter-btn active" data-filter="all">ALL</button>
+                <button class="filter-btn" data-filter="mining">MINING</button>
+                <button class="filter-btn" data-filter="processing">PROCESSING</button>
+                <button class="filter-btn" data-filter="power">POWER</button>
+                <button class="filter-btn" data-filter="storage">STORAGE</button>
+              </div>
+              <div id="building-list"></div>
+            </section>
+            <div id="prestige-bar" style="display:none" class="prestige-bar">
+              <button id="btn-prestige" class="btn btn-prestige btn-full">REBUILD</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESEARCH TAB -->
+      <div id="tab-research" class="tab-panel">
+        <div class="research-header-bar">
+          <span class="section-header">RESEARCH</span>
+          <span id="rp-display" class="rp-counter"></span>
+        </div>
+        <div class="research-categories">
+          <button class="filter-btn active" data-rcat="all">ALL</button>
+          <button class="filter-btn" data-rcat="production">PRODUCTION</button>
+          <button class="filter-btn" data-rcat="automation">AUTOMATION</button>
+          <button class="filter-btn" data-rcat="energy">ENERGY</button>
+          <button class="filter-btn" data-rcat="expansion">EXPANSION</button>
+        </div>
+        <div id="research-list"></div>
+      </div>
+
+      <!-- STATS TAB -->
+      <div id="tab-stats" class="tab-panel">
+        <div class="stats-grid">
+          <section class="panel">
+            <div class="section-header">SESSION</div>
+            <div id="stats-session"></div>
+          </section>
+          <section class="panel">
+            <div class="section-header">TOTALS</div>
+            <div id="stats-totals"></div>
+          </section>
+          <section class="panel">
+            <div class="section-header">ACHIEVEMENTS</div>
+            <div id="stats-achievements"></div>
+          </section>
+          <section class="panel" id="lp-shop-panel" style="display:none">
+            <div class="section-header">LEGACY SHOP</div>
+            <div id="lp-shop"></div>
+          </section>
+        </div>
+      </div>
+
+      <!-- LORE TAB -->
+      <div id="tab-lore" class="tab-panel">
+        <section class="panel">
+          <div class="section-header">TRANSMISSIONS</div>
+          <div id="lore-list"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODALS -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div id="modal-box" class="modal-box">
+      <div id="modal-title" class="modal-title"></div>
+      <div id="modal-body" class="modal-body"></div>
+      <div id="modal-actions" class="modal-actions"></div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- TOOLTIP -->
+  <div id="tooltip" class="tooltip hidden"></div>
+
+  <script src="assets/icons.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/save.js"></script>
+  <script src="js/achievements.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
