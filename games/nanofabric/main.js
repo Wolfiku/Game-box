@@ -4,17 +4,20 @@ function init() {
   loadGame();
   initCanvas();
 
-  // Build bottom nav
-  const nav = document.createElement('div');
-  nav.id = 'bottom-nav';
-  document.body.appendChild(nav);
-  buildNavBar();
+  // Toolbar: inject save icon
+  const saveBtn = document.getElementById('btn-save');
+  if (saveBtn) {
+    saveBtn.innerHTML = svgIcon('save', 20);
+    saveBtn.title = 'Save';
+    saveBtn.onclick = () => { saveGame(); toast('Saved'); };
+  }
 
-  // Toolbar save button (secondary, same as nav)
-  document.getElementById('btn-save').onclick = saveGame;
+  // Bottom nav: build it
+  buildNavBar();
 
   // Close buttons on panels
   document.querySelectorAll('.close-btn[data-close]').forEach(btn => {
+    btn.innerHTML = svgIcon('close', 16);
     btn.onclick = () => closePanel(btn.dataset.close);
   });
 
@@ -36,7 +39,6 @@ function init() {
   setInterval(() => {
     tick();
     updateHUD();
-    // Refresh open panel content
     if (!document.getElementById('build-panel').classList.contains('hidden'))    buildBuildPanel();
     if (!document.getElementById('research-panel').classList.contains('hidden')) buildResearchPanel();
   }, TICK_MS);
@@ -45,7 +47,7 @@ function init() {
   (function loop() { render(); requestAnimationFrame(loop); })();
 
   setMode('scroll');
-  toast('Welcome! Tap SCROLL to pan, BUILD to place. Tap a tile to inspect.');
+  toast('SCROLL to pan  |  BUILD to place  |  Tap tile to inspect');
 }
 
 function togglePanel(id) {

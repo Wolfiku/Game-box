@@ -13,32 +13,35 @@
 <!-- TOOLBAR -->
 <div id="toolbar">
   <div id="toolbar-left">
-    <span id="hud-power" class="hud-stat">⚡ 0/0 MW</span>
+    <span id="hud-power" class="hud-stat"></span>
   </div>
   <div id="toolbar-center">
     <span id="toolbar-title">NANOFACTORY</span>
   </div>
   <div id="toolbar-right">
-    <button id="btn-open-panel" class="tb-btn" title="Build Panel">🏗</button>
-    <button id="btn-open-research" class="tb-btn" title="Research">🔬</button>
-    <button id="btn-open-stats" class="tb-btn" title="Stats">📊</button>
-    <button id="btn-save" class="tb-btn" title="Save">💾</button>
+    <button id="btn-save" class="tb-btn" title="Save"></button>
   </div>
 </div>
 
 <!-- RESOURCES BAR -->
 <div id="res-bar"></div>
 
+<!-- MODE BADGE -->
+<div id="mode-badge"></div>
+
 <!-- GRID CANVAS -->
 <div id="grid-wrap">
   <canvas id="grid-canvas"></canvas>
 </div>
 
+<!-- BOTTOM NAV -->
+<div id="bottom-nav"></div>
+
 <!-- BUILD PANEL (slide-up) -->
 <div id="build-panel" class="side-panel hidden">
   <div class="panel-header">
     <span>BUILD</span>
-    <button class="close-btn" data-close="build-panel">✕</button>
+    <button class="close-btn" data-close="build-panel"></button>
   </div>
   <div class="tool-section">
     <div class="tool-label">TOOLS</div>
@@ -54,7 +57,7 @@
 <div id="research-panel" class="side-panel hidden">
   <div class="panel-header">
     <span>RESEARCH</span>
-    <button class="close-btn" data-close="research-panel">✕</button>
+    <button class="close-btn" data-close="research-panel"></button>
   </div>
   <div id="rp-bar" class="rp-bar"></div>
   <div id="research-list"></div>
@@ -64,7 +67,7 @@
 <div id="stats-panel" class="side-panel hidden">
   <div class="panel-header">
     <span>STATS</span>
-    <button class="close-btn" data-close="stats-panel">✕</button>
+    <button class="close-btn" data-close="stats-panel"></button>
   </div>
   <div id="stats-content"></div>
 </div>
