@@ -462,11 +462,12 @@ writeSave(save);
 
 // ─── CRYSTAL FORMULA ─────────────────────────────────────────────────────────
 function calcCrystals(wave, kills){
-  const base = Math.max(0, Math.floor((wave - 1) * 2.2));
+  const base = Math.max(0, Math.round(2 + wave * 2.2));
+  const waveBoost = wave >= 3 ? 2 : 0;
   const clearBonus = wave >= 5 ? 3 : 0;
-  const killBonus = Math.floor((kills||0) / 25);
-  const rng = Math.floor(Math.random()*2);
-  return base + clearBonus + killBonus + rng;
+  const killBonus = Math.floor((kills||0) / 18);
+  const rng = Math.floor(Math.random()*3);
+  return base + waveBoost + clearBonus + killBonus + rng;
 }
 function calcRunCrystals(wave, kills){
   return calcCrystals(wave, kills);
