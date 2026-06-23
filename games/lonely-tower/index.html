@@ -306,19 +306,19 @@ canvas{display:block;background:#0a0a0f;border:1px solid #1e1e2e;image-rendering
    <div class="sg2">
     <div class="si" id="si-miniStd" onclick="shopBuyMini('miniStd')">
      <div class="sn">Mini Standard</div>
-     <div class="sd">Freischalten. Im Spiel kaufbar ab Lv 30. 1/4 Dmg/Speed.</div>
+     <div class="sd">Freischalten. Im Spiel kaufbar ab Lv 15. 1/4 Dmg/Speed.</div>
      <div class="sc" id="cost-miniStd">150 ◆</div></div>
     <div class="si" id="si-miniLaser" onclick="shopBuyMini('miniLaser')">
      <div class="sn">Mini Laser</div>
-     <div class="sd">Freischalten. Im Spiel kaufbar ab Lv 30 (Speed o. Dmg).</div>
+     <div class="sd">Freischalten. Im Spiel kaufbar ab Lv 15 (Speed o. Dmg).</div>
      <div class="sc" id="cost-miniLaser">150 ◆</div></div>
     <div class="si" id="si-miniHeal" onclick="shopBuyMini('miniHeal')">
      <div class="sn">Mini Healer</div>
-     <div class="sd">Freischalten. Heilt extra Regen. Im Spiel ab Lv 30.</div>
+     <div class="sd">Freischalten. Heilt extra Regen. Im Spiel ab Lv 15.</div>
      <div class="sc" id="cost-miniHeal">150 ◆</div></div>
     <div class="si" id="si-miniMoney" onclick="shopBuyMini('miniMoney')">
      <div class="sn">Mini Money Tower</div>
-     <div class="sd">Freischalten. Generiert automatisch Gold pro Sekunde. Ab Lv 30.</div>
+     <div class="sd">Freischalten. Generiert automatisch Gold pro Sekunde. Ab Lv 15.</div>
      <div class="sc" id="cost-miniMoney">175 ◆</div></div>
    </div>
    <div class="sg2" style="margin-top:7px;">
@@ -1164,10 +1164,10 @@ function refreshUpgBtns(){
     'btn-regen': [`Lv ${regenLv} · ${fmt(regenCost)}g`, regenCost, false],
     'btn-aura-range': [auraOk?`${auraRange}px · ${fmt(auraRangeCost)}g`:'Need Kill Aura + Wave 3', auraRangeCost, !auraOk],
     'btn-aura-dmg':   [auraOk?`${auraDmg}/s · ${fmt(auraDmgCost)}g`:'Need Kill Aura + Wave 3', auraDmgCost, !auraOk],
-    'btn-mini-std':   [save.items.miniStd?(s.miniStdBought?'Owned':'Lv 30 Spd/Dmg · '+fmt(s.miniStdCost)+'g'):'Need Shop unlock', s.miniStdCost, !save.items.miniStd||s.miniStdBought||(s.speedLv<30&&s.dmgLv<30)],
-    'btn-mini-laser': [save.items.miniLaser?(s.miniLaserBought?'Owned':'Lv 30 Spd/Dmg · '+fmt(s.miniLaserCost)+'g'):'Need Shop unlock', s.miniLaserCost, !save.items.miniLaser||s.miniLaserBought||(s.speedLv<30&&s.dmgLv<30)],
-    'btn-mini-heal':  [save.items.miniHeal?(s.miniHealBought?'Owned':'Lv 30 Spd/Dmg · '+fmt(s.miniHealCost)+'g'):'Need Shop unlock', s.miniHealCost, !save.items.miniHeal||s.miniHealBought||(s.speedLv<30&&s.dmgLv<30)],
-    'btn-mini-money': [save.items.miniMoney?(s.miniMoneyBought?`Owned (${getMiniMoneyRate().toFixed(1)} G/s)`:'Lv 30 Spd/Dmg · '+fmt(s.miniMoneyCost)+'g'):'Need Shop unlock', s.miniMoneyCost, !save.items.miniMoney||s.miniMoneyBought||(s.speedLv<30&&s.dmgLv<30)],
+    'btn-mini-std':   [save.items.miniStd?(s.miniStdBought?'Owned':'Lv 15 Spd/Dmg · '+fmt(s.miniStdCost)+'g'):'Need Shop unlock', s.miniStdCost, !save.items.miniStd||s.miniStdBought||(s.speedLv<15&&s.dmgLv<15)],
+    'btn-mini-laser': [save.items.miniLaser?(s.miniLaserBought?'Owned':'Lv 15 Spd/Dmg · '+fmt(s.miniLaserCost)+'g'):'Need Shop unlock', s.miniLaserCost, !save.items.miniLaser||s.miniLaserBought||(s.speedLv<15&&s.dmgLv<15)],
+    'btn-mini-heal':  [save.items.miniHeal?(s.miniHealBought?'Owned':'Lv 15 Spd/Dmg · '+fmt(s.miniHealCost)+'g'):'Need Shop unlock', s.miniHealCost, !save.items.miniHeal||s.miniHealBought||(s.speedLv<15&&s.dmgLv<15)],
+    'btn-mini-money': [save.items.miniMoney?(s.miniMoneyBought?`Owned (${getMiniMoneyRate().toFixed(1)} G/s)`:'Lv 15 Spd/Dmg · '+fmt(s.miniMoneyCost)+'g'):'Need Shop unlock', s.miniMoneyCost, !save.items.miniMoney||s.miniMoneyBought||(s.speedLv<15&&s.dmgLv<15)],
   };
   for(const [bid,[txt,cost,disabled]] of Object.entries(upgMap)){
     const b=document.getElementById(bid); if(!b)continue;
@@ -1232,7 +1232,7 @@ function buyMiniInGame(type){
   const costKey=type==='miniStd'?'miniStdCost':type==='miniLaser'?'miniLaserCost':type==='miniMoney'?'miniMoneyCost':'miniHealCost';
   const boughtKey=type==='miniStd'?'miniStdBought':type==='miniLaser'?'miniLaserBought':type==='miniMoney'?'miniMoneyBought':'miniHealBought';
   if(s[boughtKey]) return;
-  if(s.speedLv<30&&s.dmgLv<30) return;
+  if(s.speedLv<15&&s.dmgLv<15) return;
   if(s.gold<s[costKey]) return;
   s.gold-=s[costKey];
   s[boughtKey]=true;
