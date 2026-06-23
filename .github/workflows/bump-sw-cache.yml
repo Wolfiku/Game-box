@@ -1,0 +1,35 @@
+name: Bump SW Cache Version
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '.github/**'
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Generate timestamp
+        id: ts
+        run: echo "stamp=$(date -u +'%Y%m%d_%H%M')" >> "$GITHUB_OUTPUT"
+
+      - name: Patch CACHE constant in sw.js
+        run: |
+          sed -i "s/const CACHE = 'gamebox-[^']*';/const CACHE = 'gamebox-${{ steps.ts.outputs.stamp }}';/" sw.js
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet && echo "No changes" && exit 0
+          git add sw.js
+          git commit -m "chore(sw): bump cache → gamebox-${{ steps.ts.outputs.stamp }} [skip ci]"
+          git push
