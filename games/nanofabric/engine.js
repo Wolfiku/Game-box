@@ -11,8 +11,9 @@ function getGenMultiplier() {
 }
 function getCraftMultiplier(tileType) {
   let m = 1.0;
-  if (tileType === T.SMELTER   && gameState.completedResearch.includes('advanced_smelting')) m *= 2;
-  if (tileType === T.FORGE     && gameState.completedResearch.includes('alloy_mastery'))     m *= 2;
+  if (tileType === T.SMELTER        && gameState.completedResearch.includes('advanced_smelting')) m *= 2;
+  if (tileType === T.COPPER_SMELTER && gameState.completedResearch.includes('advanced_smelting')) m *= 2;
+  if (tileType === T.FORGE          && gameState.completedResearch.includes('alloy_mastery'))     m *= 2;
   if (gameState.completedResearch.includes('stack_inserter')) m *= 2;
   return m;
 }
@@ -38,11 +39,14 @@ function powerCalc() {
   gameState.power = {generated:gen, consumed:con, ratio};
 }
 
-// Belt tick — straight + splitter + merger
+// ── FIX #1: Auto-split belt logic ───────────────────────────────────────────
+// A straight belt automatically distributes to BOTH side neighbours if they
+// are belts facing perpendicular (= outputs exist left AND right of travel dir).
+// Round-robin between forward, left-side, right-side outputs.
+
 function beltTick() {
   const speed = getBeltSpeed();
   for (let s = 0; s < speed; s++) {
-    // Collect moves
     const toMove = [];
     for (let y = 0; y < GRID_ROWS; y++) {
       for (let x = 0; x < GRID_COLS; x++) {
@@ -53,16 +57,58 @@ function beltTick() {
         toMove.push({x,y,t,item});
       }
     }
-    // Process in reverse to avoid double-move
     for (let i = toMove.length-1; i >= 0; i--) {
       const {x,y,t,item} = toMove[i];
-      if (getItem(x,y) !== item) continue; // already moved
+      if (getItem(x,y) !== item) continue;
 
       if (BELT_STRAIGHT.has(t)) {
         const [dx,dy] = DIR_OFFSET[t];
-        tryMoveBelt(x,y,item,x+dx,y+dy);
+        const perp = AUTO_SPLIT_PERP[t] || [];
+
+        // Check which perpendicular neighbours are belt tiles (auto-split targets)
+        const splitTargets = perp.filter(([ox,oy]) => {
+          const nt = getTile(x+ox, y+oy);
+          return BELT_SET.has(nt) && !getItem(x+ox, y+oy);
+        });
+
+        const forwardFree = (() => {
+          const nt = getTile(x+dx, y+dy);
+          return (BELT_SET.has(nt) && !getItem(x+dx, y+dy)) ||
+                 (!!(nt !== T.EMPTY && BUILDING_BY_TYPE[nt])) ||
+                 COLL_TYPES.has(nt) || COLL_BODY.has(nt);
+        })();
+
+        if (splitTargets.length === 2 && !forwardFree) {
+          // Both sides free, no forward: round-robin between both sides
+          const meta = getMeta(x,y) || {};
+          const ls = meta.lastSplit || 0;
+          const chosen = splitTargets[ls % 2];
+          const [ox,oy] = chosen;
+          if (tryMoveBelt(x,y,item,x+ox,y+oy)) {
+            setMeta(x,y, {...meta, lastSplit: ls + 1});
+          }
+        } else if (splitTargets.length === 2 && forwardFree) {
+          // Both sides AND forward free: distribute round-robin across all 3
+          const meta = getMeta(x,y) || {};
+          const ls = meta.lastSplit || 0;
+          const allTargets = [[dx,dy], ...splitTargets];
+          const chosen = allTargets[ls % 3];
+          const [ox,oy] = chosen;
+          if (tryMoveBelt(x,y,item,x+ox,y+oy)) {
+            setMeta(x,y, {...meta, lastSplit: ls + 1});
+          }
+        } else if (splitTargets.length === 1) {
+          // One side + possibly forward: prefer forward, else side
+          if (!tryMoveBelt(x,y,item,x+dx,y+dy)) {
+            const [ox,oy] = splitTargets[0];
+            tryMoveBelt(x,y,item,x+ox,y+oy);
+          }
+        } else {
+          // Normal straight move
+          tryMoveBelt(x,y,item,x+dx,y+dy);
+        }
+
       } else if (BELT_SPLIT.has(t)) {
-        // Try straight output first, then alternate to sides
         const [dx,dy] = DIR_OFFSET[t];
         const sides = SPLIT_SIDES[t] || [];
         const meta = getMeta(x,y) || {};
@@ -74,7 +120,6 @@ function beltTick() {
         }
         if (moved) setMeta(x,y, {...meta, lastSide:(lastSide+1)%Math.max(1,sides.length)});
       } else if (BELT_MERGE.has(t)) {
-        // Merger: take from perpendicular inputs if empty, output forward
         const [dx,dy] = DIR_OFFSET[t];
         tryMoveBelt(x,y,item,x+dx,y+dy);
       }
@@ -102,7 +147,6 @@ function beltTick() {
 function tryMoveBelt(x,y,item,nx,ny) {
   if (nx<0||nx>=GRID_COLS||ny<0||ny>=GRID_ROWS) return false;
   const nt = getTile(nx,ny);
-  // Can move onto: belt (if empty), processing machine (feeds input buffer), collector edge
   if (BELT_SET.has(nt)) {
     if (getItem(nx,ny)) return false;
     setItem(nx,ny,item); setItem(x,y,null); return true;
@@ -111,7 +155,6 @@ function tryMoveBelt(x,y,item,nx,ny) {
     const m = getMeta(nx,ny);
     if (m && feedMachine(nx,ny,nt,item)) { setItem(x,y,null); return true; }
   }
-  // Collector edge — collect into inventory
   if (COLL_TYPES.has(nt) || COLL_BODY.has(nt)) {
     addInv(item,1);
     gameState.totalMined[item] = (gameState.totalMined[item]||0)+1;
@@ -135,13 +178,12 @@ function feedMachine(x,y,tileType,item) {
 // Miner tick
 function minerTick(dt) {
   const mult = getMineMultiplier();
-  const craftTime = 3.0; // base: slow (3 seconds per item)
+  const craftTime = 3.0;
   for (let y = 0; y < GRID_ROWS; y++) {
     for (let x = 0; x < GRID_COLS; x++) {
       if (getTile(x,y) !== T.MINER) continue;
       let m = getMeta(x,y);
       if (!m) { setMeta(x,y,{progress:0,patch:null}); m=getMeta(x,y); }
-      // Find adjacent patch
       if (!m.patch) {
         for (const [ox,oy] of [[0,-1],[1,0],[0,1],[-1,0]]) {
           const pt = getTile(x+ox,y+oy);
@@ -153,7 +195,6 @@ function minerTick(dt) {
       if (m.progress >= 1) {
         m.progress = 0;
         const rid = PATCH_RES[m.patch];
-        // Output to adjacent belt
         let placed = false;
         for (const [ox,oy] of [[0,-1],[1,0],[0,1],[-1,0]]) {
           const nx=x+ox,ny=y+oy;
@@ -164,7 +205,6 @@ function minerTick(dt) {
             break;
           }
         }
-        // If no belt, drop into any adjacent collector
         if (!placed) {
           for (const [ox,oy] of [[0,-1],[1,0],[0,1],[-1,0]]) {
             const nt=getTile(x+ox,y+oy);
@@ -195,7 +235,6 @@ function processTick(dt) {
       const cm = getCraftMultiplier(t);
       const craftTime = b.craftTime / cm;
 
-      // If output buffer full, try to eject onto adjacent belt
       if (m.outputBuffer) {
         let ejected = false;
         for (const [ox,oy] of [[0,-1],[1,0],[0,1],[-1,0]]) {
@@ -205,29 +244,25 @@ function processTick(dt) {
             setItem(nx,ny,m.outputBuffer.id);
             m.outputBuffer=null; ejected=true; break;
           }
-          // Eject directly to collector
           if (COLL_TYPES.has(nt)||COLL_BODY.has(nt)) {
             addInv(m.outputBuffer.id,1);
             gameState.totalMined[m.outputBuffer.id]=(gameState.totalMined[m.outputBuffer.id]||0)+1;
             m.outputBuffer=null; ejected=true; break;
           }
         }
-        if (!ejected) continue; // blocked, stall
+        if (!ejected) continue;
       }
 
-      // Check input buffer has enough
       let canCraft = true;
       for (const [rid,amt] of Object.entries(b.input)) {
         if ((m.inputBuffer[rid]||0) < amt) { canCraft=false; break; }
       }
       if (!canCraft) { m.progress=0; continue; }
 
-      // Craft
       m.progress += (dt * ratio) / craftTime;
       if (m.progress >= 1) {
         m.progress = 0;
         for (const [rid,amt] of Object.entries(b.input)) m.inputBuffer[rid]-=amt;
-        // Output
         for (const [rid,amt] of Object.entries(b.output)) {
           if (rid === 'mw') continue;
           if (rid === 'research_points') { addInv('research_points',amt); continue; }
@@ -245,13 +280,11 @@ function genTick(dt) {
       const t = getTile(x,y);
       const b = BUILDING_BY_TYPE[t];
       if (!b || b.category !== 'power') continue;
-      if (!b.input) continue; // Solar: free
+      if (!b.input) continue;
       let m = getMeta(x,y);
       if (!m) { initMeta(x,y,t); m=getMeta(x,y); }
-      // Consume fuel from input buffer
       for (const [rid,amt] of Object.entries(b.input)) {
         if ((m.inputBuffer[rid]||0) < amt) {
-          // Try global inventory fallback for coal gen
           const inv = getInv(rid);
           if (inv >= amt) { takeInv(rid,amt); m.inputBuffer[rid]=(m.inputBuffer[rid]||0)+amt; }
         }
@@ -260,7 +293,6 @@ function genTick(dt) {
   }
 }
 
-// Collector display — show animated indicator on anchor tile
 function collectorTick() {
   for (let y = 0; y < GRID_ROWS; y++) {
     for (let x = 0; x < GRID_COLS; x++) {
@@ -268,13 +300,11 @@ function collectorTick() {
       if (!COLL_TYPES.has(t)) continue;
       let m = getMeta(x,y);
       if (!m) { setMeta(x,y,{progress:0,collected:0}); m=getMeta(x,y); }
-      // Pulse animation
       m.progress = (m.progress + 0.05) % 1;
     }
   }
 }
 
-// Chest tick: suck from adjacent belt
 function chestTick() {
   for (let y = 0; y < GRID_ROWS; y++) {
     for (let x = 0; x < GRID_COLS; x++) {
@@ -299,7 +329,6 @@ function chestTick() {
   }
 }
 
-// Main tick
 function tick() {
   const dt = TICK_DELTA;
   gameState.timePlayed += dt;
@@ -319,14 +348,12 @@ function placeTile(x, y, tileType) {
   if (x<0||x>=GRID_COLS||y<0||y>=GRID_ROWS) return false;
   const existing = getTile(x,y);
   if (PATCH_SET.has(existing)) {
-    // Only miner can go on patch
     if (tileType !== T.MINER) return false;
   } else if (existing !== T.EMPTY) {
     return false;
   }
   const b = BUILDING_BY_TYPE[tileType];
 
-  // Collector: place 3x3
   if (COLL_TYPES.has(tileType)) {
     if (!canPlace3x3(x,y)) return false;
     if (b.placeCost && !payCost(b.placeCost)) return false;
@@ -374,7 +401,6 @@ function remove3x3(ax,ay) {
 }
 
 function payCost(cost) {
-  // check first
   for (const [id,amt] of Object.entries(cost)) {
     if (getInv(id)<amt) return false;
   }
@@ -385,29 +411,33 @@ function payCost(cost) {
 function removeTile(x,y) {
   const t = getTile(x,y);
   if (t===T.EMPTY||PATCH_SET.has(t)) return;
-
-  // Collector anchor or body
   if (COLL_TYPES.has(t)) { remove3x3(x,y); return; }
   if (COLL_BODY.has(t)) {
-    // Find anchor
     for (let dy=-2;dy<=0;dy++) for (let dx=-2;dx<=0;dx++) {
       const at=getTile(x+dx,y+dy);
       if (COLL_TYPES.has(at)) { remove3x3(x+dx,y+dy); return; }
     }
     return;
   }
-
   setTile(x,y,T.EMPTY);
   setMeta(x,y,null);
   setItem(x,y,null);
 }
 
+// FIX #6: buyResearch now also checks material costs
 function buyResearch(id) {
   const r = RESEARCH.find(r=>r.id===id);
   if (!r) return false;
   if (gameState.completedResearch.includes(id)) return false;
   if (r.requires && !gameState.completedResearch.includes(r.requires)) return false;
   if (getInv('research_points') < r.cost_rp) return false;
+  // Check material costs
+  if (r.mat_cost) {
+    for (const [id,amt] of Object.entries(r.mat_cost)) {
+      if (getInv(id) < amt) return false;
+    }
+    for (const [id,amt] of Object.entries(r.mat_cost)) takeInv(id,amt);
+  }
   takeInv('research_points', r.cost_rp);
   gameState.completedResearch.push(id);
   return true;

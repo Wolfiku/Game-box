@@ -25,6 +25,17 @@ function defaultState() {
       tiles[p.y*GRID_COLS+p.x]=p.type;
   }
 
+  // FIX #3: Place a starting Collector (3x3) at top-left corner area (x:28, y:2)
+  // so the player can mine immediately without having to build one first.
+  const startCX = 28, startCY = 2;
+  for (let dy = 0; dy < 3; dy++) {
+    for (let dx = 0; dx < 3; dx++) {
+      const tt = (dx===0&&dy===0) ? T.COLLECTOR : T.COLL_BODY;
+      tiles[(startCY+dy)*GRID_COLS+(startCX+dx)] = tt;
+    }
+  }
+  meta[startCY*GRID_COLS+startCX] = {progress:0, collected:0};
+
   return {
     tiles, items, meta,
     inventory: {},

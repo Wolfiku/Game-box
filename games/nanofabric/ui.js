@@ -15,7 +15,7 @@ const DRAG_TH = 6;
 let painting = false, lastPT = null;
 let pinching = false, pt1 = null, pt2 = null;
 
-// Icon cache — use encodeURIComponent to avoid btoa UTF-8 issues
+// Icon cache
 const icCache = {};
 function icImg(id, sz) {
   const k = id + sz;
@@ -33,24 +33,33 @@ function icImg(id, sz) {
 const TBGC = {
   [T.EMPTY]:'#0d0d14',[T.PATCH_IRON]:'#181e28',[T.PATCH_COPPER]:'#1e1208',[T.PATCH_COAL]:'#131313',
   [T.BELT_R]:'#14162a',[T.BELT_L]:'#14162a',[T.BELT_U]:'#14162a',[T.BELT_D]:'#14162a',
-  [T.MINER]:'#0d1c0d',[T.SMELTER]:'#1e1008',[T.WIRE_MILL]:'#0e1828',
+  [T.SPLIT_R]:'#0e1a0e',[T.SPLIT_L]:'#0e1a0e',[T.SPLIT_U]:'#0e1a0e',[T.SPLIT_D]:'#0e1a0e',
+  [T.MERGE_R]:'#1a1608',
+  // FIX #2: MINER gets distinct background so the icon is always visible
+  [T.MINER]:'#0a1f0a',
+  [T.SMELTER]:'#1e1008',[T.COPPER_SMELTER]:'#1e1008',[T.WIRE_MILL]:'#0e1828',
   [T.FORGE]:'#1c0e0e',[T.ASSEMBLY]:'#0e1c0e',[T.BATTERY_PLANT]:'#1a1a08',
   [T.CELL_FACTORY]:'#1c0e12',[T.LAB]:'#0e1c1c',[T.COAL_GEN]:'#141418',
   [T.SOLAR]:'#101c10',[T.NUCLEAR]:'#0e1c0e',[T.CHEST]:'#181410',
 };
+
+// FIX #2: MINER is now in TICN so its icon is rendered on the grid
 const TICN = {
   [T.PATCH_IRON]:'patch_iron',[T.PATCH_COPPER]:'patch_copper',[T.PATCH_COAL]:'patch_coal',
   [T.BELT_R]:'belt_r',[T.BELT_L]:'belt_l',[T.BELT_U]:'belt_u',[T.BELT_D]:'belt_d',
-  [T.MINER]:'miner',[T.SMELTER]:'smelter',[T.WIRE_MILL]:'wire_mill',
+  [T.SPLIT_R]:'split_r',[T.SPLIT_L]:'split_l',[T.SPLIT_U]:'split_u',[T.SPLIT_D]:'split_d',
+  [T.MERGE_R]:'merge_r',
+  [T.MINER]:'miner',      // ← was missing before — this is the fix
+  [T.SMELTER]:'smelter',[T.COPPER_SMELTER]:'smelter',[T.WIRE_MILL]:'wire_mill',
   [T.FORGE]:'forge',[T.ASSEMBLY]:'assembly',[T.BATTERY_PLANT]:'battery_plant',
   [T.CELL_FACTORY]:'cell_factory',[T.LAB]:'lab',[T.COAL_GEN]:'coal_gen',
   [T.SOLAR]:'solar',[T.NUCLEAR]:'nuclear',[T.CHEST]:'chest',
+  [T.COLLECTOR]:'chest',[T.COLLECTOR2]:'chest',
 };
 
-// Fixed pixel heights matching the CSS constants in index.html
-const TB_H = 44;  // toolbar
-const RB_H = 36;  // resource bar
-const NB_H = 60;  // bottom nav
+const TB_H = 44;
+const RB_H = 36;
+const NB_H = 60;
 
 function initCanvas() {
   canvas = document.getElementById('grid-canvas');
@@ -68,10 +77,8 @@ function initCanvas() {
 }
 
 function resizeCv() {
-  // Calculate directly from window size to avoid CSS timing issues
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight - TB_H - RB_H - NB_H;
-  // Also size the grid-wrap element to match
   const wrap = document.getElementById('grid-wrap');
   if (wrap) {
     wrap.style.top    = (TB_H + RB_H) + 'px';
@@ -80,7 +87,6 @@ function resizeCv() {
   }
 }
 
-// ── Camera helpers ───────────────────────────────────────────────────────────
 function clampCam() {
   camX = Math.max(0, Math.min(camX, Math.max(0, GRID_COLS * TILE_SIZE - canvas.width)));
   camY = Math.max(0, Math.min(camY, Math.max(0, GRID_ROWS * TILE_SIZE - canvas.height)));
@@ -93,7 +99,6 @@ function s2t(sx, sy) {
   return {x: Math.floor((sx + camX) / TILE_SIZE), y: Math.floor((sy + camY) / TILE_SIZE)};
 }
 
-// ── Render ───────────────────────────────────────────────────────────────────
 let hoverTile = null;
 
 function render() {
@@ -122,6 +127,12 @@ function render() {
       ctx.lineWidth = 0.5;
       ctx.strokeRect(sx + .5, sy + .5, TILE_SIZE - 1, TILE_SIZE - 1);
 
+      // Collector body tint
+      if (t === T.COLL_BODY || t === T.COLL2_BODY) {
+        ctx.fillStyle = 'rgba(79,142,247,0.08)';
+        ctx.fillRect(sx, sy, TILE_SIZE, TILE_SIZE);
+      }
+
       // Icon
       const iid = TICN[t];
       if (iid) {
@@ -130,13 +141,12 @@ function render() {
           if (img.complete && img.naturalWidth > 0) {
             ctx.drawImage(img, sx + ioff, sy + ioff, isz, isz);
           } else {
-            // Draw once loaded
-            img.onload = () => {}; // render loop will pick it up next frame
+            img.onload = () => {};
           }
         }
       }
 
-      // Belt arrow
+      // Belt arrow overlay (on top of icon for visual clarity)
       if (BELT_SET.has(t)) drawArrow(sx, sy, t);
 
       // Item dot
@@ -150,7 +160,7 @@ function render() {
 
       // Progress bar
       const m = getMeta(x, y);
-      if (m && m.progress > 0) {
+      if (m && m.progress > 0 && t !== T.COLLECTOR && t !== T.COLLECTOR2) {
         ctx.fillStyle = 'rgba(79,142,247,.15)';
         ctx.fillRect(sx, sy + TILE_SIZE - 5, TILE_SIZE, 5);
         ctx.fillStyle = '#4f8ef7';
@@ -172,9 +182,11 @@ function render() {
 function drawArrow(sx, sy, t) {
   const cx = sx + TILE_SIZE/2, cy = sy + TILE_SIZE/2, s = TILE_SIZE * .18;
   ctx.save(); ctx.translate(cx, cy);
-  const a = {[T.BELT_R]:0, [T.BELT_D]:Math.PI/2, [T.BELT_L]:Math.PI, [T.BELT_U]:-Math.PI/2};
+  const a = {[T.BELT_R]:0,[T.BELT_D]:Math.PI/2,[T.BELT_L]:Math.PI,[T.BELT_U]:-Math.PI/2,
+             [T.SPLIT_R]:0,[T.SPLIT_D]:Math.PI/2,[T.SPLIT_L]:Math.PI,[T.SPLIT_U]:-Math.PI/2,
+             [T.MERGE_R]:0};
   ctx.rotate(a[t] || 0);
-  ctx.fillStyle = 'rgba(79,142,247,.35)';
+  ctx.fillStyle = BELT_SPLIT.has(t) ? 'rgba(76,175,61,.45)' : BELT_MERGE.has(t) ? 'rgba(245,166,35,.45)' : 'rgba(79,142,247,.35)';
   ctx.beginPath(); ctx.moveTo(s,0); ctx.lineTo(-s*.7,-s*.65); ctx.lineTo(-s*.7,s*.65);
   ctx.closePath(); ctx.fill(); ctx.restore();
 }
@@ -203,7 +215,6 @@ function onPM(e) {
     if (iMode === 'build' && selTool) doPaint(s2t(p.x, p.y));
     else if (iMode === 'remove') doRemove(s2t(p.x, p.y));
   } else {
-    // Always allow panning while dragging (unless painting belts)
     if (iMode === 'scroll' || (moved && !(iMode === 'build' && selTool && BELT_SET.has(selTool.tileType)))) {
       camX = csx - dx; camY = csy - dy; clampCam();
     }
@@ -240,7 +251,6 @@ function doPaint(tile) {
 }
 function doRemove(tile) { if (tile) removeTile(tile.x, tile.y); }
 
-// ── Tap ──────────────────────────────────────────────────────────────────────
 function handleTap(sx, sy) {
   const tile = s2t(sx, sy);
   if (tile.x < 0 || tile.x >= GRID_COLS || tile.y < 0 || tile.y >= GRID_ROWS) return;
@@ -253,7 +263,6 @@ function handleTap(sx, sy) {
   showPop(tile.x, tile.y, sx, sy);
 }
 
-// ── Tile popup ───────────────────────────────────────────────────────────────
 function showPop(tx, ty, sx, sy) {
   const t = getTile(tx, ty); if (t === T.EMPTY) return;
   const b = BUILDING_BY_TYPE[t];
@@ -278,11 +287,19 @@ function showPop(tx, ty, sx, sy) {
     h += ' &#8594; ';
     h += Object.entries(b.output).filter(([k])=>k!=='mw').map(([r,a]) => `${svgIcon(r,14)} ${a}x ${RES_BY_ID[r]?.name||r}`).join(' ');
     h += '</div>';
-    if (m) h += `Progress: <b>${Math.floor(m.progress*100)}%</b>`;
+    if (m) {
+      h += `Progress: <b>${Math.floor(m.progress*100)}%</b>`;
+      if (m.inputBuffer && Object.keys(m.inputBuffer).length) {
+        h += '<br>Buffer: ' + Object.entries(m.inputBuffer).filter(([,v])=>v>0).map(([r,v])=>`${svgIcon(r,11)} ${v}`).join(' ');
+      }
+    }
   }
   if (b && b.category === 'power') {
     h += `Output: ${svgIcon('power',12)} <b>${b.powerOut} MW</b>`;
     if (b.input) h += '<br>Fuel: ' + Object.keys(b.input).map(r => svgIcon(r,12)+' '+(RES_BY_ID[r]?.name||r)).join(', ');
+  }
+  if (COLL_TYPES.has(t)) {
+    h += `<span style="color:var(--mut)">Collector — collecting to inventory</span>`;
   }
   document.getElementById('tpb').innerHTML = h;
   const ac = document.getElementById('tpa'); ac.innerHTML = '';
@@ -294,7 +311,6 @@ function showPop(tx, ty, sx, sy) {
   const cl = document.createElement('button'); cl.textContent = 'Close'; cl.onclick = hidePop; ac.appendChild(cl);
   const pop = document.getElementById('tile-popup');
   pop.classList.remove('hidden');
-  // Position popup: offset from canvas position + screen coords
   const canvR = canvas.getBoundingClientRect();
   let px = canvR.left + sx + 12, py = canvR.top + sy + 12;
   const pw = 240, ph = 190;
@@ -304,7 +320,6 @@ function showPop(tx, ty, sx, sy) {
 }
 function hidePop() { document.getElementById('tile-popup').classList.add('hidden'); }
 
-// ── Mode ─────────────────────────────────────────────────────────────────────
 let badgeT = null;
 function setMode(m, tool) {
   iMode = m; selTool = tool || null;
@@ -316,7 +331,6 @@ function setMode(m, tool) {
   buildBuildPanel();
 }
 
-// ── HUD ──────────────────────────────────────────────────────────────────────
 function fmt(n) {
   n = Math.floor(n||0);
   if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
@@ -342,7 +356,6 @@ function updateHUD() {
   }
 }
 
-// ── Build Panel ──────────────────────────────────────────────────────────────
 function buildBuildPanel() {
   const tb = document.getElementById('tool-buttons');
   const bb = document.getElementById('building-buttons');
@@ -386,7 +399,6 @@ function buildBuildPanel() {
   }
 }
 
-// ── Research Panel ───────────────────────────────────────────────────────────
 function buildResPanel() {
   const list = document.getElementById('research-list'); if (!list) return;
   list.innerHTML = '';
@@ -397,19 +409,28 @@ function buildResPanel() {
     const aff   = getInv('research_points') >= r.cost_rp;
     const c = document.createElement('div');
     c.className = 'rcard' + (done?' done':lck?' lck':aff?' aff':'');
+    // Show material costs in research panel
+    let matHtml = '';
+    if (!done && r.mat_cost) {
+      matHtml = '<div class="rcard-mat">' +
+        Object.entries(r.mat_cost).map(([rid,amt]) => {
+          const cls = getInv(rid) >= amt ? 'cok' : 'cbad';
+          return `<span class="${cls}">${svgIcon(rid,10)} ${fmt(amt)}</span>`;
+        }).join(' ') + '</div>';
+    }
     c.innerHTML = `<div class="rcard-n">${done?svgIcon('check',11)+' ':''}${r.name}</div>
       <div class="rcard-d">${r.description}</div>
       <div class="rcard-c">${done?'Done':svgIcon('research_points',10)+' '+r.cost_rp+' RP'}</div>
+      ${matHtml}
       ${lck?`<div style="font-size:9px;color:var(--mut);margin-top:2px">${svgIcon('lock',10)} Req: ${r.requires}</div>`:''}`;
     if (!done && !lck) c.onclick = () => {
       if (buyResearch(r.id)) { toast('Researched: '+r.name); buildResPanel(); buildBuildPanel(); }
-      else toast('Not enough RP');
+      else toast('Not enough RP or materials');
     };
     list.appendChild(c);
   }
 }
 
-// ── Stats Panel ──────────────────────────────────────────────────────────────
 function buildStatsPanel() {
   const el = document.getElementById('stats-content'); if (!el) return;
   const p = gameState.power;
@@ -428,7 +449,6 @@ function buildStatsPanel() {
     <button onclick="if(confirm('Reset?')){resetGame&&resetGame();location.reload()}" style="color:var(--acc);border:1px solid var(--acc);padding:8px 16px;border-radius:6px;font-size:11px">Reset Game</button>`;
 }
 
-// ── Nav Bar ──────────────────────────────────────────────────────────────────
 function buildNav() {
   const nav = document.getElementById('bottom-nav'); if (!nav) return;
   nav.innerHTML = '';
