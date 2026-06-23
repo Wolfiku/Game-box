@@ -34,27 +34,30 @@ function dbSet(key, val) {
   });
 }
 
-// ── PWA Update banner ─────────────────────────────────────────────────────────
-// Shows a non-intrusive banner instead of a hard reload so an active game
-// session isn't killed. User decides when to reload.
-let _bannerShown = false;
-function showUpdateBanner() {
-  if (_bannerShown) return;
-  _bannerShown = true;
-  const bar = document.createElement('div');
-  bar.id = 'update-banner';
-  bar.innerHTML = '<span>Update available</span>' +
-    '<button id="upd-reload">Reload now</button>' +
-    '<button id="upd-dismiss" aria-label="Dismiss">×</button>';
-  document.body.appendChild(bar);
-  document.getElementById('upd-reload').onclick   = () => location.reload();
-  document.getElementById('upd-dismiss').onclick  = () => { bar.remove(); _bannerShown = false; };
+// ── PWA Update Dialog ─────────────────────────────────────────────────────────
+// Shows a proper in-UI dialog instead of a small toast.
+// "Jetzt installieren" reloads immediately.
+// "Später installieren" stores a pendingUpdate flag → reload happens on next boot.
+let _dialogShown = false;
+function showUpdateDialog() {
+  if (_dialogShown) return;
+  _dialogShown = true;
+  document.getElementById('update-overlay').classList.add('show');
 }
+
+document.getElementById('upd-now').addEventListener('click', () => {
+  location.reload();
+});
+document.getElementById('upd-later').addEventListener('click', async () => {
+  await dbSet('pendingUpdate', true);
+  document.getElementById('update-overlay').classList.remove('show');
+  _dialogShown = false;
+});
 
 if ('serviceWorker' in navigator) {
   // Route 1: activated SW posts SW_UPDATED message
   navigator.serviceWorker.addEventListener('message', e => {
-    if (e.data?.type === 'SW_UPDATED') showUpdateBanner();
+    if (e.data?.type === 'SW_UPDATED') showUpdateDialog();
   });
 
   // Route 2: new SW found while page is open (updatefound)
@@ -64,7 +67,7 @@ if ('serviceWorker' in navigator) {
       if (!nw) return;
       nw.addEventListener('statechange', () => {
         if (nw.state === 'installed' && navigator.serviceWorker.controller)
-          showUpdateBanner();
+          showUpdateDialog();
       });
     });
     // Poll every 5 minutes so long-open sessions also catch updates
@@ -241,8 +244,14 @@ document.getElementById('btn-skip-storage').addEventListener('click', async () =
   runLoader(afterLoad);
 });
 async function afterLoad() {
-  const [done, username, consoleName, theme] =
-    await Promise.all([dbGet('setupDone'), dbGet('username'), dbGet('consoleName'), dbGet('theme')]);
+  const [done, username, consoleName, theme, pendingUpdate] =
+    await Promise.all([dbGet('setupDone'), dbGet('username'), dbGet('consoleName'), dbGet('theme'), dbGet('pendingUpdate')]);
+  // If the user chose "Später installieren" in a previous session, reload now
+  if (pendingUpdate) {
+    await dbSet('pendingUpdate', false);
+    location.reload();
+    return;
+  }
   if (theme) applyTheme(theme === 'dark');
   if (done) await goHome(username || 'Player', consoleName || 'My Game-Box');
   else show('screen-setup');
