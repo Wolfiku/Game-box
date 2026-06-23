@@ -1,7 +1,7 @@
 {
   "games": [
     {
-      "index": 0,
+      "index": 8,
       "name": "Lonely Tower",
       "icon": "games/lonely-tower/icon.png",
       "path": "games/lonely-tower/index.html"
