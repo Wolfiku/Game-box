@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Arena Shooter Demo</title>
+<style>
+html,body{margin:0;padding:0;overflow:hidden;background:#0b1020;font-family:sans-serif;touch-action:none}
+#game{display:block;width:100vw;height:100vh;background:linear-gradient(#111a33,#0b1020)}
+#menu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center, rgba(20,30,60,.92), rgba(5,8,18,.98));z-index:5;color:#fff}
+#menu.hidden{display:none}
+.panel{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:24px 22px;border-radius:18px;max-width:360px;width:calc(100vw - 48px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.panel h1{margin:0 0 10px;font-size:32px}
+.panel p{margin:0 0 18px;opacity:.9;line-height:1.5}
+#startBtn{pointer-events:auto;border:0;border-radius:12px;padding:14px 22px;font-size:18px;font-weight:700;background:#4ad7ff;color:#08111f}
+#ui{position:fixed;inset:0;pointer-events:none;color:#fff}
+#hud{position:absolute;left:12px;top:10px;background:rgba(0,0,0,.35);padding:8px 10px;border-radius:8px;font-size:14px;line-height:1.4}
+#help{position:absolute;right:12px;top:10px;background:rgba(0,0,0,.35);padding:8px 10px;border-radius:8px;font-size:12px;line-height:1.4;max-width:42vw;text-align:right}
+#miniInfo{position:absolute;left:12px;top:86px;background:rgba(0,0,0,.28);padding:8px 10px;border-radius:8px;font-size:12px;line-height:1.4}
+#stickBase,#stickKnob,#fireBtn{position:fixed;pointer-events:auto}
+#stickBase{left:18px;bottom:18px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.12)}
+#stickKnob{left:58px;bottom:58px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.3);transform:translate(-50%,-50%)}
+#fireBtn{right:20px;bottom:24px;width:96px;height:96px;border-radius:50%;background:rgba(255,80,80,.22);border:2px solid rgba(255,120,120,.45);color:#fff;font-weight:700;font-size:18px}
+canvas{image-rendering:pixelated}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="menu">
+  <div class="panel">
+    <h1>Arena Shooter</h1>
+    <p>Bewege dich, schieße auf Gegner und überlebe zufällige Arenen.</p>
+    <button id="startBtn">Start</button>
+  </div>
+</div>
+<div id="ui">
+  <div id="hud"></div>
+  <div id="help">WASD / Pfeile bewegen<br>Maus zielen + schießen<br>Mobile: linker Stick + Feuer</div>
+  <div id="miniInfo"></div>
+</div>
+<div id="stickBase"></div>
+<div id="stickKnob"></div>
+<button id="fireBtn">FIRE</button>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const hud = document.getElementById('hud');
+const miniInfo = document.getElementById('miniInfo');
+const stickBase = document.getElementById('stickBase');
+const stickKnob = document.getElementById('stickKnob');
+const fireBtn = document.getElementById('fireBtn');
+const startBtn = document.getElementById('startBtn');
+const menu = document.getElementById('menu');
+
+let W=0,H=0, DPR=1;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 2);
+  W=innerWidth; H=innerHeight;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+addEventListener('resize', resize);
+resize();
+
+const keys = new Set();
+addEventListener('keydown', e=>keys.add(e.key.toLowerCase()));
+addEventListener('keyup', e=>keys.delete(e.key.toLowerCase()));
+
+let mouse = {x:W/2,y:H/2,down:false};
+canvas.addEventListener('pointermove', e=>{ mouse.x=e.clientX; mouse.y=e.clientY; });
+canvas.addEventListener('pointerdown', e=>{ mouse.down=true; mouse.x=e.clientX; mouse.y=e.clientY; });
+addEventListener('pointerup', ()=>mouse.down=false);
+
+const touch = {active:false,id:null,cx:0,cy:0,dx:0,dy:0,fire:false};
+function setKnob(dx,dy){
+  const max=60;
+  const len=Math.hypot(dx,dy)||1;
+  const s=Math.min(max,len);
+  const nx=dx/len*s, ny=dy/len*s;
+  stickKnob.style.left=(touch.cx+nx)+'px';
+  stickKnob.style.top=(touch.cy+ny)+'px';
+  touch.dx=nx/max;
+  touch.dy=ny/max;
+}
+stickBase.style.touchAction = 'none';
+stickKnob.style.touchAction = 'none';
+stickBase.style.webkitUserSelect = 'none';
+stickKnob.style.webkitUserSelect = 'none';
+stickBase.style.userSelect = 'none';
+stickKnob.style.userSelect = 'none';
+stickBase.addEventListener('pointerdown', e=>{
+  e.preventDefault();
+  touch.active=true;
+  touch.id=e.pointerId;
+  touch.cx=e.clientX;
+  touch.cy=e.clientY;
+  stickBase.style.left=(e.clientX-65)+'px';
+  stickBase.style.top=(e.clientY-65)+'px';
+  stickKnob.style.left=e.clientX+'px';
+  stickKnob.style.top=e.clientY+'px';
+  stickBase.setPointerCapture(e.pointerId);
+});
+stickBase.addEventListener('pointermove', e=>{
+  if(!touch.active||e.pointerId!==touch.id) return;
+  e.preventDefault();
+  setKnob(e.clientX-touch.cx, e.clientY-touch.cy);
+});
+function resetStick(){
+  touch.active=false;
+  touch.dx=touch.dy=0;
+  stickKnob.style.left=(touch.cx)+'px';
+  stickKnob.style.top=(touch.cy)+'px';
+}
+stickBase.addEventListener('pointerup', e=>{
+  if(e.pointerId!==touch.id) return;
+  e.preventDefault();
+  resetStick();
+});
+stickBase.addEventListener('pointercancel', resetStick);
+stickBase.addEventListener('lostpointercapture', resetStick);
+fireBtn.addEventListener('pointerdown', e=>{ e.preventDefault(); touch.fire=true; });
+fireBtn.addEventListener('pointerup', e=>{ e.preventDefault(); touch.fire=false; });
+fireBtn.addEventListener('pointercancel', ()=>touch.fire=false);
+fireBtn.style.userSelect = 'none';
+fireBtn.style.webkitUserSelect = 'none';
+fireBtn.style.touchAction = 'none';
+
+const map = { tileSize: 48, w: 24, h: 18, tiles: [] };
+
+const arenaConfigs = [
+  { name:'Box', w:24, h:18, gen:(m)=>{ for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){ const b = x===0||y===0||x===m.w-1||y===m.h-1; m.tiles.push(b?1:0); } } },
+  { name:'Cross', w:24, h:18, gen:(m)=>{ for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){ const border = x===0||y===0||x===m.w-1||y===m.h-1; const cross = (x===12 && y>2 && y<m.h-3) || (y===9 && x>2 && x<m.w-3); m.tiles.push((border||cross)?1:0); } } },
+  { name:'Rooms', w:24, h:18, gen:(m)=>{ for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){ const border = x===0||y===0||x===m.w-1||y===m.h-1; const blocks = (x%6===0 && y>1 && y<m.h-2) || (y%6===0 && x>1 && x<m.w-2); m.tiles.push((border||blocks)?1:0); } } },
+  { name:'Maze', w:24, h:18, gen:(m)=>{ for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++){ const border = x===0||y===0||x===m.w-1||y===m.h-1; const maze = ((x+y)%4===0 && x>2 && y>2 && x<m.w-3 && y<m.h-3); m.tiles.push((border||maze)?1:0); } } }
+];
+
+function buildArena(){
+  const cfg = arenaConfigs[(Math.random()*arenaConfigs.length)|0];
+  map.w = cfg.w; map.h = cfg.h; map.tiles = [];
+  cfg.gen(map);
+  currentArenaName = cfg.name;
+}
+
+function solidAt(px,py){
+  const ts=map.tileSize;
+  const tx=Math.floor(px/ts), ty=Math.floor(py/ts);
+  if(tx<0||ty<0||tx>=map.w||ty>=map.h) return true;
+  return map.tiles[ty*map.w+tx]===1;
+}
+function rectSolid(x,y,w,h){
+  return solidAt(x,y)||solidAt(x+w,y)||solidAt(x,y+h)||solidAt(x+w,y+h);
+}
+
+const player = {x:120,y:120,r:14,vx:0,vy:0,spd:220,dir:0,hp:100,cd:0};
+const bullets = [];
+const enemies = [];
+const enemySpawns = [
+  {x:96, y:96},
+  {x:(map.w*map.tileSize)-96, y:96},
+  {x:96, y:(map.h*map.tileSize)-96},
+  {x:(map.w*map.tileSize)-96, y:(map.h*map.tileSize)-96},
+  {x:(map.w*map.tileSize)/2, y:96}
+];
+function findSpawnPoint(i){
+  const s = enemySpawns[i % enemySpawns.length];
+  return {x:s.x, y:s.y};
+}
+const stageExtras = [
+  {name:'Shield', color:'#6fd3ff'},
+  {name:'Damage', color:'#ffcf5a'},
+  {name:'Speed', color:'#9cff73'}
+];
+let activeStageExtra = null;
+let stageExtraTimer = 0;
+function spawnEnemy(){
+  if(enemies.length >= 5) return;
+  const p = findSpawnPoint(enemies.length);
+  const hp = 3 + ((Math.random()*3)|0);
+  if(!rectSolid(p.x-12,p.y-12,24,24)) enemies.push({x:p.x,y:p.y,r:13,hp, maxHp:hp, spd:80 + ((Math.random()*35)|0)});
+}
+function spawnStageExtra(){
+  const extras = [
+    {x:map.tileSize*3, y:map.tileSize*3},
+    {x:(map.w-4)*map.tileSize, y:map.tileSize*3},
+    {x:map.tileSize*3, y:(map.h-4)*map.tileSize},
+    {x:(map.w-4)*map.tileSize, y:(map.h-4)*map.tileSize}
+  ];
+  const p = extras[(Math.random()*extras.length)|0];
+  activeStageExtra = {x:p.x, y:p.y, r:14, type: stageExtras[(Math.random()*stageExtras.length)|0], life:10};
+}
+let spawnTimer=0;
+let score=0;
+let last=performance.now();
+let running = false;
+let currentArenaName = '';
+
+function shoot(){
+  if(player.cd>0) return;
+  player.cd = 0.18;
+  const ang = player.dir;
+  bullets.push({x:player.x+Math.cos(ang)*18,y:player.y+Math.sin(ang)*18,vx:Math.cos(ang)*520,vy:Math.sin(ang)*520,r:4,life:1.3});
+}
+
+function resetGame(){
+  buildArena();
+  player.x = map.tileSize*2.5;
+  player.y = map.tileSize*2.5;
+  player.hp = 100;
+  player.cd = 0;
+  player.dir = 0;
+  bullets.length = 0;
+  enemies.length = 0;
+  score = 0;
+  spawnTimer = 0;
+  stageExtraTimer = 3;
+  activeStageExtra = null;
+  for(let i=0;i<5;i++) spawnEnemy();
+  running = true;
+  menu.classList.add('hidden');
+}
+
+startBtn.addEventListener('click', resetGame);
+startBtn.addEventListener('touchstart', e=>{ e.preventDefault(); resetGame(); }, {passive:false});
+
+function update(dt){
+  if(!running) return;
+  const ix = (keys.has('d')||keys.has('arrowright')?1:0) - (keys.has('a')||keys.has('arrowleft')?1:0) + touch.dx;
+  const iy = (keys.has('s')||keys.has('arrowdown')?1:0) - (keys.has('w')||keys.has('arrowup')?1:0) + touch.dy;
+  const len = Math.hypot(ix,iy);
+  let mx=0,my=0;
+  if(len>0){ mx=ix/len; my=iy/len; }
+  player.vx = mx * player.spd;
+  player.vy = my * player.spd;
+  const aimDx = mouse.x - W/2;
+  const aimDy = mouse.y - H/2;
+  if(len>0.05) player.dir = Math.atan2(my,mx);
+  else if(mouse.down || Math.hypot(aimDx, aimDy) > 18) player.dir = Math.atan2(aimDy, aimDx);
+  if(mouse.down || keys.has(' ') || touch.fire) shoot();
+  if(player.cd>0) player.cd -= dt;
+
+  let nx = player.x + player.vx*dt;
+  if(!rectSolid(nx-player.r,player.y-player.r,player.r*2,player.r*2)) player.x = nx;
+  let ny = player.y + player.vy*dt;
+  if(!rectSolid(player.x-player.r,ny-player.r,player.r*2,player.r*2)) player.y = ny;
+
+  for(const b of bullets){ b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt; }
+  for(let i=bullets.length-1;i>=0;i--){
+    const b=bullets[i];
+    if(b.life<=0 || solidAt(b.x,b.y)) { bullets.splice(i,1); continue; }
+    for(let j=enemies.length-1;j>=0;j--){
+      const e=enemies[j];
+      const d=Math.hypot(b.x-e.x,b.y-e.y);
+      if(d < b.r + e.r){
+        bullets.splice(i,1); e.hp--;
+        if(e.hp<=0){ enemies.splice(j,1); score += 10; }
+        break;
+      }
+    }
+  }
+
+  for(const e of enemies){
+    const ang = Math.atan2(player.y-e.y, player.x-e.x);
+    const ex = e.x + Math.cos(ang)*e.spd*dt;
+    const ey = e.y + Math.sin(ang)*e.spd*dt;
+    if(!rectSolid(ex-e.r, e.y-e.r, e.r*2, e.r*2)) e.x = ex;
+    if(!rectSolid(e.x-e.r, ey-e.r, e.r*2, e.r*2)) e.y = ey;
+    if(Math.hypot(player.x-e.x, player.y-e.y) < player.r + e.r){ player.hp -= 20*dt; }
+  }
+
+  stageExtraTimer -= dt;
+  if(!activeStageExtra && stageExtraTimer <= 0){ activeStageExtra = null; spawnStageExtra(); stageExtraTimer = 8; }
+  if(activeStageExtra){
+    activeStageExtra.life -= dt;
+    if(activeStageExtra.life <= 0){ activeStageExtra = null; }
+    const d = Math.hypot(player.x-activeStageExtra.x, player.y-activeStageExtra.y);
+    if(d < player.r + activeStageExtra.r){
+      if(activeStageExtra.type.name==='Shield') player.hp = Math.min(100, player.hp + 30);
+      if(activeStageExtra.type.name==='Damage') player.cd = Math.max(0, player.cd - 0.08);
+      if(activeStageExtra.type.name==='Speed') player.spd = 280;
+      activeStageExtra = null;
+    }
+  }
+
+  spawnTimer -= dt;
+  if(spawnTimer<=0){ spawnTimer = 0.6; spawnEnemy(); }
+  if(player.hp <= 0){
+    player.hp = 100;
+    player.x = 120;
+    player.y = 120;
+    score = 0;
+    enemies.length = 0;
+    bullets.length = 0;
+    running = false;
+    menu.classList.remove('hidden');
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  const ts = map.tileSize;
+  const camX = W/2 - player.x;
+  const camY = H/2 - player.y;
+  ctx.save(); ctx.translate(camX,camY);
+  for(let y=0;y<map.h;y++){
+    for(let x=0;x<map.w;x++){
+      const t = map.tiles[y*map.w+x];
+      ctx.fillStyle = t ? '#26324f' : '#13203b';
+      ctx.fillRect(x*ts,y*ts,ts,ts);
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.strokeRect(x*ts,y*ts,ts,ts);
+    }
+  }
+  ctx.fillStyle = '#4ad7ff';
+  ctx.beginPath(); ctx.arc(player.x,player.y,player.r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(player.x,player.y); ctx.lineTo(player.x+Math.cos(player.dir)*22, player.y+Math.sin(player.dir)*22); ctx.stroke();
+  ctx.fillStyle = '#ffd24a';
+  for(const b of bullets){ ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill(); }
+  ctx.fillStyle = '#ff5a6b';
+  for(const e of enemies){
+    ctx.beginPath(); ctx.arc(e.x,e.y,e.r,0,Math.PI*2); ctx.fill();
+    const barW = 26;
+    const hpRatio = Math.max(0, e.hp / e.maxHp);
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(e.x-barW/2, e.y-e.r-12, barW, 4);
+    ctx.fillStyle = '#7dff85'; ctx.fillRect(e.x-barW/2, e.y-e.r-12, barW*hpRatio, 4);
+    ctx.fillStyle = '#ff5a6b';
+  }
+  if(activeStageExtra){
+    ctx.fillStyle = activeStageExtra.type.color;
+    ctx.beginPath(); ctx.arc(activeStageExtra.x, activeStageExtra.y, activeStageExtra.r, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = '12px sans-serif';
+    ctx.fillText(activeStageExtra.type.name, activeStageExtra.x-18, activeStageExtra.y-20);
+  }
+  ctx.restore();
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.fillRect(12,H-22,200,10);
+  ctx.fillStyle='#5cff7d';
+  ctx.fillRect(12,H-22,200*(player.hp/100),10);
+  hud.innerHTML = `Arena: ${currentArenaName}<br>HP: ${Math.max(0,player.hp|0)}<br>Score: ${score}<br>Enemies: ${enemies.length}`;
+  miniInfo.textContent = activeStageExtra ? `Stage Extra: ${activeStageExtra.type.name}` : 'Stage Extras erscheinen zeitweise im Level';
+}
+
+function loop(t){
+  const dt = Math.min(0.033, (t-last)/1000);
+  last=t;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
