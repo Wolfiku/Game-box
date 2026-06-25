@@ -17,6 +17,12 @@
       "name": "Tic Tac Toe",
       "icon": "games/tto/icon.png",
       "path": "games/tto/index.html"
+    },
+    {
+      "index": 3,
+      "name": "Crossy Road",
+      "icon": "games/Crossyroad/icon.png",
+      "path": "games/Crossyroad/index.html"
     }
   ]
 }
