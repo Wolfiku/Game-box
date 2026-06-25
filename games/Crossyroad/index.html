@@ -80,5 +80,48 @@ html,body{width:100%;height:100%;overflow:hidden;background:#87CEEB;font-family:
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="game.js"></script>
+
+<script>
+// Swipe-Steuerung
+(function() {
+  var touchStartX = 0;
+  var touchStartY = 0;
+  var swipeThreshold = 35; // Mindest-Pixel fuer einen Swipe
+  var moved = false;
+
+  document.addEventListener('touchstart', function(e) {
+    // Nur wenn kein Button getroffen wurde
+    if (e.target.closest('#controls, #retry, #darkMode')) return;
+    touchStartX = e.changedTouches[0].clientX;
+    touchStartY = e.changedTouches[0].clientY;
+    moved = false;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (e.target.closest('#controls, #retry, #darkMode')) return;
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    var dy = e.changedTouches[0].clientY - touchStartY;
+    if (!moved && (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold)) {
+      moved = true;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        // Horizontal
+        if (dx > 0) {
+          document.getElementById('right').click();
+        } else {
+          document.getElementById('left').click();
+        }
+      } else {
+        // Vertikal (Swipe hoch = forward, runter = backward)
+        if (dy < 0) {
+          document.getElementById('forward').click();
+        } else {
+          document.getElementById('backward').click();
+        }
+      }
+    }
+  }, { passive: true });
+})();
+</script>
+
 </body>
 </html>

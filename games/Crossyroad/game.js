@@ -95,6 +95,7 @@ let previousTimestamp;
 let startMoving;
 let moves;
 let stepStartTimestamp;
+let isDead = false;
 
 // Textures
 const carFrontTexture = new Texture(40,80,[{x: 0, y: 10, w: 30, h: 60}]);
@@ -423,6 +424,7 @@ const initaliseValues = () => {
   startMoving = false;
   moves = [];
   stepStartTimestamp = null;
+  isDead = false;
 
   chicken.position.x = 0;
   chicken.position.y = 0;
@@ -436,12 +438,14 @@ const initaliseValues = () => {
 
 // Movement and game controls
 function move(direction) {
+  if (isDead) return;
+
   const finalPositions = moves.reduce((position, move) => {
     if(move === 'forward') return {lane: position.lane+1, column: position.column};
     if(move === 'backward') return {lane: position.lane-1, column: position.column};
     if(move === 'left') return {lane: position.lane, column: position.column-1};
     if(move === 'right') return {lane: position.lane, column: position.column+1};
-    return position;  // Add default return
+    return position;
   }, {lane: currentLane, column: currentColumn});
 
   if (direction === 'forward') {
@@ -493,11 +497,40 @@ function toggleDarkMode() {
   });
 }
 
+// Collision detection helper
+// Checks the real world position of the chicken against all vehicles in a lane
+function checkCollisionWithLane(laneIndex) {
+  if (laneIndex < 0 || laneIndex >= lanes.length) return false;
+  const lane = lanes[laneIndex];
+  if (lane.type !== 'car' && lane.type !== 'truck') return false;
+
+  const vechicleLength = { car: 60, truck: 105 }[lane.type];
+  // Use actual rendered chicken position for accurate collision
+  const chickenX = chicken.position.x;
+  const chickenHalf = (CONFIG.chickenSize * CONFIG.zoom) / 2 * 0.85; // 0.85 = slight forgiveness factor
+  const chickenMinX = chickenX - chickenHalf;
+  const chickenMaxX = chickenX + chickenHalf;
+
+  // Check Y overlap: chicken must actually be inside this lane's Y range
+  const laneY = laneIndex * CONFIG.positionWidth * CONFIG.zoom;
+  const laneHalfY = (CONFIG.positionWidth * CONFIG.zoom) / 2;
+  const chickenY = chicken.position.y;
+  if (chickenY < laneY - laneHalfY || chickenY > laneY + laneHalfY) return false;
+
+  return lane.vechicles.some(vechicle => {
+    const carHalf = (vechicleLength * CONFIG.zoom) / 2;
+    const carMinX = vechicle.position.x - carHalf;
+    const carMaxX = vechicle.position.x + carHalf;
+    return chickenMaxX > carMinX && chickenMinX < carMaxX;
+  });
+}
+
 // Event listeners
 document.querySelector("#retry").addEventListener("click", () => {
   lanes.forEach(lane => scene.remove(lane.mesh));
   initaliseValues();
   endDOM.style.visibility = 'hidden';
+  endDOM.classList.remove('visible');
 });
 
 document.getElementById('forward').addEventListener("click", () => move('forward'));
@@ -507,21 +540,11 @@ document.getElementById('right').addEventListener("click", () => move('right'));
 document.getElementById('darkMode').addEventListener("click", toggleDarkMode);
 
 window.addEventListener("keydown", event => {
-  if (event.keyCode == '38') {
-    move('forward');
-  }
-  else if (event.keyCode == '40') {
-    move('backward');
-  }
-  else if (event.keyCode == '37') {
-    move('left');
-  }
-  else if (event.keyCode == '39') {
-    move('right');
-  }
-  else if (event.key === 'd') {
-    toggleDarkMode();
-  }
+  if (event.keyCode == '38') { move('forward'); }
+  else if (event.keyCode == '40') { move('backward'); }
+  else if (event.keyCode == '37') { move('left'); }
+  else if (event.keyCode == '39') { move('right'); }
+  else if (event.key === 'd') { toggleDarkMode(); }
 });
 
 // Renderer setup
@@ -539,16 +562,13 @@ if (gameContainer) {
     document.body.appendChild(renderer.domElement);
 }
 
-// Add window resize handler
 window.addEventListener('resize', () => {
     const width = window.innerWidth;
     const height = window.innerHeight;
-    
     camera.left = width / -2;
     camera.right = width / 2;
     camera.top = height / 2;
     camera.bottom = height / -2;
-    
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
 });
@@ -624,43 +644,44 @@ function animate(timestamp) {
 
     if(moveDeltaTime > CONFIG.stepTime) {
       switch(moves[0]) {
-        case 'forward': {
-          currentLane++;
-          counterDOM.innerHTML = currentLane;
-          break;
-        }
-        case 'backward': {
-          currentLane--;
-          counterDOM.innerHTML = currentLane;
-          break;
-        }
-        case 'left': {
-          currentColumn--;
-          break;
-        }
-        case 'right': {
-          currentColumn++;
-          break;
-        }
+        case 'forward': { currentLane++; counterDOM.innerHTML = currentLane; break; }
+        case 'backward': { currentLane--; counterDOM.innerHTML = currentLane; break; }
+        case 'left': { currentColumn--; break; }
+        case 'right': { currentColumn++; break; }
       }
       moves.shift();
       stepStartTimestamp = moves.length === 0 ? null : timestamp;
     }
   }
 
-  // Collision detection
-  if(lanes[currentLane].type === 'car' || lanes[currentLane].type === 'truck') {
-    const chickenMinX = chicken.position.x - CONFIG.chickenSize*CONFIG.zoom/2;
-    const chickenMaxX = chicken.position.x + CONFIG.chickenSize*CONFIG.zoom/2;
-    const vechicleLength = { car: 60, truck: 105}[lanes[currentLane].type];
-    
-    lanes[currentLane].vechicles.forEach(vechicle => {
-      const carMinX = vechicle.position.x - vechicleLength*CONFIG.zoom/2;
-      const carMaxX = vechicle.position.x + vechicleLength*CONFIG.zoom/2;
-      if(chickenMaxX > carMinX && chickenMinX < carMaxX) {
-        endDOM.style.visibility = 'visible';
+  // --- FIXED COLLISION DETECTION ---
+  // Only check if not already dead, and use actual chicken world position
+  if (!isDead) {
+    // Check current lane AND neighboring lanes (chicken might be mid-jump between two)
+    const lanesToCheck = new Set();
+    // Determine which lane indices the chicken overlaps based on Y position
+    const chickenWorldY = chicken.position.y;
+    for (let i = Math.max(0, currentLane - 1); i <= Math.min(lanes.length - 1, currentLane + 1); i++) {
+      lanesToCheck.add(i);
+    }
+    // Also add where moves will land
+    if (moves.length > 0) {
+      let projectedLane = currentLane;
+      for (const m of moves) {
+        if (m === 'forward') projectedLane++;
+        else if (m === 'backward') projectedLane--;
       }
-    });
+      if (projectedLane >= 0 && projectedLane < lanes.length) lanesToCheck.add(projectedLane);
+    }
+
+    for (const laneIdx of lanesToCheck) {
+      if (checkCollisionWithLane(laneIdx)) {
+        isDead = true;
+        endDOM.style.visibility = 'visible';
+        endDOM.classList.add('visible');
+        break;
+      }
+    }
   }
   
   renderer.render(scene, camera);
