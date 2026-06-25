@@ -45,7 +45,7 @@ function applyThemeToLanes() {
   if (!lanes) return;
   lanes.forEach(lane => {
     const g = lane.type === 'field' || lane.type === 'forest';
-    if (lane.type === 'water') return;
+    if (lane.type === 'water' || lane.type === 'log') return;
     lane.mesh.children.forEach((sec, i) => {
       if (sec.material) sec.material.color.setHex(i===0?(g?currentTheme.grass:currentTheme.road):(g?currentTheme.grassSide:currentTheme.roadSide));
     });
@@ -104,7 +104,7 @@ window.addEventListener('resize',()=>{
 });
 
 // ── Game state ───────────────────────────────────────────────────
-const laneTypes  = ['car','truck','forest','water'];
+const laneTypes  = ['car','truck','forest','water','log'];
 const laneSpeeds = [2, 2.5, 3];
 const threeHeights = [20,45,60];
 let lanes, currentLane, currentColumn, previousTimestamp;
@@ -235,7 +235,7 @@ function Grass(){
   grass.position.z=1.5*CONFIG.zoom; return grass;
 }
 
-// ── Water ──────────────────────────────────────────────────────────
+// ── Water surface (shared by water & log lanes) ──────────────────────
 function WaterPlane(){
   const w=new THREE.Group();
   const surf=new THREE.Mesh(
@@ -248,17 +248,35 @@ function WaterPlane(){
   return w;
 }
 
-// Simple flat leaf – just the green cylinder, nothing else
+// Simple flat lily pad
 function LilyPad(){
   const pad=new THREE.Mesh(
     new THREE.CylinderGeometry(18*CONFIG.zoom, 18*CONFIG.zoom, 4*CONFIG.zoom, 20),
     new THREE.MeshPhongMaterial({color:0x2e9e2e, flatShading:false, shininess:30})
   );
-  pad.rotation.x=Math.PI/2;   // lay flat
+  pad.rotation.x=Math.PI/2;
   pad.castShadow=true;
   pad.receiveShadow=true;
-  pad.position.z=4*CONFIG.zoom; // float just above water
+  pad.position.z=4*CONFIG.zoom;
   return pad;
+}
+
+// Floating log (long brown cylinder lying on its side)
+function Log(){
+  // length varies: 3-5 columns wide
+  const len=(3+Math.floor(Math.random()*3))*CONFIG.positionWidth*CONFIG.zoom;
+  const log=new THREE.Mesh(
+    new THREE.CylinderGeometry(10*CONFIG.zoom, 10*CONFIG.zoom, len, 12),
+    new THREE.MeshPhongMaterial({color:0x8B5E3C, flatShading:true, shininess:10})
+  );
+  // rotate so the long axis goes left-right (X axis)
+  log.rotation.z=Math.PI/2;
+  log.castShadow=true;
+  log.receiveShadow=true;
+  log.position.z=10*CONFIG.zoom; // float above water
+  // store half-length so we can do collision detection
+  log.halfLen=len/2;
+  return log;
 }
 
 // ── Coin ────────────────────────────────────────────────────────────
@@ -273,12 +291,23 @@ function CoinMesh(){
   return coin;
 }
 
+// ── Helper: column → world X ─────────────────────────────────────────
+function colToX(col){
+  return (col*CONFIG.positionWidth + CONFIG.positionWidth/2)*CONFIG.zoom - CONFIG.boardWidth*CONFIG.zoom/2;
+}
+// world X → nearest column index (clamped)
+function xToCol(x){
+  const col=Math.round((x + CONFIG.boardWidth*CONFIG.zoom/2 - CONFIG.positionWidth*CONFIG.zoom/2) / (CONFIG.positionWidth*CONFIG.zoom));
+  return Math.max(0, Math.min(CONFIG.columns-1, col));
+}
+
 // ── Lane ─────────────────────────────────────────────────────────
 function Lane(index){
   this.index=index;
   this.type=index<=0?'field':laneTypes[Math.floor(Math.random()*laneTypes.length)];
   this.coins=[];
-  this.pads=[];
+  this.pads=[];  // used by water
+  this.logs=[];  // used by log
 
   switch(this.type){
     case 'field':
@@ -335,7 +364,7 @@ function Lane(index){
       this.mesh=new WaterPlane();
       this.direction=Math.random()>=0.5;
       this.speed=laneSpeeds[Math.floor(Math.random()*laneSpeeds.length)]*0.7;
-      const padCount=2+Math.floor(Math.random()*2); // 2–3 pads
+      const padCount=2+Math.floor(Math.random()*2);
       const boardHalf=CONFIG.boardWidth*CONFIG.zoom/2;
       const segment=CONFIG.boardWidth*CONFIG.zoom/padCount;
       for(let i=0;i<padCount;i++){
@@ -346,12 +375,23 @@ function Lane(index){
       }
       break;
     }
-  }
-}
 
-// helper: column index → world X (centered)
-function colToX(col){
-  return (col*CONFIG.positionWidth + CONFIG.positionWidth/2)*CONFIG.zoom - CONFIG.boardWidth*CONFIG.zoom/2;
+    case 'log':{
+      this.mesh=new WaterPlane(); // same water surface
+      this.direction=Math.random()>=0.5;
+      this.speed=laneSpeeds[Math.floor(Math.random()*laneSpeeds.length)]*0.8;
+      const logCount=2+Math.floor(Math.random()*2); // 2-3 logs
+      const boardHalf=CONFIG.boardWidth*CONFIG.zoom/2;
+      const segment=CONFIG.boardWidth*CONFIG.zoom/logCount;
+      for(let i=0;i<logCount;i++){
+        const log=new Log();
+        log.position.x=-boardHalf+segment*i+segment*0.1+Math.random()*segment*0.5;
+        this.mesh.add(log);
+        this.logs.push({mesh:log});
+      }
+      break;
+    }
+  }
 }
 
 Lane.prototype._addCoins=function(){
@@ -442,28 +482,38 @@ function move(direction){
   moves.push(direction);
 }
 
-// ── Water helpers ──────────────────────────────────────────────────
-function onWaterLane(){
+// ── Water / Log helpers ──────────────────────────────────────────
+function onFloatingLane(){
   const cy=chicken.position.y;
   const halfY=CONFIG.positionWidth*CONFIG.zoom/2;
   for(const lane of lanes){
-    if(lane.type!=='water') continue;
+    if(lane.type!=='water'&&lane.type!=='log') continue;
     const laneY=lane.mesh.position.y;
     if(cy>=laneY-halfY&&cy<=laneY+halfY) return lane;
   }
   return null;
 }
-function getPadUnderChicken(){
+
+// Returns {obj, lane} if chicken is on a pad or log, else null
+function getFloatingObjUnderChicken(){
   const cx=chicken.position.x;
   const cy=chicken.position.y;
-  const padR=18*CONFIG.zoom;
   const halfY=CONFIG.positionWidth*CONFIG.zoom/2;
   for(const lane of lanes){
-    if(lane.type!=='water') continue;
-    const laneY=lane.mesh.position.y;
-    if(cy<laneY-halfY||cy>laneY+halfY) continue;
-    for(const p of lane.pads){
-      if(Math.abs(cx-p.mesh.position.x)<padR) return {pad:p, lane};
+    if(lane.type==='water'){
+      const laneY=lane.mesh.position.y;
+      if(cy<laneY-halfY||cy>laneY+halfY) continue;
+      const padR=18*CONFIG.zoom;
+      for(const p of lane.pads){
+        if(Math.abs(cx-p.mesh.position.x)<padR) return {obj:p, lane};
+      }
+    }
+    if(lane.type==='log'){
+      const laneY=lane.mesh.position.y;
+      if(cy<laneY-halfY||cy>laneY+halfY) continue;
+      for(const l of lane.logs){
+        if(Math.abs(cx-l.mesh.position.x)<l.mesh.halfLen) return {obj:l, lane};
+      }
     }
   }
   return null;
@@ -586,7 +636,6 @@ window.addEventListener('keydown',e=>{
   else if(e.keyCode===39||e.key==='d') move('right');
 });
 
-// Touch
 (function initTouchControls(){
   const canvas=renderer.domElement;
   let sx=0,sy=0,st=0;
@@ -614,7 +663,6 @@ function animate(timestamp){
   const delta=timestamp-previousTimestamp;
   previousTimestamp=timestamp;
 
-  // Spin coins
   coinAngle+=delta*0.003;
   if(lanes) lanes.forEach(lane=>{
     if(lane.coins) lane.coins.forEach(coin=>{ if(!coin.collected) coin.mesh.rotation.y=coinAngle; });
@@ -625,7 +673,7 @@ function animate(timestamp){
   const boardHalf=CONFIG.boardWidth*CONFIG.zoom/2;
   const edgeOff  =CONFIG.positionWidth*2*CONFIG.zoom;
 
-  // Move vehicles & pads
+  // Move vehicles, pads, logs
   lanes.forEach(lane=>{
     if(lane.type==='car'||lane.type==='truck'){
       const eL=-boardHalf-edgeOff, eR=boardHalf+edgeOff;
@@ -637,13 +685,15 @@ function animate(timestamp){
     if(lane.type==='water'){
       const eL=-boardHalf-edgeOff, eR=boardHalf+edgeOff;
       lane.pads.forEach(p=>{
-        if(lane.direction){
-          p.mesh.position.x-=lane.speed/16*delta;
-          if(p.mesh.position.x<eL) p.mesh.position.x=eR;
-        }else{
-          p.mesh.position.x+=lane.speed/16*delta;
-          if(p.mesh.position.x>eR) p.mesh.position.x=eL;
-        }
+        if(lane.direction){ p.mesh.position.x-=lane.speed/16*delta; if(p.mesh.position.x<eL) p.mesh.position.x=eR; }
+        else              { p.mesh.position.x+=lane.speed/16*delta; if(p.mesh.position.x>eR) p.mesh.position.x=eL; }
+      });
+    }
+    if(lane.type==='log'){
+      const eL=-boardHalf-edgeOff, eR=boardHalf+edgeOff;
+      lane.logs.forEach(l=>{
+        if(lane.direction){ l.mesh.position.x-=lane.speed/16*delta; if(l.mesh.position.x<eL) l.mesh.position.x=eR; }
+        else              { l.mesh.position.x+=lane.speed/16*delta; if(l.mesh.position.x>eR) l.mesh.position.x=eL; }
       });
     }
   });
@@ -673,17 +723,14 @@ function animate(timestamp){
         break;
       }
       case 'left':{
-        // FIXED: use currentColumn*positionWidth + positionWidth/2 as the base, subtract moveDist
-        const baseX=colToX(currentColumn);
-        const posX=baseX-moveDist;
+        const posX=colToX(currentColumn)-moveDist;
         camera.position.x=initialCameraPositionX+posX;
         dirLight.position.x=initialDirLightPositionX+posX;
         chicken.position.x=posX; chicken.position.z=jumpDist;
         break;
       }
       case 'right':{
-        const baseX=colToX(currentColumn);
-        const posX=baseX+moveDist;
+        const posX=colToX(currentColumn)+moveDist;
         camera.position.x=initialCameraPositionX+posX;
         dirLight.position.x=initialDirLightPositionX+posX;
         chicken.position.x=posX; chicken.position.z=jumpDist;
@@ -692,14 +739,13 @@ function animate(timestamp){
     }
 
     if(dt>=CONFIG.stepTime){
-      // Snap to final position
       switch(moves[0]){
         case 'forward':  currentLane++;   score=currentLane; counterDOM.innerHTML=score; break;
         case 'backward': currentLane--;   score=currentLane; counterDOM.innerHTML=score; break;
         case 'left':     currentColumn--; break;
         case 'right':    currentColumn++; break;
       }
-      // Snap X/Y precisely
+      // Snap precisely
       chicken.position.x=colToX(currentColumn);
       chicken.position.y=currentLane*CONFIG.positionWidth*CONFIG.zoom;
       chicken.position.z=0;
@@ -713,17 +759,20 @@ function animate(timestamp){
     }
   }
 
-  // ── Water: ride pad or drown ────────────────────────────────────
+  // ── Floating: ride pad/log or drown ────────────────────────────────
   if(!isDead && stepStartTimestamp===null && moves.length===0){
-    const waterLane=onWaterLane();
-    if(waterLane){
-      const hit=getPadUnderChicken();
+    const floatLane=onFloatingLane();
+    if(floatLane){
+      const hit=getFloatingObjUnderChicken();
       if(hit){
         const spd=hit.lane.speed/16*delta;
         const dx=hit.lane.direction?-spd:spd;
         chicken.position.x+=dx;
         camera.position.x+=dx;
         dirLight.position.x+=dx;
+        // FIX: keep currentColumn in sync with the drifted position
+        // so that when the player jumps away, the snap target is correct
+        currentColumn=xToCol(chicken.position.x);
         if(Math.abs(chicken.position.x)>boardHalf+edgeOff) triggerDeath();
       }else{
         triggerDeath();
