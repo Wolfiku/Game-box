@@ -45,6 +45,7 @@ function applyThemeToLanes() {
   if (!lanes) return;
   lanes.forEach(lane => {
     const g = lane.type === 'field' || lane.type === 'forest';
+    if (lane.type === 'water') return;
     lane.mesh.children.forEach((sec, i) => {
       if (sec.material) sec.material.color.setHex(i===0?(g?currentTheme.grass:currentTheme.road):(g?currentTheme.grassSide:currentTheme.roadSide));
     });
@@ -54,7 +55,7 @@ function applyThemeToLanes() {
 // ── Persistent data ───────────────────────────────────────────────
 let highscore   = parseInt(localStorage.getItem('cr_highscore') || '0', 10);
 let totalCoins  = parseInt(localStorage.getItem('cr_coins') || '0', 10);
-let sessionCoins = 0; // coins collected this run
+let sessionCoins = 0;
 
 function saveHighscore(s) { if (s > highscore) { highscore = s; localStorage.setItem('cr_highscore', s); } }
 function saveCoins(n)     { totalCoins += n; localStorage.setItem('cr_coins', totalCoins); }
@@ -96,7 +97,7 @@ window.addEventListener('resize',()=>{
 });
 
 // ── Game state ───────────────────────────────────────────────────
-const laneTypes=['car','truck','forest'];
+const laneTypes=['car','truck','forest','water'];
 const laneSpeeds=[2,2.5,3];
 const threeHeights=[20,45,60];
 let lanes, currentLane, currentColumn, previousTimestamp;
@@ -196,16 +197,71 @@ function Grass(){
   grass.position.z=1.5*CONFIG.zoom; return grass;
 }
 
+// ── Water + Lily Pad ──────────────────────────────────────────────
+function WaterPlane(){
+  const w=new THREE.Group();
+  // Wide water surface
+  const surf=new THREE.Mesh(
+    new THREE.BoxGeometry(CONFIG.boardWidth*3*CONFIG.zoom, CONFIG.positionWidth*CONFIG.zoom, 2*CONFIG.zoom),
+    new THREE.MeshPhongMaterial({color:0x1a7abf, transparent:true, opacity:0.85, shininess:120})
+  );
+  surf.receiveShadow=true;
+  w.add(surf);
+  w.position.z=1*CONFIG.zoom;
+  return w;
+}
+
+function LilyPad(){
+  const group=new THREE.Group();
+  // Pad (flat green cylinder)
+  const pad=new THREE.Mesh(
+    new THREE.CylinderGeometry(16*CONFIG.zoom, 16*CONFIG.zoom, 3*CONFIG.zoom, 18),
+    new THREE.MeshPhongMaterial({color:0x3aad3a, flatShading:false, shininess:40})
+  );
+  pad.rotation.x=Math.PI/2;
+  pad.castShadow=true; pad.receiveShadow=true;
+  group.add(pad);
+  // Small notch (darker sector) to look like a real lily pad
+  const notch=new THREE.Mesh(
+    new THREE.BoxGeometry(6*CONFIG.zoom, 3*CONFIG.zoom, 4*CONFIG.zoom),
+    new THREE.MeshPhongMaterial({color:0x2a8a2a})
+  );
+  notch.position.set(14*CONFIG.zoom, 0, 0);
+  group.add(notch);
+  // White flower on top
+  const flower=new THREE.Mesh(
+    new THREE.SphereGeometry(5*CONFIG.zoom, 8, 6),
+    new THREE.MeshPhongMaterial({color:0xfffde0, emissive:0xffee88, shininess:80})
+  );
+  flower.position.set(0, 0, 5*CONFIG.zoom);
+  flower.scale.z=0.5;
+  group.add(flower);
+  // Petals (4 flat boxes around flower)
+  const petalColors=[0xffb3c6,0xffd6e0,0xffb3c6,0xffd6e0];
+  for(let i=0;i<4;i++){
+    const petal=new THREE.Mesh(
+      new THREE.BoxGeometry(7*CONFIG.zoom, 3*CONFIG.zoom, 2*CONFIG.zoom),
+      new THREE.MeshPhongMaterial({color:petalColors[i],flatShading:true})
+    );
+    petal.position.set(
+      Math.cos(i*Math.PI/2)*9*CONFIG.zoom,
+      Math.sin(i*Math.PI/2)*9*CONFIG.zoom,
+      4*CONFIG.zoom
+    );
+    group.add(petal);
+  }
+  group.position.z=3*CONFIG.zoom; // float above water
+  return group;
+}
+
 // ── Coin 3D object ────────────────────────────────────────────────
-// A flat golden cylinder standing upright
 function CoinMesh(){
   const coin=new THREE.Mesh(
     new THREE.CylinderGeometry(6*CONFIG.zoom, 6*CONFIG.zoom, 3*CONFIG.zoom, 16),
     new THREE.MeshPhongMaterial({color:0xFFD700, emissive:0xAA8800, flatShading:false, shininess:90})
   );
-  // Rotate so flat face points up (cylinder axis is Y by default)
   coin.rotation.x = Math.PI/2;
-  coin.position.z = 10*CONFIG.zoom; // hover above ground
+  coin.position.z = 10*CONFIG.zoom;
   coin.castShadow = true;
   return coin;
 }
@@ -214,7 +270,8 @@ function CoinMesh(){
 function Lane(index){
   this.index=index;
   this.type=index<=0?'field':laneTypes[Math.floor(Math.random()*laneTypes.length)];
-  this.coins=[]; // {mesh, column, collected}
+  this.coins=[];
+  this.pads=[];  // lily pads for water lane: {mesh, x}
 
   switch(this.type){
     case 'field': this.mesh=new Grass(); break;
@@ -228,7 +285,6 @@ function Lane(index){
         tree.position.x=(pos*CONFIG.positionWidth+CONFIG.positionWidth/2)*CONFIG.zoom-CONFIG.boardWidth*CONFIG.zoom/2;
         this.mesh.add(tree); return tree;
       });
-      // Add coins on some free positions (grass/forest lanes)
       this._addCoins();
       break;
     }
@@ -258,16 +314,30 @@ function Lane(index){
       });
       this.speed=laneSpeeds[Math.floor(Math.random()*laneSpeeds.length)]; break;
     }
+    case 'water':{
+      this.mesh=new WaterPlane();
+      this.direction=Math.random()>=0.5; // drift direction
+      this.speed=laneSpeeds[Math.floor(Math.random()*laneSpeeds.length)]*0.6;
+      const padCount=2+Math.floor(Math.random()*2); // 2-3 pads
+      const boardHalf=CONFIG.boardWidth*CONFIG.zoom/2;
+      for(let i=0;i<padCount;i++){
+        const pad=new LilyPad();
+        // Space pads evenly with some randomness
+        const segment=CONFIG.boardWidth*CONFIG.zoom/padCount;
+        pad.position.x=-boardHalf+segment*i+segment*0.3+Math.random()*segment*0.4;
+        this.mesh.add(pad);
+        this.pads.push({mesh:pad, baseX:pad.position.x});
+      }
+      break;
+    }
   }
 }
 Lane.prototype._addCoins=function(){
-  // Spawn coins on field/forest lanes with ~40% chance, 1-2 coins each
   if(this.index<=0) return;
   const count=Math.random()<0.4?Math.floor(Math.random()*2)+1:0;
   const used=new Set(this.occupiedPositions||new Set());
   for(let i=0;i<count;i++){
-    let pos;
-    let tries=0;
+    let pos; let tries=0;
     do{pos=Math.floor(Math.random()*CONFIG.columns);tries++;}while(used.has(pos)&&tries<20);
     if(tries>=20) break;
     used.add(pos);
@@ -278,7 +348,7 @@ Lane.prototype._addCoins=function(){
   }
 };
 
-// ── Chicken instance ─────────────────────────────────────────────
+// ── Chicken instance ──────────────────────────────────────────────
 const chicken=new Chicken();
 scene.add(chicken);
 dirLight.target=chicken;
@@ -340,30 +410,57 @@ function move(direction){
   moves.push(direction);
 }
 
-// ── Coin collection ───────────────────────────────────────────────
-let coinPopupTimer=null;
-function showCoinPopup(){
-  coinPopup.classList.remove('pop');
-  void coinPopup.offsetWidth; // reflow to restart animation
-  coinPopup.classList.add('pop');
+// ── Water: get pad under chicken ──────────────────────────────────
+// Returns the pad mesh if the chicken is standing on one, else null
+function getPadUnderChicken(){
+  const cx=chicken.position.x;
+  const cy=chicken.position.y;
+  const padRadius=16*CONFIG.zoom;
+  const halfY=CONFIG.positionWidth*CONFIG.zoom/2;
+  for(const lane of lanes){
+    if(lane.type!=='water') continue;
+    const laneY=lane.mesh.position.y;
+    if(cy<laneY-halfY||cy>laneY+halfY) continue;
+    for(const p of lane.pads){
+      // pad world X = lane.mesh.position.x (0) + pad local x
+      const padWorldX=p.mesh.position.x;
+      if(Math.abs(cx-padWorldX)<padRadius) return p;
+    }
+  }
+  return null;
 }
 
+// Is the chicken currently on a water lane?
+function onWaterLane(){
+  const cy=chicken.position.y;
+  const halfY=CONFIG.positionWidth*CONFIG.zoom/2;
+  for(const lane of lanes){
+    if(lane.type!=='water') continue;
+    const laneY=lane.mesh.position.y;
+    if(cy>=laneY-halfY&&cy<=laneY+halfY) return lane;
+  }
+  return null;
+}
+
+// ── Coin collection ───────────────────────────────────────────────
+function showCoinPopup(){
+  coinPopup.classList.remove('pop');
+  void coinPopup.offsetWidth;
+  coinPopup.classList.add('pop');
+}
 function checkCoins(){
   const cx=chicken.position.x;
   const cy=chicken.position.y;
   const halfX=(CONFIG.chickenSize*CONFIG.zoom)/2+4;
   const halfY=(CONFIG.positionWidth*CONFIG.zoom)/2;
-
   for(const lane of lanes){
     if(!lane.coins||lane.coins.length===0)continue;
     const laneWorldY=lane.mesh.position.y;
-    // Only check if chicken Y is near this lane
     if(cy<laneWorldY-halfY||cy>laneWorldY+halfY)continue;
     for(const coin of lane.coins){
       if(coin.collected)continue;
-      const coinWorldX=coin.mesh.position.x; // local = world (lane.mesh.x=0)
+      const coinWorldX=coin.mesh.position.x;
       if(Math.abs(cx-coinWorldX)<halfX){
-        // Collect!
         coin.collected=true;
         lane.mesh.remove(coin.mesh);
         sessionCoins++;
@@ -374,7 +471,7 @@ function checkCoins(){
   }
 }
 
-// ── Collision ────────────────────────────────────────────────────
+// ── Collision ─────────────────────────────────────────────────────
 function checkCollision(){
   const cx=chicken.position.x, cy=chicken.position.y;
   const hx=(CONFIG.chickenSize*CONFIG.zoom)/2;
@@ -392,8 +489,21 @@ function checkCollision(){
   return false;
 }
 
-// ── Game Over ────────────────────────────────────────────────────
+// ── Drowning check ────────────────────────────────────────────────
+// Called once per frame only when movement has stopped and we're on water
+let waterCheckDelay=0;
+function checkDrowning(){
+  const waterLane=onWaterLane();
+  if(!waterLane) return;
+  // Only check when not mid-jump
+  if(stepStartTimestamp!==null) return;
+  const pad=getPadUnderChicken();
+  if(!pad) triggerDeath();
+}
+
+// ── Game Over ─────────────────────────────────────────────────────
 function triggerDeath(){
+  if(isDead) return;
   isDead=true;
   score=currentLane;
   saveHighscore(score);
@@ -405,7 +515,7 @@ function triggerDeath(){
   screenEnd.classList.add('visible');
 }
 
-// ── UI Navigation ────────────────────────────────────────────────
+// ── UI Navigation ──────────────────────────────────────────────────
 function showMenu(){
   gameRunning=false;
   screenMenu.classList.remove('hidden');
@@ -429,14 +539,14 @@ function startGame(){
   gameRunning=true;
 }
 
-// ── Theme init ───────────────────────────────────────────────────
+// ── Theme init ────────────────────────────────────────────────────
 (function initThemeButtons(){
   document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
   const map={white:'theme-white',dark:'theme-dark',time:'theme-time'};
   const el=document.getElementById(map[savedTheme]); if(el)el.classList.add('active');
 })();
 
-// ── Button events ────────────────────────────────────────────────
+// ── Button events ──────────────────────────────────────────────────
 document.getElementById('btn-play').addEventListener('click',startGame);
 document.getElementById('btn-settings-open').addEventListener('click',()=>{ screenMenu.classList.add('hidden'); screenSettings.classList.remove('hidden'); });
 document.getElementById('btn-settings-close').addEventListener('click',()=>{ screenSettings.classList.add('hidden'); screenMenu.classList.remove('hidden'); });
@@ -461,7 +571,7 @@ window.addEventListener('keydown',e=>{
   else if(e.keyCode===39||e.key==='d')move('right');
 });
 
-// ── Swipe & Tap on Canvas ────────────────────────────────────────
+// ── Touch controls ────────────────────────────────────────────────
 (function initTouchControls(){
   const canvas=renderer.domElement;
   let sx=0,sy=0,st=0;
@@ -479,10 +589,9 @@ window.addEventListener('keydown',e=>{
   canvas.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 })();
 
-// ── Coin spin animation ───────────────────────────────────────────
+// ── Animation ─────────────────────────────────────────────────────
 let coinAngle=0;
 
-// ── Animation Loop ───────────────────────────────────────────────
 function animate(timestamp){
   requestAnimationFrame(animate);
   if(!previousTimestamp)previousTimestamp=timestamp;
@@ -499,14 +608,29 @@ function animate(timestamp){
 
   if(!gameRunning){renderer.render(scene,camera);return;}
 
-  // Move vehicles
+  const boardHalf=CONFIG.boardWidth*CONFIG.zoom/2;
+  const edgeOff=CONFIG.positionWidth*2*CONFIG.zoom;
+
+  // Move vehicles + lily pads
   lanes.forEach(lane=>{
     if(lane.type==='car'||lane.type==='truck'){
-      const eL=-CONFIG.boardWidth*CONFIG.zoom/2-CONFIG.positionWidth*2*CONFIG.zoom;
-      const eR=CONFIG.boardWidth*CONFIG.zoom/2+CONFIG.positionWidth*2*CONFIG.zoom;
+      const eL=-boardHalf-edgeOff, eR=boardHalf+edgeOff;
       lane.vechicles.forEach(v=>{
         if(lane.direction)v.position.x=v.position.x<eL?eR:v.position.x-lane.speed/16*delta;
         else               v.position.x=v.position.x>eR?eL:v.position.x+lane.speed/16*delta;
+      });
+    }
+    if(lane.type==='water'){
+      // Pads drift; wrap around edges
+      const eL=-boardHalf-edgeOff, eR=boardHalf+edgeOff;
+      lane.pads.forEach(p=>{
+        if(lane.direction){
+          p.mesh.position.x-=lane.speed/16*delta;
+          if(p.mesh.position.x<eL) p.mesh.position.x=eR;
+        }else{
+          p.mesh.position.x+=lane.speed/16*delta;
+          if(p.mesh.position.x>eR) p.mesh.position.x=eL;
+        }
       });
     }
   });
@@ -529,12 +653,12 @@ function animate(timestamp){
         chicken.position.y=posY; chicken.position.z=jumpDist; break;
       }
       case 'left':{
-        const posX=(currentColumn*CONFIG.positionWidth+CONFIG.positionWidth/2)*CONFIG.zoom-CONFIG.boardWidth*CONFIG.zoom/2-moveDist;
+        const posX=(currentColumn*CONFIG.positionWidth+CONFIG.positionWidth/2)*CONFIG.zoom-boardHalf-moveDist;
         camera.position.x=initialCameraPositionX+posX; dirLight.position.x=initialDirLightPositionX+posX;
         chicken.position.x=posX; chicken.position.z=jumpDist; break;
       }
       case 'right':{
-        const posX=(currentColumn*CONFIG.positionWidth+CONFIG.positionWidth/2)*CONFIG.zoom-CONFIG.boardWidth*CONFIG.zoom/2+moveDist;
+        const posX=(currentColumn*CONFIG.positionWidth+CONFIG.positionWidth/2)*CONFIG.zoom-boardHalf+moveDist;
         camera.position.x=initialCameraPositionX+posX; dirLight.position.x=initialDirLightPositionX+posX;
         chicken.position.x=posX; chicken.position.z=jumpDist; break;
       }
@@ -551,12 +675,38 @@ function animate(timestamp){
     }
   }
 
+  // If standing still on water → ride the pad or drown
+  if(!isDead && stepStartTimestamp===null && moves.length===0){
+    const waterLane=onWaterLane();
+    if(waterLane){
+      const pad=getPadUnderChicken();
+      if(pad){
+        // Ride the pad: push chicken X with pad
+        const speed=waterLane.speed/16*delta;
+        if(waterLane.direction){
+          chicken.position.x-=speed;
+          camera.position.x-=speed;
+          dirLight.position.x-=speed;
+        }else{
+          chicken.position.x+=speed;
+          camera.position.x+=speed;
+          dirLight.position.x+=speed;
+        }
+        // Drown if carried off edge
+        if(Math.abs(chicken.position.x)>boardHalf+edgeOff) triggerDeath();
+      }else{
+        // No pad under chicken → drown
+        triggerDeath();
+      }
+    }
+  }
+
   checkCoins();
   if(!isDead&&checkCollision())triggerDeath();
   renderer.render(scene,camera);
 }
 
-// ── Init ─────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
   initValues();
   showMenu();
