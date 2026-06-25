@@ -20,6 +20,8 @@ const CONFIG = {
   distance: 500, chickenSize: 15, positionWidth: 42,
   columns: 17, stepTime: 200, zoom: 2, boardWidth: 42 * 17
 };
+// Log radius in world units (radius = 10 * zoom)
+const LOG_RADIUS = 10 * CONFIG.zoom;
 
 // ── Themes ────────────────────────────────────────────────────────
 const THEMES = {
@@ -110,6 +112,10 @@ const threeHeights = [20,45,60];
 let lanes, currentLane, currentColumn, previousTimestamp;
 let startMoving, moves, stepStartTimestamp;
 let isDead=false, gameRunning=false, score=0;
+
+// ── Death animation state ───────────────────────────────────────────
+let deathAnim = null; // null | { type:'squash'|'drown', t:0 }
+const DEATH_ANIM_DURATION = 500; // ms before end screen shows
 
 // ── Textures ─────────────────────────────────────────────────────
 function Texture(w,h,rects){
@@ -260,17 +266,27 @@ function LilyPad(){
 }
 
 // Returns {mesh, halfLen}
+// Log lies along X axis. Radius = LOG_RADIUS.
+// mesh.position.z places the CENTER of the cylinder at LOG_RADIUS above water surface (z=1*zoom)
+// so the top of the log is at z = 1*zoom + LOG_RADIUS*2 (waterPlane z + diameter).
+// Chicken should stand at z = 1*zoom + LOG_RADIUS*2 = water z + diameter.
 function Log(){
   const len=(3+Math.floor(Math.random()*3))*CONFIG.positionWidth*CONFIG.zoom;
   const mesh=new THREE.Mesh(
-    new THREE.CylinderGeometry(10*CONFIG.zoom, 10*CONFIG.zoom, len, 12),
+    new THREE.CylinderGeometry(LOG_RADIUS, LOG_RADIUS, len, 12),
     new THREE.MeshPhongMaterial({color:0x8B5E3C, flatShading:true, shininess:10})
   );
   mesh.rotation.z=Math.PI/2; // lay along X axis
   mesh.castShadow=true; mesh.receiveShadow=true;
-  mesh.position.z=10*CONFIG.zoom;
+  // Center of log sits at LOG_RADIUS above water plane top (water plane top ~ 2*zoom)
+  // water group z = 1*zoom, surf height = 2*zoom, so surf top = 1*zoom + 1*zoom = 2*zoom
+  // Log center z = 2*zoom + LOG_RADIUS so top = 2*zoom + LOG_RADIUS*2
+  mesh.position.z = 2*CONFIG.zoom + LOG_RADIUS;
   return {mesh, halfLen: len/2};
 }
+
+// Z position of chicken when standing on a log (absolute world z)
+const LOG_TOP_Z = 2*CONFIG.zoom + LOG_RADIUS*2;
 
 // ── Coin ────────────────────────────────────────────────────────────
 function CoinMesh(){
@@ -291,6 +307,12 @@ function colToX(col){
 function xToCol(x){
   const col=Math.round((x + CONFIG.boardWidth*CONFIG.zoom/2 - CONFIG.positionWidth*CONFIG.zoom/2) / (CONFIG.positionWidth*CONFIG.zoom));
   return Math.max(0, Math.min(CONFIG.columns-1, col));
+}
+
+// Returns true if the future lane (after fp.lane moves) is water or log
+function futureOnWater(fp){
+  const lane=lanes[fp.lane];
+  return lane && (lane.type==='water'||lane.type==='log');
 }
 
 // ── Lane ─────────────────────────────────────────────────────────
@@ -376,11 +398,10 @@ function Lane(index){
       const boardHalf=CONFIG.boardWidth*CONFIG.zoom/2;
       const segment=CONFIG.boardWidth*CONFIG.zoom/logCount;
       for(let i=0;i<logCount;i++){
-        // Log() now returns {mesh, halfLen}
         const logObj=Log();
         logObj.mesh.position.x=-boardHalf+segment*i+segment*0.1+Math.random()*segment*0.5;
         this.mesh.add(logObj.mesh);
-        this.logs.push(logObj); // store {mesh, halfLen}
+        this.logs.push(logObj);
       }
       break;
     }
@@ -432,8 +453,9 @@ const initValues=()=>{
   currentLane=0;
   currentColumn=Math.floor(CONFIG.columns/2);
   previousTimestamp=null; startMoving=false; moves=[]; stepStartTimestamp=null;
-  isDead=false; score=0; sessionCoins=0;
+  isDead=false; deathAnim=null; score=0; sessionCoins=0;
   chicken.position.set(0,0,0);
+  chicken.scale.set(1,1,1);
   camera.position.y=initialCameraPositionY;
   camera.position.x=initialCameraPositionX;
   dirLight.position.x=initialDirLightPositionX;
@@ -447,6 +469,7 @@ const initValues=()=>{
 // ── Movement ──────────────────────────────────────────────────────
 function move(direction){
   if(isDead||!gameRunning) return;
+
   const fp=moves.reduce((p,m)=>{
     if(m==='forward')  return {lane:p.lane+1, column:p.column};
     if(m==='backward') return {lane:p.lane-1, column:p.column};
@@ -454,6 +477,11 @@ function move(direction){
     if(m==='right')    return {lane:p.lane,   column:p.column+1};
     return p;
   },{lane:currentLane, column:currentColumn});
+
+  // ── Anti-spam: on water/log lanes, only allow 1 move queued at a time
+  // so the player can't tap quickly to skip over water without a platform
+  const onWater = futureOnWater(fp);
+  if(onWater && moves.length >= 1) return;
 
   if(direction==='forward'){
     if(lanes[fp.lane+1]&&lanes[fp.lane+1].type==='forest'&&lanes[fp.lane+1].occupiedPositions.has(fp.column)) return;
@@ -496,15 +524,14 @@ function getFloatingObjUnderChicken(){
       const laneY=lane.mesh.position.y;
       if(cy<laneY-halfY||cy>laneY+halfY) continue;
       for(const p of lane.pads){
-        if(Math.abs(cx-p.mesh.position.x)<18*CONFIG.zoom) return {obj:p, lane};
+        if(Math.abs(cx-p.mesh.position.x)<18*CONFIG.zoom) return {obj:p, lane, type:'pad'};
       }
     }
     if(lane.type==='log'){
       const laneY=lane.mesh.position.y;
       if(cy<laneY-halfY||cy>laneY+halfY) continue;
       for(const l of lane.logs){
-        // l = {mesh, halfLen}  ← now correctly structured
-        if(Math.abs(cx-l.mesh.position.x)<l.halfLen) return {obj:l, lane};
+        if(Math.abs(cx-l.mesh.position.x)<l.halfLen) return {obj:l, lane, type:'log'};
       }
     }
   }
@@ -539,6 +566,7 @@ function checkCoins(){
 }
 
 // ── Collision ────────────────────────────────────────────────────────
+// Returns the vehicle that hit the chicken, or null
 function checkCollision(){
   const cx=chicken.position.x, cy=chicken.position.y;
   const hx=(CONFIG.chickenSize*CONFIG.zoom)/2;
@@ -549,16 +577,14 @@ function checkCollision(){
     if(cy<laneY-laneHY||cy>laneY+laneHY) continue;
     const vhx=(lane.type==='car'?60:105)*CONFIG.zoom/2;
     for(const v of lane.vechicles){
-      if(cx+hx>v.position.x-vhx&&cx-hx<v.position.x+vhx) return true;
+      if(cx+hx>v.position.x-vhx&&cx-hx<v.position.x+vhx) return {vehicle:v, lane};
     }
   }
-  return false;
+  return null;
 }
 
 // ── Death ────────────────────────────────────────────────────────────
-function triggerDeath(){
-  if(isDead) return;
-  isDead=true;
+function showEndScreen(){
   score=currentLane;
   saveHighscore(score);
   saveCoins(sessionCoins);
@@ -567,6 +593,15 @@ function triggerDeath(){
   endCoinsVal.textContent=sessionCoins;
   endCoinsTotal.textContent='(gesamt: '+totalCoins+')';
   screenEnd.classList.add('visible');
+}
+
+function triggerDeath(type){
+  // type: 'squash' (vehicle) | 'drown' (water)
+  if(isDead) return;
+  isDead=true;
+  moves=[];
+  stepStartTimestamp=null;
+  deathAnim={type: type||'drown', t:0};
 }
 
 // ── UI ────────────────────────────────────────────────────────────
@@ -665,6 +700,28 @@ function animate(timestamp){
   const boardHalf=CONFIG.boardWidth*CONFIG.zoom/2;
   const edgeOff  =CONFIG.positionWidth*2*CONFIG.zoom;
 
+  // ── Death animation ────────────────────────────────────────────
+  if(isDead && deathAnim){
+    deathAnim.t+=delta;
+    const p=Math.min(deathAnim.t/DEATH_ANIM_DURATION, 1);
+    if(deathAnim.type==='squash'){
+      // Squash flat like a pancake, slight X/Y expansion
+      chicken.scale.set(1+p*0.5, 1+p*0.5, 1-p*0.95);
+      chicken.position.z=Math.max(0,(1-p)*0)*CONFIG.zoom;
+    } else {
+      // Drown: sink into water
+      chicken.scale.set(1-p*0.3, 1-p*0.3, 1-p*0.8);
+      chicken.position.z=-p*10*CONFIG.zoom;
+    }
+    if(p>=1){
+      deathAnim=null;
+      chicken.scale.set(1,1,1);
+      showEndScreen();
+    }
+    renderer.render(scene,camera);
+    return; // freeze world during death anim
+  }
+
   // Move vehicles, pads, logs
   lanes.forEach(lane=>{
     if(lane.type==='car'||lane.type==='truck'){
@@ -704,7 +761,6 @@ function animate(timestamp){
         const posY=currentLane*CONFIG.positionWidth*CONFIG.zoom+moveDist;
         camera.position.y=initialCameraPositionY+posY;
         dirLight.position.y=initialDirLightPositionY+posY;
-        // Keep X as-is (may be drifted from pad) – only update Y
         chicken.position.y=posY; chicken.position.z=jumpDist;
         break;
       }
@@ -716,15 +772,6 @@ function animate(timestamp){
         break;
       }
       case 'left':{
-        // Base X from current actual chicken position, not colToX
-        // so drift offset is preserved
-        const posX=chicken.position.x-moveDist+ // wrong if called every frame
-          // Actually: base = position at start of this step
-          // We need to use the column-snapped base for left/right
-          // (left/right always moves by exactly 1 col regardless of drift)
-          0;
-        // Simpler correct approach: base = colToX(currentColumn),
-        // X drift is corrected via currentColumn=xToCol when on water
         const px=colToX(currentColumn)-moveDist;
         camera.position.x=initialCameraPositionX+px;
         dirLight.position.x=initialDirLightPositionX+px;
@@ -749,17 +796,13 @@ function animate(timestamp){
         case 'right':    currentColumn++; break;
       }
 
-      // ── KEY FIX: only snap the axis that actually moved ──
       if(dir==='forward'||dir==='backward'){
-        // Y snap only – preserve X (may be drifted from pad/log)
         chicken.position.y=currentLane*CONFIG.positionWidth*CONFIG.zoom;
         chicken.position.z=0;
         camera.position.y=initialCameraPositionY+chicken.position.y;
         dirLight.position.y=initialDirLightPositionY+chicken.position.y;
-        // Sync currentColumn from actual X so next left/right uses correct base
         currentColumn=xToCol(chicken.position.x);
       } else {
-        // left/right: snap X only, preserve Y
         chicken.position.x=colToX(currentColumn);
         chicken.position.z=0;
         camera.position.x=initialCameraPositionX+chicken.position.x;
@@ -782,17 +825,23 @@ function animate(timestamp){
         chicken.position.x+=dx;
         camera.position.x+=dx;
         dirLight.position.x+=dx;
-        // Keep currentColumn in sync so forward/backward jumps land correctly
         currentColumn=xToCol(chicken.position.x);
-        if(Math.abs(chicken.position.x)>boardHalf+edgeOff) triggerDeath();
+
+        // ── FIX: stand ON TOP of log (not inside) ──
+        if(hit.type==='log'){
+          chicken.position.z=LOG_TOP_Z;
+        }
+
+        if(Math.abs(chicken.position.x)>boardHalf+edgeOff) triggerDeath('drown');
       }else{
-        triggerDeath();
+        triggerDeath('drown');
       }
     }
   }
 
   checkCoins();
-  if(!isDead&&checkCollision()) triggerDeath();
+  const hit=checkCollision();
+  if(!isDead&&hit) triggerDeath('squash');
   renderer.render(scene,camera);
 }
 
