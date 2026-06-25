@@ -235,7 +235,7 @@ function Grass(){
   grass.position.z=1.5*CONFIG.zoom; return grass;
 }
 
-// ── Water surface (shared by water & log lanes) ──────────────────────
+// ── Water surface ───────────────────────────────────────────────────
 function WaterPlane(){
   const w=new THREE.Group();
   const surf=new THREE.Mesh(
@@ -248,35 +248,28 @@ function WaterPlane(){
   return w;
 }
 
-// Simple flat lily pad
 function LilyPad(){
   const pad=new THREE.Mesh(
     new THREE.CylinderGeometry(18*CONFIG.zoom, 18*CONFIG.zoom, 4*CONFIG.zoom, 20),
     new THREE.MeshPhongMaterial({color:0x2e9e2e, flatShading:false, shininess:30})
   );
   pad.rotation.x=Math.PI/2;
-  pad.castShadow=true;
-  pad.receiveShadow=true;
+  pad.castShadow=true; pad.receiveShadow=true;
   pad.position.z=4*CONFIG.zoom;
   return pad;
 }
 
-// Floating log (long brown cylinder lying on its side)
+// Returns {mesh, halfLen}
 function Log(){
-  // length varies: 3-5 columns wide
   const len=(3+Math.floor(Math.random()*3))*CONFIG.positionWidth*CONFIG.zoom;
-  const log=new THREE.Mesh(
+  const mesh=new THREE.Mesh(
     new THREE.CylinderGeometry(10*CONFIG.zoom, 10*CONFIG.zoom, len, 12),
     new THREE.MeshPhongMaterial({color:0x8B5E3C, flatShading:true, shininess:10})
   );
-  // rotate so the long axis goes left-right (X axis)
-  log.rotation.z=Math.PI/2;
-  log.castShadow=true;
-  log.receiveShadow=true;
-  log.position.z=10*CONFIG.zoom; // float above water
-  // store half-length so we can do collision detection
-  log.halfLen=len/2;
-  return log;
+  mesh.rotation.z=Math.PI/2; // lay along X axis
+  mesh.castShadow=true; mesh.receiveShadow=true;
+  mesh.position.z=10*CONFIG.zoom;
+  return {mesh, halfLen: len/2};
 }
 
 // ── Coin ────────────────────────────────────────────────────────────
@@ -291,11 +284,10 @@ function CoinMesh(){
   return coin;
 }
 
-// ── Helper: column → world X ─────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────
 function colToX(col){
   return (col*CONFIG.positionWidth + CONFIG.positionWidth/2)*CONFIG.zoom - CONFIG.boardWidth*CONFIG.zoom/2;
 }
-// world X → nearest column index (clamped)
 function xToCol(x){
   const col=Math.round((x + CONFIG.boardWidth*CONFIG.zoom/2 - CONFIG.positionWidth*CONFIG.zoom/2) / (CONFIG.positionWidth*CONFIG.zoom));
   return Math.max(0, Math.min(CONFIG.columns-1, col));
@@ -306,8 +298,8 @@ function Lane(index){
   this.index=index;
   this.type=index<=0?'field':laneTypes[Math.floor(Math.random()*laneTypes.length)];
   this.coins=[];
-  this.pads=[];  // used by water
-  this.logs=[];  // used by log
+  this.pads=[];
+  this.logs=[];
 
   switch(this.type){
     case 'field':
@@ -377,17 +369,18 @@ function Lane(index){
     }
 
     case 'log':{
-      this.mesh=new WaterPlane(); // same water surface
+      this.mesh=new WaterPlane();
       this.direction=Math.random()>=0.5;
       this.speed=laneSpeeds[Math.floor(Math.random()*laneSpeeds.length)]*0.8;
-      const logCount=2+Math.floor(Math.random()*2); // 2-3 logs
+      const logCount=2+Math.floor(Math.random()*2);
       const boardHalf=CONFIG.boardWidth*CONFIG.zoom/2;
       const segment=CONFIG.boardWidth*CONFIG.zoom/logCount;
       for(let i=0;i<logCount;i++){
-        const log=new Log();
-        log.position.x=-boardHalf+segment*i+segment*0.1+Math.random()*segment*0.5;
-        this.mesh.add(log);
-        this.logs.push({mesh:log});
+        // Log() now returns {mesh, halfLen}
+        const logObj=Log();
+        logObj.mesh.position.x=-boardHalf+segment*i+segment*0.1+Math.random()*segment*0.5;
+        this.mesh.add(logObj.mesh);
+        this.logs.push(logObj); // store {mesh, halfLen}
       }
       break;
     }
@@ -494,7 +487,6 @@ function onFloatingLane(){
   return null;
 }
 
-// Returns {obj, lane} if chicken is on a pad or log, else null
 function getFloatingObjUnderChicken(){
   const cx=chicken.position.x;
   const cy=chicken.position.y;
@@ -503,16 +495,16 @@ function getFloatingObjUnderChicken(){
     if(lane.type==='water'){
       const laneY=lane.mesh.position.y;
       if(cy<laneY-halfY||cy>laneY+halfY) continue;
-      const padR=18*CONFIG.zoom;
       for(const p of lane.pads){
-        if(Math.abs(cx-p.mesh.position.x)<padR) return {obj:p, lane};
+        if(Math.abs(cx-p.mesh.position.x)<18*CONFIG.zoom) return {obj:p, lane};
       }
     }
     if(lane.type==='log'){
       const laneY=lane.mesh.position.y;
       if(cy<laneY-halfY||cy>laneY+halfY) continue;
       for(const l of lane.logs){
-        if(Math.abs(cx-l.mesh.position.x)<l.mesh.halfLen) return {obj:l, lane};
+        // l = {mesh, halfLen}  ← now correctly structured
+        if(Math.abs(cx-l.mesh.position.x)<l.halfLen) return {obj:l, lane};
       }
     }
   }
@@ -712,6 +704,7 @@ function animate(timestamp){
         const posY=currentLane*CONFIG.positionWidth*CONFIG.zoom+moveDist;
         camera.position.y=initialCameraPositionY+posY;
         dirLight.position.y=initialDirLightPositionY+posY;
+        // Keep X as-is (may be drifted from pad) – only update Y
         chicken.position.y=posY; chicken.position.z=jumpDist;
         break;
       }
@@ -723,36 +716,55 @@ function animate(timestamp){
         break;
       }
       case 'left':{
-        const posX=colToX(currentColumn)-moveDist;
-        camera.position.x=initialCameraPositionX+posX;
-        dirLight.position.x=initialDirLightPositionX+posX;
-        chicken.position.x=posX; chicken.position.z=jumpDist;
+        // Base X from current actual chicken position, not colToX
+        // so drift offset is preserved
+        const posX=chicken.position.x-moveDist+ // wrong if called every frame
+          // Actually: base = position at start of this step
+          // We need to use the column-snapped base for left/right
+          // (left/right always moves by exactly 1 col regardless of drift)
+          0;
+        // Simpler correct approach: base = colToX(currentColumn),
+        // X drift is corrected via currentColumn=xToCol when on water
+        const px=colToX(currentColumn)-moveDist;
+        camera.position.x=initialCameraPositionX+px;
+        dirLight.position.x=initialDirLightPositionX+px;
+        chicken.position.x=px; chicken.position.z=jumpDist;
         break;
       }
       case 'right':{
-        const posX=colToX(currentColumn)+moveDist;
-        camera.position.x=initialCameraPositionX+posX;
-        dirLight.position.x=initialDirLightPositionX+posX;
-        chicken.position.x=posX; chicken.position.z=jumpDist;
+        const px=colToX(currentColumn)+moveDist;
+        camera.position.x=initialCameraPositionX+px;
+        dirLight.position.x=initialDirLightPositionX+px;
+        chicken.position.x=px; chicken.position.z=jumpDist;
         break;
       }
     }
 
     if(dt>=CONFIG.stepTime){
-      switch(moves[0]){
+      const dir=moves[0];
+      switch(dir){
         case 'forward':  currentLane++;   score=currentLane; counterDOM.innerHTML=score; break;
         case 'backward': currentLane--;   score=currentLane; counterDOM.innerHTML=score; break;
         case 'left':     currentColumn--; break;
         case 'right':    currentColumn++; break;
       }
-      // Snap precisely
-      chicken.position.x=colToX(currentColumn);
-      chicken.position.y=currentLane*CONFIG.positionWidth*CONFIG.zoom;
-      chicken.position.z=0;
-      camera.position.x=initialCameraPositionX+chicken.position.x;
-      camera.position.y=initialCameraPositionY+chicken.position.y;
-      dirLight.position.x=initialDirLightPositionX+chicken.position.x;
-      dirLight.position.y=initialDirLightPositionY+chicken.position.y;
+
+      // ── KEY FIX: only snap the axis that actually moved ──
+      if(dir==='forward'||dir==='backward'){
+        // Y snap only – preserve X (may be drifted from pad/log)
+        chicken.position.y=currentLane*CONFIG.positionWidth*CONFIG.zoom;
+        chicken.position.z=0;
+        camera.position.y=initialCameraPositionY+chicken.position.y;
+        dirLight.position.y=initialDirLightPositionY+chicken.position.y;
+        // Sync currentColumn from actual X so next left/right uses correct base
+        currentColumn=xToCol(chicken.position.x);
+      } else {
+        // left/right: snap X only, preserve Y
+        chicken.position.x=colToX(currentColumn);
+        chicken.position.z=0;
+        camera.position.x=initialCameraPositionX+chicken.position.x;
+        dirLight.position.x=initialDirLightPositionX+chicken.position.x;
+      }
 
       moves.shift();
       stepStartTimestamp=moves.length===0?null:timestamp;
@@ -770,8 +782,7 @@ function animate(timestamp){
         chicken.position.x+=dx;
         camera.position.x+=dx;
         dirLight.position.x+=dx;
-        // FIX: keep currentColumn in sync with the drifted position
-        // so that when the player jumps away, the snap target is correct
+        // Keep currentColumn in sync so forward/backward jumps land correctly
         currentColumn=xToCol(chicken.position.x);
         if(Math.abs(chicken.position.x)>boardHalf+edgeOff) triggerDeath();
       }else{
