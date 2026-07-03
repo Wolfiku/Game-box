@@ -15,30 +15,29 @@
 }
 *{box-sizing:border-box;}
 body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.5;overflow:hidden;}
-/* NAV */
 .nav{height:52px;display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:1px solid var(--hairline);background:var(--canvas);}
 .wordmark{font-weight:700;font-size:14px;letter-spacing:1px;white-space:nowrap;}
 .stats{display:flex;gap:10px;font-size:11px;color:var(--mute);flex:1;flex-wrap:wrap;}
 .stats span{white-space:nowrap;}
 #s-ram{color:var(--run);}#s-money{color:var(--success);font-weight:600;}
-/* BUTTONS */
 .btn{font-family:var(--font);cursor:pointer;border-radius:4px;border:none;font-size:12px;font-weight:500;padding:4px 11px;height:28px;}
 .btn-ink{background:var(--ink);color:var(--on-dark);}
 .btn-ink:hover{background:#3a3737;}
 .btn-out{background:var(--canvas);color:var(--ink);border:1px solid var(--hl);}
 .btn-out:hover{background:var(--surface-soft);}
-.btn-del{background:transparent;color:var(--danger);border:1px solid var(--danger);font-size:10px;padding:1px 5px;height:auto;opacity:0;pointer-events:none;transition:opacity .15s;}
-/* LAYOUT */
+.btn-sm{font-size:10px;padding:1px 5px;height:auto;border-radius:3px;}
+.btn-del{background:transparent;color:var(--danger);border:1px solid var(--danger);opacity:0;pointer-events:none;transition:opacity .15s;}
+.btn-cp{background:transparent;color:var(--ash);border:1px solid var(--hairline);opacity:0;pointer-events:none;transition:opacity .15s;}
+.btn-mv{background:transparent;color:var(--mute);border:1px solid var(--hairline);opacity:0;pointer-events:none;transition:opacity .15s;}
 .workspace{display:grid;grid-template-columns:255px 1fr 290px;height:calc(100vh - 52px - 36px);}
 .panel{border-right:1px solid var(--hairline);display:flex;flex-direction:column;overflow:hidden;}
 .term-panel{border-right:none;}
 .plabel{font-weight:700;font-size:12px;padding:6px 12px;border-bottom:1px solid var(--hairline);background:var(--surface-soft);display:flex;align-items:center;gap:8px;}
 .pactions{display:flex;gap:5px;padding:6px 10px;background:var(--canvas);border-bottom:1px solid var(--hairline);flex-wrap:wrap;}
-/* FILE TREE */
 .ftree{overflow-y:auto;flex:1;}
 .frow{display:flex;align-items:center;gap:3px;padding:4px 10px;cursor:pointer;position:relative;}
 .frow:hover{background:var(--surface-soft);}
-.frow:hover .btn-del{opacity:1;pointer-events:auto;}
+.frow:hover .btn-del,.frow:hover .btn-cp,.frow:hover .btn-mv{opacity:1;pointer-events:auto;}
 .frow.active{background:var(--surface-card);}
 .frow.folder{font-weight:600;color:var(--mute);}
 .fname{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;}
@@ -51,7 +50,6 @@ body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font);
 .s-error{background:var(--danger);}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .fcindent{padding-left:12px;border-left:1px dashed var(--hairline);}
-/* EDITOR */
 .epanel{position:relative;}
 .ewrap{flex:1;display:flex;position:relative;overflow:hidden;}
 .gutter{width:30px;background:var(--surface-soft);color:var(--ash);padding:9px 4px 9px 0;text-align:right;font-size:11px;line-height:1.65;user-select:none;overflow:hidden;flex-shrink:0;}
@@ -63,7 +61,6 @@ body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font);
 .hint{font-size:10px;color:var(--ash);margin-left:auto;}
 .refbar{border-top:1px solid var(--hairline);background:var(--surface-soft);padding:5px 11px;font-size:10px;color:var(--mute);line-height:1.7;}
 .refbar b{color:var(--ink);}
-/* TERMINAL */
 .tout{flex:1;overflow-y:auto;background:var(--surface-dark);color:var(--on-dark);font-size:11px;padding:7px 11px;}
 .tl{margin-bottom:1px;white-space:pre-wrap;word-break:break-all;line-height:1.55;}
 .tl-run{color:var(--run);}
@@ -71,9 +68,8 @@ body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font);
 .tl-err{color:#ff6b60;}
 .tl-info{color:var(--on-dark-mute);}
 .tl-sell{color:var(--gold);}
-/* MODALS */
 .modal{position:fixed;inset:0;background:rgba(15,0,0,.52);display:flex;align-items:center;justify-content:center;z-index:100;}
-.mcard{background:var(--canvas);border-radius:4px;border:1px solid var(--hl);width:420px;max-height:82vh;overflow-y:auto;}
+.mcard{background:var(--canvas);border-radius:4px;border:1px solid var(--hl);width:440px;max-height:82vh;overflow-y:auto;}
 .shoprow{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid var(--hairline);font-size:12px;gap:8px;}
 .shoprow-left{display:flex;flex-direction:column;gap:1px;flex:1;}
 .shoprow-right{display:flex;align-items:center;gap:7px;white-space:nowrap;}
@@ -81,21 +77,24 @@ body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font);
 .upg-pip{width:10px;height:6px;border-radius:2px;background:var(--surface-card);border:1px solid var(--hl);}
 .upg-pip.on{background:var(--run);border-color:var(--run);}
 .inp-modal{position:fixed;inset:0;background:rgba(15,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:200;}
-.inp-box{background:var(--canvas);border:1px solid var(--hl);border-radius:4px;padding:18px 20px;width:280px;}
+.inp-box{background:var(--canvas);border:1px solid var(--hl);border-radius:4px;padding:18px 20px;width:300px;}
 .inp-box label{display:block;font-size:11px;font-weight:600;margin-bottom:6px;}
 .inp-box input{width:100%;font-family:var(--font);font-size:12px;padding:4px 8px;border:1px solid var(--hl);border-radius:4px;background:var(--surface-soft);outline:none;}
 .inp-box input:focus{border-color:var(--run);}
 .inp-btns{display:flex;gap:6px;margin-top:9px;justify-content:flex-end;}
-/* FOOTER */
 .foot{height:36px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--hairline);color:var(--ash);font-size:10px;background:var(--surface-soft);}
+.ctx-menu{position:fixed;background:var(--canvas);border:1px solid var(--hl);border-radius:4px;z-index:300;min-width:140px;font-size:12px;box-shadow:0 4px 12px rgba(0,0,0,.15);}
+.ctx-item{padding:6px 14px;cursor:pointer;}
+.ctx-item:hover{background:var(--surface-soft);}
+.ctx-sep{height:1px;background:var(--hairline);margin:2px 0;}
 </style>
 </head>
 <body>
 <nav class="nav">
   <div class="wordmark">[SCRIPTO]</div>
   <div class="stats">
-    <span id="s-stor">STOR 0/10MB</span>
-    <span id="s-ram">RAM 0/24MB</span>
+    <span id="s-stor">STOR 0/4MB</span>
+    <span id="s-ram">RAM 0/8MB</span>
     <span id="s-tick">TICK 1000ms</span>
     <span id="s-money">$ 0</span>
   </div>
@@ -103,11 +102,11 @@ body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font);
 </nav>
 <main class="workspace">
   <section class="panel">
-    <div class="plabel">[FILES]</div>
+    <div class="plabel">[FILES] <span id="file-count" style="color:var(--ash);font-weight:400;font-size:10px;"></span></div>
     <div class="pactions">
-      <button class="btn btn-out" id="btn-ns">[+] .code</button>
-      <button class="btn btn-out" id="btn-nd">[+] .dat</button>
-      <button class="btn btn-out" id="btn-nf">[+] folder</button>
+      <button class="btn btn-out btn-sm" id="btn-ns">[+].code</button>
+      <button class="btn btn-out btn-sm" id="btn-nd">[+].dat</button>
+      <button class="btn btn-out btn-sm" id="btn-nf">[+]folder</button>
     </div>
     <div id="ftree" class="ftree"></div>
   </section>
@@ -121,16 +120,20 @@ body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font);
     <div class="eactions">
       <button class="btn btn-ink" id="btn-run">[RUN]</button>
       <button class="btn btn-out" id="btn-stop">[STOP]</button>
-      <span class="hint">Tab = autocomplete &nbsp;|&nbsp; Ctrl+S = save</span>
+      <span class="hint">Tab=AC &nbsp;|&nbsp; Ctrl+S=save &nbsp;|&nbsp; RMB=menu</span>
     </div>
     <div class="refbar">
-      <b>mine (cur)</b> 3tk &nbsp;|&nbsp;
-      <b>collect (file)</b> grab bits from file &nbsp;|&nbsp;
-      <b>store (file)</b> save own bits → file &nbsp;|&nbsp;
-      <b>sell (file)</b> sell all bits (3tk) &nbsp;|&nbsp;
-      <b>check (file)</b> inspect &nbsp;|&nbsp;
-      <b>run (file)</b> start script &nbsp;|&nbsp;
-      <b>repeat N times / repeat if (cond) / while (cond) / if (cond)</b>
+      <b>mine</b> 3tk &nbsp;|&nbsp;
+      <b>collect(f)</b> bits→self &nbsp;|&nbsp;
+      <b>store(f)</b> bits→file &nbsp;|&nbsp;
+      <b>sell(f)</b> $0.5/b &nbsp;|&nbsp;
+      <b>copy(src,dst)</b> &nbsp;|&nbsp;
+      <b>move(src,dst)</b> &nbsp;|&nbsp;
+      <b>bits(f)</b> count &nbsp;|&nbsp;
+      <b>delete(f)</b> &nbsp;|&nbsp;
+      <b>create(name,type)</b> &nbsp;|&nbsp;
+      <b>run(f)</b> &nbsp;|&nbsp;
+      <b>if/while/repeat</b>
     </div>
   </section>
   <section class="panel term-panel">
@@ -155,123 +158,118 @@ body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font);
     </div>
   </div>
 </div>
-<footer class="foot">scripto v3 · mine(currency) → collect(src) → store(dst) → sell(file) · 0.1MB RAM/bit</footer>
+<div id="ctx-menu" class="ctx-menu" style="display:none;"></div>
+<footer class="foot">scripto v4 · start: 4MB stor, 8MB RAM · .code=2MB RAM · copy/move/delete/create cmds · bits in .code files</footer>
 <script>
 'use strict';
-// ═══════════════════════════════════════════════════════════
-// UTILS
-// ═══════════════════════════════════════════════════════════
 const r2 = n => Math.round(n * 100) / 100;
 
 function askUser(label, def) {
   return new Promise(res => {
     const m = document.getElementById('inp-modal');
-    const i = document.getElementById('inp-input');
+    const inp = document.getElementById('inp-input');
     document.getElementById('inp-label').textContent = label;
-    i.value = def || '';
+    inp.value = def || '';
     m.style.display = 'flex';
-    setTimeout(() => { i.focus(); i.select(); }, 60);
+    setTimeout(() => { inp.focus(); inp.select(); }, 60);
     const done = v => { m.style.display = 'none'; res(v); };
-    document.getElementById('inp-ok').onclick = () => done(i.value.trim() || null);
+    document.getElementById('inp-ok').onclick = () => done(inp.value.trim() || null);
     document.getElementById('inp-cancel').onclick = () => done(null);
-    i.onkeydown = e => {
-      if (e.key === 'Enter') done(i.value.trim() || null);
+    inp.onkeydown = e => {
+      if (e.key === 'Enter') done(inp.value.trim() || null);
       if (e.key === 'Escape') done(null);
     };
   });
 }
 
-// ═══════════════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════════════
 const S = {
   money: 0,
-  storMax: 10,   // MB
-  ramMax: 24,    // MB — generous start
-  speedTier: 1,  // 1=1000ms 2=500ms 3=200ms
+  storMax: 4,
+  ramMax: 8,
+  speedTier: 1,
   tickMs: 1000,
   files: {},
   rootOrder: [],
   activeId: null,
   nextId: 1,
-  tick: 0
+  tick: 0,
+  mineTicks: 3,
+  sellTicks: 3,
+  sellRate: 0.5
 };
 
 const TICK_MS = { 1: 1000, 2: 500, 3: 200 };
 
-// ── Upgrades: each entry is a level array ──
+function bitsRam() {
+  let t = 0;
+  for (const id in S.files) t += (S.files[id].bits || 0);
+  return r2(t * 0.05);
+}
+function scriptsRam() {
+  let t = 0;
+  for (const id in S.files) if (S.files[id].running) t += 2.0;
+  return r2(t);
+}
+function totalRam() { return r2(bitsRam() + scriptsRam()); }
+function fileStor(f) {
+  if (!f || f.type === 'folder') return 0;
+  return f.type === 'script' ? 0.5 : 0.2;
+}
+function totalStor() {
+  let t = 0;
+  for (const id in S.files) t += fileStor(S.files[id]);
+  return r2(t);
+}
+
 const UPGRADES = {
   storage: {
     label: 'Storage',
-    desc: 'Disk space',
+    desc: 'Disk space (+)',
     levels: [
-      { label: '+20MB', cost: 25, apply: () => { S.storMax += 20; } },
-      { label: '+50MB', cost: 80, apply: () => { S.storMax += 50; } },
-      { label: '+200MB', cost: 400, apply: () => { S.storMax += 200; } },
-      { label: '+1GB', cost: 2000, apply: () => { S.storMax += 1000; } }
+      { label: '+4MB',  cost: 15,   apply: () => { S.storMax += 4; } },
+      { label: '+10MB', cost: 50,   apply: () => { S.storMax += 10; } },
+      { label: '+50MB', cost: 200,  apply: () => { S.storMax += 50; } },
+      { label: '+200MB',cost: 1000, apply: () => { S.storMax += 200; } }
     ]
   },
   ram: {
     label: 'RAM',
-    desc: '0.1MB per stored bit',
+    desc: '.code=2MB, bits=0.05MB',
     levels: [
-      { label: '+8MB', cost: 60, apply: () => { S.ramMax += 8; } },
-      { label: '+24MB', cost: 200, apply: () => { S.ramMax += 24; } },
-      { label: '+64MB', cost: 700, apply: () => { S.ramMax += 64; } },
-      { label: '+256MB', cost: 3000, apply: () => { S.ramMax += 256; } }
+      { label: '+4MB',  cost: 30,   apply: () => { S.ramMax += 4; } },
+      { label: '+12MB', cost: 100,  apply: () => { S.ramMax += 12; } },
+      { label: '+32MB', cost: 400,  apply: () => { S.ramMax += 32; } },
+      { label: '+128MB',cost: 2000, apply: () => { S.ramMax += 128; } }
     ]
   },
   speed: {
     label: 'CPU Speed',
     desc: 'Tick interval',
     levels: [
-      { label: 'Tier 2 (500ms)', cost: 180, apply: () => { S.speedTier = 2; reloop(); } },
-      { label: 'Tier 3 (200ms)', cost: 800, apply: () => { S.speedTier = 3; reloop(); } }
+      { label: 'Tier 2 (500ms)', cost: 150, apply: () => { S.speedTier = 2; reloop(); } },
+      { label: 'Tier 3 (200ms)', cost: 700, apply: () => { S.speedTier = 3; reloop(); } }
     ]
   },
   mineSpeed: {
     label: 'Mine Speed',
-    desc: 'Ticks per mine',
+    desc: 'Ticks per mine op',
     levels: [
-      { label: '2 ticks/mine', cost: 150, apply: () => { S.mineTicks = 2; } },
-      { label: '1 tick/mine', cost: 600, apply: () => { S.mineTicks = 1; } }
+      { label: '2 ticks', cost: 100, apply: () => { S.mineTicks = 2; } },
+      { label: '1 tick',  cost: 400, apply: () => { S.mineTicks = 1; } }
     ]
   },
-  sellSpeed: {
-    label: 'Sell Speed',
-    desc: 'Ticks per sell',
+  sellRate: {
+    label: 'Sell Rate',
+    desc: '$ per bit sold',
     levels: [
-      { label: '2 ticks/sell', cost: 120, apply: () => { S.sellTicks = 2; } },
-      { label: '1 tick/sell', cost: 500, apply: () => { S.sellTicks = 1; } }
+      { label: '$0.75/b', cost: 120,  apply: () => { S.sellRate = 0.75; } },
+      { label: '$1.25/b', cost: 500,  apply: () => { S.sellRate = 1.25; } },
+      { label: '$2.00/b', cost: 2500, apply: () => { S.sellRate = 2.00; } }
     ]
   }
 };
-// track how many levels bought per upgrade
-const UP_LVL = { storage: 0, ram: 0, speed: 0, mineSpeed: 0, sellSpeed: 0 };
-S.mineTicks = 3;
-S.sellTicks = 3;
+const UP_LVL = { storage: 0, ram: 0, speed: 0, mineSpeed: 0, sellRate: 0 };
 
-// ── RAM / STOR accounting ──
-function bitsRam() {
-  let t = 0;
-  for (const id in S.files) { const f = S.files[id]; t += (f.bits || 0); }
-  return r2(t * 0.1);
-}
-function scriptsRam() {
-  let t = 0;
-  for (const id in S.files) if (S.files[id].running) t += 0.5;
-  return r2(t);
-}
-function totalRam() { return r2(bitsRam() + scriptsRam()); }
-function totalStor() {
-  let t = 0;
-  for (const id in S.files) if (S.files[id].type !== 'folder') t += 0.2;
-  return r2(t);
-}
-
-// ═══════════════════════════════════════════════════════════
-// FILE SYSTEM
-// ═══════════════════════════════════════════════════════════
 function nid() { return 'f' + (S.nextId++); }
 
 function mkFile(name, type, pid, content) {
@@ -282,9 +280,9 @@ function mkFile(name, type, pid, content) {
     content: content || '',
     status: 'idle', currentLine: -1,
     pc: 0, program: null, running: false,
-    pendingAction: null,  // { cmd, arg, ticksLeft }
-    bits: 0,              // bits THIS file holds
-    loopStack: []         // runtime loop stack
+    pendingAction: null,
+    bits: 0,
+    loopStack: []
   };
   S.files[id] = f;
   if (pid && S.files[pid]) S.files[pid].children.push(id);
@@ -292,8 +290,18 @@ function mkFile(name, type, pid, content) {
   return f;
 }
 
-// Resolve a path relative to a file.
-// Supports: "name" (same folder), "folder/name", "../name"
+function uniqueName(base, pid) {
+  const siblings = pid ? (S.files[pid] ? S.files[pid].children : []) : S.rootOrder;
+  const names = new Set((siblings || []).map(id => S.files[id] && S.files[id].name));
+  if (!names.has(base)) return base;
+  const dot = base.lastIndexOf('.');
+  const stem = dot >= 0 ? base.slice(0, dot) : base;
+  const ext  = dot >= 0 ? base.slice(dot) : '';
+  let i = 2;
+  while (names.has(`${stem}(${i})${ext}`)) i++;
+  return `${stem}(${i})${ext}`;
+}
+
 function resolvePath(pathStr, fromFile) {
   if (!pathStr) return null;
   const parts = pathStr.replace(/\\/g, '/').split('/').filter(Boolean);
@@ -304,9 +312,8 @@ function resolvePath(pathStr, fromFile) {
       const cur = currentPid ? S.files[currentPid] : null;
       currentPid = cur ? cur.parentId : null;
     } else {
-      // find child folder named p
-      const parentChildren = currentPid ? S.files[currentPid].children : S.rootOrder;
-      const fld = (parentChildren || []).map(id => S.files[id]).find(f => f && f.type === 'folder' && f.name === p);
+      const searchIn = currentPid ? (S.files[currentPid] ? S.files[currentPid].children : []) : S.rootOrder;
+      const fld = (searchIn || []).map(id => S.files[id]).find(f => f && f.type === 'folder' && f.name === p);
       if (!fld) return null;
       currentPid = fld.id;
     }
@@ -317,6 +324,29 @@ function resolvePath(pathStr, fromFile) {
     if (S.files[id] && S.files[id].name === lastName) return S.files[id];
   }
   return null;
+}
+
+function copyFileTo(srcId, dstPid) {
+  const src = S.files[srcId];
+  if (!src || src.type === 'folder') return null;
+  const newName = uniqueName(src.name, dstPid);
+  const f = mkFile(newName, src.type, dstPid, src.content);
+  f.bits = src.bits;
+  return f;
+}
+
+function moveFileTo(srcId, dstPid) {
+  const src = S.files[srcId];
+  if (!src) return;
+  if (src.parentId && S.files[src.parentId]) {
+    S.files[src.parentId].children = S.files[src.parentId].children.filter(c => c !== srcId);
+  } else {
+    S.rootOrder = S.rootOrder.filter(r => r !== srcId);
+  }
+  src.name = uniqueName(src.name, dstPid);
+  src.parentId = dstPid;
+  if (dstPid && S.files[dstPid]) S.files[dstPid].children.push(srcId);
+  else S.rootOrder.push(srcId);
 }
 
 function deleteFile(id) {
@@ -342,35 +372,18 @@ function deleteFile(id) {
   renderAll();
 }
 
-// ═══════════════════════════════════════════════════════════
-// INITIAL FILES
-// ═══════════════════════════════════════════════════════════
-const F_MINER = mkFile('miner.code', 'script', null,
-`repeat infinite
-  mine bit
-  when miner.code bits >= 8: store wallet.dat
-  when wallet.dat bits >= 20: sell wallet.dat
-`);
-const F_WALLET = mkFile('wallet.dat', 'dat', null, '');
-S.activeId = F_MINER.id;
+const F_MAIN = mkFile('main.code', 'script', null,
+`// Hallo! Du hast nur diese eine Datei.
+// Zuerst: bits minen und dann verkaufen.
+// Dann: .dat Datei erstellen fuer Speicher.
+// .code Dateien brauchen 2MB RAM waehrend sie laufen!
+// Tipp: create(wallet.dat, dat)  erstellt eine Datei
 
-// ═══════════════════════════════════════════════════════════
-// SCRIPTO LANG — PARSER  (v3)
-// ═══════════════════════════════════════════════════════════
-// Grammar (one line = one instruction, indentation = block):
-//   repeat N times
-//   repeat if (cond)
-//   while (cond)
-//   if (cond)
-//   else
-//   mine (currency)
-//   collect (file)          ← pull bits FROM file INTO self
-//   store (file)            ← push own bits INTO file
-//   sell (file)             ← sell all bits of file (3 ticks)
-//   check (file)
-//   run (file)
-//   wait N                  ← skip N ticks
-//   [when (cond): action]   ← legacy shorthand
+repeat infinite
+  mine bit
+  when main.code bits >= 5: sell main.code
+`);
+S.activeId = F_MAIN.id;
 
 function parseSrc(src) {
   const lines = src.split('\n');
@@ -380,12 +393,11 @@ function parseSrc(src) {
     const children = [];
     while (idx < lines.length) {
       const raw = lines[idx];
-      if (!raw.trim()) { idx++; continue; }
+      if (!raw.trim() || raw.trim().startsWith('//')) { idx++; continue; }
       const i = ind(raw);
       if (i < minInd) break;
       const tr = raw.trim();
 
-      // ── repeat N times ──
       let m;
       if ((m = tr.match(/^repeat\s+(\d+)\s+times?$/i))) {
         const node = { type: 'loop', kind: 'count', count: +m[1], lineNo: idx, children: [] };
@@ -393,45 +405,38 @@ function parseSrc(src) {
         const r = blk(i + 1, idx); node.children = r.children; idx = r.idx;
         children.push(node); continue;
       }
-      // ── repeat if (cond) ──
       if ((m = tr.match(/^repeat\s+if\s+\((.+)\)$/i))) {
         const node = { type: 'loop', kind: 'cond', cond: m[1].trim(), lineNo: idx, children: [] };
         idx++;
         const r = blk(i + 1, idx); node.children = r.children; idx = r.idx;
         children.push(node); continue;
       }
-      // ── repeat infinite / repeat ──
       if ((m = tr.match(/^repeat(\s+infinite)?$/i))) {
         const node = { type: 'loop', kind: 'infinite', lineNo: idx, children: [] };
         idx++;
         const r = blk(i + 1, idx); node.children = r.children; idx = r.idx;
         children.push(node); continue;
       }
-      // ── while (cond) ──
       if ((m = tr.match(/^while\s+\((.+)\)$/i))) {
         const node = { type: 'loop', kind: 'while', cond: m[1].trim(), lineNo: idx, children: [] };
         idx++;
         const r = blk(i + 1, idx); node.children = r.children; idx = r.idx;
         children.push(node); continue;
       }
-      // ── if (cond) ──
       if ((m = tr.match(/^if\s+\((.+)\)$/i))) {
         const node = { type: 'if', cond: m[1].trim(), lineNo: idx, children: [], elseChildren: [] };
         idx++;
         const r = blk(i + 1, idx); node.children = r.children; idx = r.idx;
-        // check for else
         if (idx < lines.length && lines[idx].trim() === 'else') {
           idx++;
           const r2_ = blk(i + 1, idx); node.elseChildren = r2_.children; idx = r2_.idx;
         }
         children.push(node); continue;
       }
-      // ── legacy when cond: action ──
       if ((m = tr.match(/^when\s+(.+?):\s*(.+)$/))) {
         children.push({ type: 'when', cond: m[1].trim(), action: m[2].trim(), lineNo: idx });
         idx++; continue;
       }
-      // ── plain action ──
       children.push({ type: 'action', action: tr, lineNo: idx });
       idx++;
     }
@@ -440,7 +445,6 @@ function parseSrc(src) {
   return { type: 'block', children: blk(0, 0).children };
 }
 
-// Flatten AST to instruction stream with virtual loop control
 function flatten(ast) {
   const ops = [];
   function walk(node) {
@@ -467,152 +471,197 @@ function flatten(ast) {
   return ops;
 }
 
-// ═══════════════════════════════════════════════════════════
-// CONDITIONS
-// ═══════════════════════════════════════════════════════════
 function cmpOp(a, op, b) {
   return op === '>=' ? a >= b : op === '<=' ? a <= b : op === '>' ? a > b : op === '<' ? a < b : a == b;
 }
-
 function evalCond(cond, f) {
   cond = cond.trim();
   let m;
-  // (file) bits op N
   if ((m = cond.match(/^(\S+)\s+bits\s*(>=|<=|>|<|==)\s*(\d+)$/))) {
     const t = resolvePath(m[1], f); return t ? cmpOp(t.bits, m[2], +m[3]) : false;
   }
-  // money op N
   if ((m = cond.match(/^money\s*(>=|<=|>|<|==)\s*([\d.]+)$/))) return cmpOp(S.money, m[1], +m[2]);
-  // ram op Nmb
   if ((m = cond.match(/^ram\s*(>=|<=|>|<|==)\s*([\d.]+)\s*mb?$/i))) return cmpOp(totalRam(), m[1], +m[2]);
-  // stor op Nmb
   if ((m = cond.match(/^stor(age)?\s*(>=|<=|>|<|==)\s*([\d.]+)\s*mb?$/i))) return cmpOp(totalStor(), m[2], +m[3]);
-  // (file) exists
   if ((m = cond.match(/^(\S+)\s+exists$/))) return resolvePath(m[1], f) !== null;
+  if ((m = cond.match(/^files\s*(>=|<=|>|<|==)\s*(\d+)$/i))) {
+    const cnt = Object.values(S.files).filter(x => x.type !== 'folder').length;
+    return cmpOp(cnt, m[1], +m[2]);
+  }
   return false;
 }
 
-// ═══════════════════════════════════════════════════════════
-// ACTIONS
-// ═══════════════════════════════════════════════════════════
 function execAction(str, f) {
   str = str.trim();
   const parts = str.split(/\s+/);
   const cmd = parts[0].toLowerCase();
-  const arg = parts.slice(1).join(' ') || null;
 
-  // ── mine (currency) ── mines into THIS file's bits
   if (cmd === 'mine') {
-    const cur = arg || 'bit';
+    const cur = parts[1] || 'bit';
     if (!f.pendingAction) {
       f.pendingAction = { cmd: 'mine', cur, ticksLeft: S.mineTicks };
       return { ok: true, skip: true, log: `mine ${cur} — started (${S.mineTicks}tk)` };
     }
     f.pendingAction.ticksLeft--;
-    if (f.pendingAction.ticksLeft > 0) {
-      return { ok: true, skip: true, log: `mine ${cur} — ${f.pendingAction.ticksLeft}tk left` };
-    }
+    if (f.pendingAction.ticksLeft > 0) return { ok: true, skip: true, log: `mine ${cur} — ${f.pendingAction.ticksLeft}tk` };
     f.pendingAction = null;
     f.bits++;
-    return { ok: true, log: `mine ${cur} — +1 bit → ${f.name} holds ${f.bits}b` };
+    return { ok: true, log: `mine — +1b > ${f.name}[${f.bits}b]` };
   }
 
-  // ── collect (srcFile) ── pull all bits FROM srcFile INTO this file
   if (cmd === 'collect') {
-    if (!arg) return { ok: false, log: 'collect: missing file argument' };
+    const arg = parts.slice(1).join(' ') || null;
+    if (!arg) return { ok: false, log: 'collect: missing arg' };
     const src = resolvePath(arg, f);
     if (!src) return { ok: false, log: `collect: '${arg}' not found` };
-    if (src.id === f.id) return { ok: false, log: 'collect: cannot collect from self' };
-    if (src.bits <= 0) return { ok: true, log: `collect(${arg}) — nothing to collect` };
-    // RAM check: each collected bit costs 0.1MB on THIS file
-    const needed = src.bits * 0.1;
+    if (src.id === f.id) return { ok: false, log: 'collect: self reference' };
+    if (src.bits <= 0) return { ok: true, log: `collect(${arg}) — empty` };
+    const needed = src.bits * 0.05;
     if (totalRam() + needed > S.ramMax)
-      return { ok: false, log: `collect(${arg}): not enough RAM (need ${r2(needed)}MB more)` };
-    const got = src.bits;
-    f.bits += got;
-    src.bits = 0;
-    return { ok: true, log: `collect(${arg}) — grabbed ${got}b → ${f.name} holds ${f.bits}b` };
+      return { ok: false, log: `collect(${arg}): need ${r2(needed)}MB more RAM` };
+    const got = src.bits; f.bits += got; src.bits = 0;
+    return { ok: true, log: `collect(${arg}) — got ${got}b > self[${f.bits}b]` };
   }
 
-  // ── store (dstFile) ── push own bits INTO dstFile
   if (cmd === 'store') {
-    if (!arg) return { ok: false, log: 'store: missing file argument' };
+    const arg = parts.slice(1).join(' ') || null;
+    if (!arg) return { ok: false, log: 'store: missing arg' };
     const dst = resolvePath(arg, f);
     if (!dst) return { ok: false, log: `store: '${arg}' not found` };
-    if (dst.id === f.id) return { ok: false, log: 'store: cannot store into self' };
+    if (dst.id === f.id) return { ok: false, log: 'store: self reference' };
     if (f.bits <= 0) return { ok: true, log: 'store: nothing to store' };
-    // RAM: bits move from f to dst — net RAM change is 0 (same total bits)
     const mv = f.bits; f.bits = 0; dst.bits += mv;
-    return { ok: true, log: `store(${arg}) — moved ${mv}b → ${arg} holds ${dst.bits}b` };
+    return { ok: true, log: `store(${arg}) — moved ${mv}b > ${arg}[${dst.bits}b]` };
   }
 
-  // ── sell (file) ── sell ALL bits of ANY file (3 ticks)
   if (cmd === 'sell') {
-    if (!arg) return { ok: false, log: 'sell: missing file argument' };
+    const arg = parts.slice(1).join(' ') || null;
+    if (!arg) return { ok: false, log: 'sell: missing arg' };
     const tgt = resolvePath(arg, f);
     if (!tgt) return { ok: false, log: `sell: '${arg}' not found` };
-    if (tgt.bits <= 0) return { ok: true, log: `sell(${arg}): nothing to sell` };
+    if (tgt.bits <= 0) return { ok: true, log: `sell(${arg}): 0 bits` };
     if (!f.pendingAction) {
       f.pendingAction = { cmd: 'sell', arg, ticksLeft: S.sellTicks };
-      return { ok: true, skip: true, log: `sell(${arg}) — started (${tgt.bits}b, ${S.sellTicks}tk)` };
+      return { ok: true, skip: true, log: `sell(${arg}) — ${tgt.bits}b (${S.sellTicks}tk)` };
     }
     f.pendingAction.ticksLeft--;
-    if (f.pendingAction.ticksLeft > 0)
-      return { ok: true, skip: true, log: `sell(${arg}) — ${f.pendingAction.ticksLeft}tk left` };
+    if (f.pendingAction.ticksLeft > 0) return { ok: true, skip: true, log: `sell(${arg}) — ${f.pendingAction.ticksLeft}tk` };
     f.pendingAction = null;
     const sold = tgt.bits; tgt.bits = 0;
-    const earned = r2(sold * 0.5);
+    const earned = r2(sold * S.sellRate);
     S.money = r2(S.money + earned);
-    return { ok: true, log: `sell(${arg}) — sold ${sold}b → +$${earned} | total $${S.money}` };
+    return { ok: true, kind: 'sell', log: `sell(${arg}) — ${sold}b > +$${earned} | $${S.money}` };
   }
 
-  // ── check (file) ──
-  if (cmd === 'check') {
-    if (!arg) return { ok: false, log: 'check: missing file argument' };
+  if (cmd === 'copy') {
+    const raw = str.slice(5).trim();
+    let [srcName, dstName] = raw.replace(/[()]/g,'').split(/[\s,]+/);
+    if (!srcName) return { ok: false, log: 'copy: usage: copy srcfile [dstfolder]' };
+    const src = resolvePath(srcName, f);
+    if (!src) return { ok: false, log: `copy: '${srcName}' not found` };
+    if (src.type === 'folder') return { ok: false, log: 'copy: cannot copy folders' };
+    if (totalStor() + fileStor(src) > S.storMax) return { ok: false, log: 'copy: not enough storage' };
+    const dstPid = dstName ? (() => { const d = resolvePath(dstName, f); return d ? d.id : null; })() : f.parentId;
+    const newF = copyFileTo(src.id, dstPid);
+    renderAll();
+    return { ok: true, log: `copy(${srcName}) > ${newF.name}` };
+  }
+
+  if (cmd === 'move') {
+    const raw = str.slice(5).trim();
+    let [srcName, dstName] = raw.replace(/[()]/g,'').split(/[\s,]+/);
+    if (!srcName) return { ok: false, log: 'move: usage: move srcfile [dstfolder]' };
+    const src = resolvePath(srcName, f);
+    if (!src) return { ok: false, log: `move: '${srcName}' not found` };
+    const dstPid = dstName ? (() => { const d = resolvePath(dstName, f); return d ? d.id : null; })() : null;
+    moveFileTo(src.id, dstPid);
+    renderAll();
+    return { ok: true, log: `move(${srcName}) > ${src.name} moved` };
+  }
+
+  if (cmd === 'delete') {
+    const arg = str.slice(7).trim().replace(/[()]/g,'');
+    if (!arg) return { ok: false, log: 'delete: missing arg' };
     const tgt = resolvePath(arg, f);
-    if (!tgt) return { ok: false, log: `check: '${arg}' not found` };
-    return { ok: true, log: `check(${arg}) — ${tgt.bits}b stored` };
+    if (!tgt) return { ok: false, log: `delete: '${arg}' not found` };
+    if (tgt.id === f.id) return { ok: false, log: 'delete: cannot delete self while running' };
+    deleteFile(tgt.id);
+    return { ok: true, log: `delete(${arg}) — done` };
   }
 
-  // ── run (file) ── start another script
+  if (cmd === 'create') {
+    const raw = str.slice(7).trim().replace(/[()]/g,'');
+    const [name, type] = raw.split(/[\s,]+/);
+    if (!name) return { ok: false, log: 'create: usage: create(name, type)' };
+    const t = (type || 'dat').toLowerCase().replace('.','');
+    const ft = t === 'code' ? 'script' : 'dat';
+    if (resolvePath(name, f)) return { ok: true, log: `create(${name}) — already exists` };
+    const stor = ft === 'script' ? 0.5 : 0.2;
+    if (totalStor() + stor > S.storMax) return { ok: false, log: 'create: not enough storage' };
+    mkFile(name, ft, f.parentId, '');
+    renderAll();
+    return { ok: true, log: `create(${name}) — ok` };
+  }
+
+  if (cmd === 'bits') {
+    const arg = str.slice(5).trim().replace(/[()]/g,'');
+    if (!arg) return { ok: true, log: `bits(self) = ${f.bits}` };
+    const tgt = resolvePath(arg, f);
+    if (!tgt) return { ok: false, log: `bits: '${arg}' not found` };
+    return { ok: true, log: `bits(${arg}) = ${tgt.bits}` };
+  }
+
+  if (cmd === 'check') {
+    const arg = str.slice(6).trim().replace(/[()]/g,'') || null;
+    const tgt = arg ? resolvePath(arg, f) : f;
+    if (!tgt) return { ok: false, log: `check: '${arg}' not found` };
+    return { ok: true, log: `check(${arg||'self'}) — ${tgt.bits}b | stor:${totalStor()}MB | ram:${totalRam()}MB` };
+  }
+
   if (cmd === 'run') {
-    if (!arg) return { ok: false, log: 'run: missing file argument' };
+    const arg = str.slice(4).trim().replace(/[()]/g,'');
+    if (!arg) return { ok: false, log: 'run: missing arg' };
     const tgt = resolvePath(arg, f);
     if (!tgt) return { ok: false, log: `run: '${arg}' not found` };
-    if (tgt.type !== 'script') return { ok: false, log: `run: '${arg}' is not a .code file` };
+    if (tgt.type !== 'script') return { ok: false, log: `run: '${arg}' not a .code file` };
+    if (totalRam() + 2.0 > S.ramMax) return { ok: false, log: `run(${arg}): not enough RAM (need 2MB)` };
     if (!tgt.running) startF(tgt);
     return { ok: true, log: `run(${arg}) — launched` };
   }
 
-  // ── wait N ──
+  if (cmd === 'stop') {
+    const arg = str.slice(5).trim().replace(/[()]/g,'');
+    const tgt = arg ? resolvePath(arg, f) : null;
+    if (!tgt) return { ok: false, log: `stop: '${arg}' not found` };
+    if (tgt.running) stopF(tgt);
+    return { ok: true, log: `stop(${arg}) — stopped` };
+  }
+
   if (cmd === 'wait') {
-    const n = parseInt(arg) || 1;
+    const n = parseInt(parts[1]) || 1;
     if (!f.pendingAction) {
       f.pendingAction = { cmd: 'wait', ticksLeft: n };
-      return { ok: true, skip: true, log: `wait — ${n}tk` };
+      return { ok: true, skip: true, log: `wait ${n}tk` };
     }
     f.pendingAction.ticksLeft--;
-    if (f.pendingAction.ticksLeft > 0)
-      return { ok: true, skip: true, log: `wait — ${f.pendingAction.ticksLeft}tk left` };
+    if (f.pendingAction.ticksLeft > 0) return { ok: true, skip: true, log: `wait ${f.pendingAction.ticksLeft}tk` };
     f.pendingAction = null;
     return { ok: true, log: 'wait — done' };
   }
 
-  return { ok: false, log: `Unknown: ${str}` };
+  return { ok: false, log: `Unknown cmd: ${str}` };
 }
 
-// ═══════════════════════════════════════════════════════════
-// TICK ENGINE
-// ═══════════════════════════════════════════════════════════
 let tmr = null;
 
 function startF(f) {
-  if (f.type !== 'script') { tlog(`[${f.name}] Only .code files can run`, 'err'); return; }
+  if (f.type !== 'script') { tlog(`[${f.name}] not a .code file`, 'err'); return; }
+  if (totalRam() + 2.0 > S.ramMax) { tlog(`[${f.name}] not enough RAM (need 2MB for .code)`, 'err'); return; }
   try { f.program = flatten(parseSrc(f.content)); }
   catch (e) { f.status = 'error'; tlog(`[${f.name}] parse error: ${e.message}`, 'err'); return; }
   f.pc = 0; f.running = true; f.status = 'running';
   f.currentLine = -1; f.pendingAction = null; f.loopStack = [];
-  tlog(`[${f.name}] started`, 'info'); renderAll();
+  tlog(`[${f.name}] started (using 2MB RAM)`, 'info'); renderAll();
 }
 
 function stopF(f) {
@@ -623,22 +672,16 @@ function stopF(f) {
 
 function tickF(f) {
   if (!f.running || !f.program) return;
+  if (f.pc >= f.program.length) { f.pc = 0; f.loopStack = []; }
 
-  // safety: wrap PC
-  if (f.pc >= f.program.length) {
-    // if there's no infinite loop, script is done
-    f.pc = 0; f.loopStack = [];
-  }
-
-  // If pending action, re-run same action line
   if (f.pendingAction) {
     const op = f.program[f.pc];
     if (!op) { f.pendingAction = null; return; }
-    const actionStr = op.type === 'action' ? op.action : op.type === 'when' ? op.action : null;
+    const actionStr = (op.type === 'action' || op.type === 'when') ? op.action : null;
     if (!actionStr) { f.pendingAction = null; f.pc++; return; }
     const r = execAction(actionStr, f);
-    if (r.skip) { tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, 'run'); }
-    else { f.pendingAction = null; tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, r.ok ? 'ok' : 'err'); f.pc++; }
+    if (r.skip) tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, 'run');
+    else { f.pendingAction = null; tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, r.kind === 'sell' ? 'sell' : r.ok ? 'ok' : 'err'); f.pc++; }
     return;
   }
 
@@ -646,12 +689,10 @@ function tickF(f) {
   if (!op) { f.pc = 0; return; }
   f.currentLine = op.lineNo || 0;
 
-  // ── LOOP_START ──
   if (op.type === 'LOOP_START') {
     const enters = (() => {
       if (op.kind === 'infinite') return true;
       if (op.kind === 'count') {
-        // find existing stack entry
         const se = f.loopStack.find(s => s.pc === f.pc);
         if (!se) { f.loopStack.push({ pc: f.pc, rem: op.count }); return op.count > 0; }
         return se.rem > 0;
@@ -659,24 +700,18 @@ function tickF(f) {
       if (op.kind === 'cond' || op.kind === 'while') return evalCond(op.cond, f);
       return false;
     })();
-    if (enters) {
-      f.pc++; return; // enter loop body
-    } else {
-      // skip to matching LOOP_END
-      let depth = 1; f.pc++;
-      while (f.pc < f.program.length && depth > 0) {
-        if (f.program[f.pc].type === 'LOOP_START') depth++;
-        if (f.program[f.pc].type === 'LOOP_END') depth--;
-        f.pc++;
-      }
-      return;
+    if (enters) { f.pc++; return; }
+    let depth = 1; f.pc++;
+    while (f.pc < f.program.length && depth > 0) {
+      if (f.program[f.pc].type === 'LOOP_START') depth++;
+      if (f.program[f.pc].type === 'LOOP_END') depth--;
+      f.pc++;
     }
+    return;
   }
 
-  // ── LOOP_END ──
   if (op.type === 'LOOP_END') {
-    // find matching LOOP_START by scanning back
-    let depth = 1; let si = f.pc - 1;
+    let depth = 1, si = f.pc - 1;
     while (si >= 0 && depth > 0) {
       if (f.program[si].type === 'LOOP_END') depth++;
       if (f.program[si].type === 'LOOP_START') depth--;
@@ -684,40 +719,30 @@ function tickF(f) {
     }
     const start = f.program[si];
     if (!start) { f.pc++; return; }
-
     if (start.kind === 'count') {
       const se = f.loopStack.find(s => s.pc === si);
-      if (se) {
-        se.rem--;
-        if (se.rem > 0) { f.pc = si + 1; return; }
-        else { f.loopStack = f.loopStack.filter(s => s.pc !== si); f.pc++; return; }
-      }
+      if (se) { se.rem--; if (se.rem > 0) { f.pc = si + 1; return; } else { f.loopStack = f.loopStack.filter(s => s.pc !== si); f.pc++; return; } }
     }
     if (start.kind === 'cond' || start.kind === 'while') {
       if (evalCond(start.cond, f)) { f.pc = si + 1; return; }
       else { f.pc++; return; }
     }
-    // infinite
-    f.pc = si + 1;
-    return;
+    f.pc = si + 1; return;
   }
 
-  // ── IF / ELSE / ENDIF ──
   if (op.type === 'IF') {
     if (evalCond(op.cond, f)) { f.pc++; return; }
-    // skip to ELSE or ENDIF
     let depth = 1; f.pc++;
     while (f.pc < f.program.length && depth > 0) {
       const t = f.program[f.pc].type;
       if (t === 'IF') depth++;
       if (t === 'ENDIF') depth--;
-      if (t === 'ELSE' && depth === 1) { f.pc++; return; } // jump into else
+      if (t === 'ELSE' && depth === 1) { f.pc++; return; }
       f.pc++;
     }
     return;
   }
   if (op.type === 'ELSE') {
-    // skip ELSE block to ENDIF
     let depth = 1; f.pc++;
     while (f.pc < f.program.length && depth > 0) {
       const t = f.program[f.pc].type;
@@ -729,30 +754,21 @@ function tickF(f) {
   }
   if (op.type === 'ENDIF') { f.pc++; return; }
 
-  // ── WHEN (legacy inline) ──
   if (op.type === 'when') {
     if (evalCond(op.cond, f)) {
       const r = execAction(op.action, f);
-      if (r.skip) { tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, 'run'); }
-      else { tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, r.ok ? 'ok' : 'err'); f.pc++; }
+      if (r.skip) tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, 'run');
+      else { tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, r.kind === 'sell' ? 'sell' : r.ok ? 'ok' : 'err'); f.pc++; }
     } else { f.pc++; }
     return;
   }
 
-  // ── ACTION ──
   if (op.type === 'action') {
     const r = execAction(op.action, f);
-    if (r.skip) { tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, 'run'); }
-    else { tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, r.ok ? 'ok' : 'err'); f.pc++; }
+    if (r.skip) tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, 'run');
+    else { tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, r.kind === 'sell' ? 'sell' : r.ok ? 'ok' : 'err'); f.pc++; }
     return;
   }
-
-  if (op.type === 'error') {
-    tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${op.msg}`, 'err');
-    f.status = 'error'; f.pc++;
-    return;
-  }
-
   f.pc++;
 }
 
@@ -771,18 +787,18 @@ function reloop() {
   tmr = setInterval(tick, S.tickMs);
 }
 
-// ═══════════════════════════════════════════════════════════
-// RENDER
-// ═══════════════════════════════════════════════════════════
 function renderTree() {
-  const el = document.getElementById('ftree'); el.innerHTML = '';
+  const el = document.getElementById('ftree');
+  el.innerHTML = '';
+  const fileCount = Object.values(S.files).filter(f => f.type !== 'folder').length;
+  document.getElementById('file-count').textContent = `${fileCount} files`;
+
   function rl(ids, container) {
     for (const id of (ids || [])) {
       const f = S.files[id]; if (!f) continue;
       const row = document.createElement('div');
       row.className = 'frow' + (f.type === 'folder' ? ' folder' : '') + (f.id === S.activeId ? ' active' : '');
 
-      // status dot
       if (f.type === 'script') {
         const dot = document.createElement('span');
         dot.className = `sdot s-${f.status}`; row.appendChild(dot);
@@ -791,41 +807,42 @@ function renderTree() {
         dot.className = 'sdot'; dot.style.background = '#4ade80'; row.appendChild(dot);
       } else {
         const arrow = document.createElement('span');
-        arrow.textContent = '▸ '; arrow.style.cssText = 'color:var(--ash);font-size:10px;'; row.appendChild(arrow);
+        arrow.textContent = '> '; arrow.style.cssText = 'color:var(--ash);font-size:10px;'; row.appendChild(arrow);
       }
 
-      // name
       const nameEl = document.createElement('span');
-      nameEl.className = 'fname';
-      nameEl.textContent = f.name;
+      nameEl.className = 'fname'; nameEl.textContent = f.name;
       row.appendChild(nameEl);
 
-      // bits badge — show for ALL files that have bits > 0
-      if (f.bits > 0 || f.type !== 'folder') {
+      if (f.type !== 'folder') {
         const bb = document.createElement('span');
         bb.className = 'fbits';
         bb.textContent = `${f.bits}b`;
         if (f.bits === 0) bb.style.opacity = '0.3';
         row.appendChild(bb);
-      }
-
-      // MB label
-      if (f.type !== 'folder') {
         const mb = document.createElement('span');
-        mb.className = 'fmb'; mb.textContent = '0.2M'; row.appendChild(mb);
+        mb.className = 'fmb'; mb.textContent = f.type === 'script' ? '0.5M' : '0.2M';
+        row.appendChild(mb);
       }
 
-      // delete button
+      const cpBtn = document.createElement('button');
+      cpBtn.className = 'btn btn-sm btn-cp'; cpBtn.textContent = 'cp';
+      cpBtn.title = 'Copy file'; cpBtn.onclick = e => { e.stopPropagation(); uiCopy(f.id); };
+      row.appendChild(cpBtn);
+
+      const mvBtn = document.createElement('button');
+      mvBtn.className = 'btn btn-sm btn-mv'; mvBtn.textContent = 'mv';
+      mvBtn.title = 'Move file'; mvBtn.onclick = e => { e.stopPropagation(); uiMove(f.id); };
+      row.appendChild(mvBtn);
+
       const del = document.createElement('button');
-      del.className = 'btn btn-del'; del.textContent = 'del';
+      del.className = 'btn btn-sm btn-del'; del.textContent = 'del';
       del.title = `Delete "${f.name}"`;
-      del.onclick = e => {
-        e.stopPropagation();
-        if (confirm(`Delete "${f.name}"?`)) deleteFile(f.id);
-      };
+      del.onclick = e => { e.stopPropagation(); if (confirm(`Delete "${f.name}"?`)) deleteFile(f.id); };
       row.appendChild(del);
 
       row.onclick = () => selF(f.id);
+      row.oncontextmenu = e => { e.preventDefault(); showCtxMenu(e.clientX, e.clientY, f); };
       container.appendChild(row);
 
       if (f.type === 'folder' && f.children) {
@@ -837,6 +854,62 @@ function renderTree() {
   rl(S.rootOrder, el);
 }
 
+function showCtxMenu(x, y, f) {
+  const m = document.getElementById('ctx-menu');
+  m.innerHTML = `
+    <div class="ctx-item" data-act="open">Oeffnen</div>
+    ${f.type !== 'folder' ? `
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" data-act="copy">Kopieren</div>
+    <div class="ctx-item" data-act="move">Verschieben</div>
+    <div class="ctx-sep"></div>
+    ${f.type === 'script' && !f.running ? '<div class="ctx-item" data-act="run">Run</div>' : ''}
+    ${f.running ? '<div class="ctx-item" data-act="stop">Stop</div>' : ''}
+    ` : ''}
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" style="color:var(--danger)" data-act="del">Loeschen</div>
+  `;
+  m.style.cssText = `display:block;left:${x}px;top:${y}px;`;
+  m.querySelectorAll('.ctx-item').forEach(it => {
+    it.onclick = () => {
+      m.style.display = 'none';
+      const act = it.dataset.act;
+      if (act === 'open') selF(f.id);
+      else if (act === 'copy') uiCopy(f.id);
+      else if (act === 'move') uiMove(f.id);
+      else if (act === 'run') startF(f);
+      else if (act === 'stop') stopF(f);
+      else if (act === 'del') { if (confirm(`Delete "${f.name}"?`)) deleteFile(f.id); }
+    };
+  });
+  setTimeout(() => document.addEventListener('click', function h() { m.style.display = 'none'; document.removeEventListener('click', h); }, { once: true }), 10);
+}
+
+async function uiCopy(id) {
+  const f = S.files[id]; if (!f || f.type === 'folder') return;
+  const folders = Object.values(S.files).filter(x => x.type === 'folder').map(x => x.name);
+  const hint = folders.length ? `(leer = gleicher Ordner; oder: ${folders.join(', ')})` : '(leer = gleicher Ordner)';
+  const ans = await askUser(`"${f.name}" kopieren nach ${hint}:`, '');
+  if (ans === null) return;
+  const dstPid = ans.trim() ? (() => { const d = resolvePath(ans.trim(), f); return d ? d.id : null; })() : f.parentId;
+  if (totalStor() + fileStor(f) > S.storMax) { tlog('copy: nicht genug Storage', 'err'); return; }
+  const nf = copyFileTo(id, dstPid);
+  tlog(`copy > ${nf.name} erstellt`, 'ok');
+  renderAll();
+}
+
+async function uiMove(id) {
+  const f = S.files[id]; if (!f) return;
+  const folders = Object.values(S.files).filter(x => x.type === 'folder').map(x => x.name);
+  const hint = folders.length ? `(Ordner oder leer=root: ${folders.join(', ')})` : '(leer = root)';
+  const ans = await askUser(`"${f.name}" verschieben nach: ${hint}`, '');
+  if (ans === null) return;
+  const dstPid = ans.trim() ? (() => { const d = resolvePath(ans.trim(), f); return d ? d.id : null; })() : null;
+  moveFileTo(id, dstPid);
+  tlog(`move > ${f.name} verschoben`, 'ok');
+  renderAll();
+}
+
 function selF(id) {
   if (!S.files[id]) return;
   S.activeId = id;
@@ -845,8 +918,7 @@ function selF(id) {
   const ed = document.getElementById('editor');
   ed.value = f.content;
   ed.disabled = (f.type !== 'script');
-  renderGutter();
-  renderTree();
+  renderGutter(); renderTree();
 }
 
 function renderGutter() {
@@ -866,43 +938,37 @@ function renderGutter() {
 }
 
 function renderAll() {
-  const ram = totalRam();
-  const stor = totalStor();
+  const ram = totalRam(); const stor = totalStor();
   document.getElementById('s-stor').textContent = `STOR ${stor}/${S.storMax}MB`;
   document.getElementById('s-ram').textContent = `RAM ${ram}/${S.ramMax}MB`;
   document.getElementById('s-tick').textContent = `TICK ${S.tickMs}ms T${S.speedTier}`;
   document.getElementById('s-money').textContent = `$ ${r2(S.money)}`;
   const ramEl = document.getElementById('s-ram');
   ramEl.style.color = ram > S.ramMax * 0.85 ? 'var(--danger)' : 'var(--run)';
-  renderTree();
-  renderGutter();
-  // update editor label with current bits
+  renderTree(); renderGutter();
   if (S.activeId && S.files[S.activeId]) {
     const f = S.files[S.activeId];
     document.getElementById('eplabel').textContent = `[EDITOR] ${f.name}  (${f.bits}b)`;
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// TERMINAL
-// ═══════════════════════════════════════════════════════════
 function tlog(msg, kind) {
   const out = document.getElementById('tout');
   const l = document.createElement('div');
   const cls = { run: 'run', ok: 'ok', err: 'err', info: 'info', sell: 'sell' };
   l.className = `tl tl-${cls[kind] || 'info'}`;
-  l.textContent = `[t${String(S.tick).padStart(4, '0')}] ${msg}`;
+  l.textContent = `[t${String(S.tick).padStart(4,'0')}] ${msg}`;
   out.appendChild(l);
-  while (out.children.length > 400) out.removeChild(out.firstChild);
+  while (out.children.length > 600) out.removeChild(out.firstChild);
   out.scrollTop = out.scrollHeight;
 }
 
-// ═══════════════════════════════════════════════════════════
-// AUTOCOMPLETE
-// ═══════════════════════════════════════════════════════════
-const KW = ['mine bit','mine','collect','store','sell','check','run','wait',
+const KW = [
+  'mine bit','mine','collect','store','sell','check','run','stop','wait',
+  'copy','move','delete','create','bits',
   'repeat','repeat infinite','repeat if','while','if','else','times',
-  'bits','exists','money','ram','storage'];
+  'exists','money','ram','storage','files'
+];
 
 function onInput(e) {
   const ed = e.target;
@@ -959,56 +1025,50 @@ function applyAc(word) {
   renderGutter();
 }
 
-// ═══════════════════════════════════════════════════════════
-// SHOP — UPGRADE SYSTEM
-// ═══════════════════════════════════════════════════════════
 function renderShop() {
   const body = document.getElementById('shop-body');
   body.innerHTML = '';
+  const info = document.createElement('div');
+  info.style.cssText = 'padding:8px 14px;font-size:10px;color:var(--mute);border-bottom:1px solid var(--hairline);';
+  info.innerHTML = `<b>RAM-Kosten:</b> .code laeuft = 2MB | bits = 0.05MB/bit | Aktuell: ${totalRam()}/${S.ramMax}MB`;
+  body.appendChild(info);
+
   for (const key in UPGRADES) {
-    const upg = UPGRADES[key];
-    const lvl = UP_LVL[key];
+    const upg = UPGRADES[key]; const lvl = UP_LVL[key];
     const maxed = lvl >= upg.levels.length;
     const nextLevel = maxed ? null : upg.levels[lvl];
     const row = document.createElement('div'); row.className = 'shoprow';
-
-    // left side
     const left = document.createElement('div'); left.className = 'shoprow-left';
     const title = document.createElement('div');
     title.innerHTML = `<b>${upg.label}</b> <span style="color:var(--ash);font-size:10px;">${upg.desc}</span>`;
     left.appendChild(title);
-    // pip bar
     const bar = document.createElement('div'); bar.className = 'upg-bar';
     for (let i = 0; i < upg.levels.length; i++) {
       const pip = document.createElement('div');
-      pip.className = 'upg-pip' + (i < lvl ? ' on' : '');
-      bar.appendChild(pip);
+      pip.className = 'upg-pip' + (i < lvl ? ' on' : ''); bar.appendChild(pip);
     }
     left.appendChild(bar);
     if (maxed) {
       const done = document.createElement('span');
-      done.style.cssText = 'font-size:10px;color:var(--success);'; done.textContent = '✓ MAXED';
+      done.style.cssText = 'font-size:10px;color:var(--success);'; done.textContent = 'MAXED';
       left.appendChild(done);
     }
     row.appendChild(left);
-
-    // right side
     const right = document.createElement('div'); right.className = 'shoprow-right';
     if (!maxed) {
-      const info = document.createElement('span');
-      info.style.cssText = 'font-size:10px;color:var(--mute);';
-      info.textContent = `Lv${lvl + 1}: ${nextLevel.label} · $${nextLevel.cost}`;
-      right.appendChild(info);
-      const btn = document.createElement('button'); btn.className = 'btn btn-ink'; btn.textContent = 'upgrade';
+      const info2 = document.createElement('span');
+      info2.style.cssText = 'font-size:10px;color:var(--mute);';
+      info2.textContent = `Lv${lvl + 1}: ${nextLevel.label} $${nextLevel.cost}`;
+      right.appendChild(info2);
+      const btn = document.createElement('button'); btn.className = 'btn btn-ink'; btn.textContent = 'buy';
       btn.onclick = () => {
         if (S.money >= nextLevel.cost) {
           S.money = r2(S.money - nextLevel.cost);
-          nextLevel.apply();
-          UP_LVL[key]++;
-          tlog(`Upgraded: ${upg.label} → Lv${UP_LVL[key]}`, 'ok');
+          nextLevel.apply(); UP_LVL[key]++;
+          tlog(`Upgrade: ${upg.label} Lv${UP_LVL[key]}`, 'ok');
           renderAll(); renderShop();
         } else {
-          tlog(`Not enough money for ${upg.label} Lv${lvl + 1}`, 'err');
+          tlog(`Zu wenig Geld fuer ${upg.label} Lv${lvl + 1}`, 'err');
         }
       };
       right.appendChild(btn);
@@ -1018,41 +1078,26 @@ function renderShop() {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// NEW FILE UI
-// ═══════════════════════════════════════════════════════════
 async function newFileUI(type) {
   const af = S.activeId ? S.files[S.activeId] : null;
   const pid = af && af.type === 'folder' ? af.id : (af ? af.parentId : null);
-  const def = type === 'script' ? `script${S.nextId}.code`
-            : type === 'folder' ? `folder${S.nextId}`
-            : `data${S.nextId}.dat`;
-  const name = await askUser('File name:', def);
+  const stor = type === 'script' ? 0.5 : type === 'folder' ? 0 : 0.2;
+  if (stor > 0 && totalStor() + stor > S.storMax) { tlog('Nicht genug Storage! Kaufe mehr im Shop.', 'err'); return; }
+  const def = type === 'script' ? `script${S.nextId}.code` : type === 'folder' ? `folder${S.nextId}` : `data${S.nextId}.dat`;
+  const name = await askUser('Dateiname:', def);
   if (!name) return;
-  if (type !== 'folder' && totalStor() + 0.2 > S.storMax) {
-    tlog('Not enough disk storage!', 'err'); return;
-  }
-  const tpl = type === 'script' ?
-`repeat infinite
-  mine bit
-  when miner.code bits >= 8: store wallet.dat
-  when wallet.dat bits >= 20: sell wallet.dat
-` : '';
-  const f = mkFile(name, type, pid, type === 'script' ? tpl : '');
+  const finalName = uniqueName(name, pid);
+  const f = mkFile(finalName, type, pid, type === 'script' ? '// Neues Skript\nrepeat infinite\n  mine bit\n' : '');
   renderAll(); selF(f.id);
+  tlog(`Erstellt: ${finalName}`, 'ok');
 }
 
-// ═══════════════════════════════════════════════════════════
-// BOOT
-// ═══════════════════════════════════════════════════════════
 (function init() {
   const ed = document.getElementById('editor');
   ed.value = S.files[S.activeId].content;
   ed.addEventListener('input', onInput);
   ed.addEventListener('keydown', onKey);
-  ed.addEventListener('scroll', () => {
-    document.getElementById('gutter').scrollTop = ed.scrollTop;
-  });
+  ed.addEventListener('scroll', () => { document.getElementById('gutter').scrollTop = ed.scrollTop; });
 
   document.getElementById('btn-ns').onclick = () => newFileUI('script');
   document.getElementById('btn-nd').onclick = () => newFileUI('dat');
@@ -1060,31 +1105,27 @@ async function newFileUI(type) {
 
   document.getElementById('btn-run').onclick = () => {
     const f = S.files[S.activeId];
-    if (!f || f.type !== 'script') { tlog('Select a .code file first.', 'err'); return; }
+    if (!f || f.type !== 'script') { tlog('Waehle erst eine .code Datei aus.', 'err'); return; }
     f.content = ed.value; startF(f);
   };
-  document.getElementById('btn-stop').onclick = () => {
-    const f = S.files[S.activeId]; if (f) stopF(f);
-  };
-  document.getElementById('btn-shop').onclick = () => {
-    renderShop(); document.getElementById('shop-modal').style.display = 'flex';
-  };
-  document.getElementById('btn-close-shop').onclick = () => {
-    document.getElementById('shop-modal').style.display = 'none';
-  };
+  document.getElementById('btn-stop').onclick = () => { const f = S.files[S.activeId]; if (f) stopF(f); };
+  document.getElementById('btn-shop').onclick = () => { renderShop(); document.getElementById('shop-modal').style.display = 'flex'; };
+  document.getElementById('btn-close-shop').onclick = () => { document.getElementById('shop-modal').style.display = 'none'; };
+  document.addEventListener('click', () => { document.getElementById('acbox').style.display = 'none'; });
 
-  selF(F_MINER.id);
+  selF(F_MAIN.id);
   reloop();
 
-  tlog('=== SCRIPTO v3 ===', 'info');
-  tlog('mine(cur) — mines into THIS file (3 ticks)', 'info');
-  tlog('collect(src) — pull bits FROM src INTO self (costs RAM)', 'info');
-  tlog('store(dst) — push own bits INTO dst', 'info');
-  tlog('sell(file) — sell all bits in any file (3 ticks, $0.5/bit)', 'info');
-  tlog('new: repeat N times | repeat if (cond) | while (cond) | if (cond)', 'info');
-  tlog('new: run(file) | folder paths: folder/name or ../name', 'info');
-  tlog('Shop upgraded to UPGRADE system — buy levels, not one-shots!', 'info');
-  tlog('Select miner.code and press [RUN] to start!', 'info');
+  tlog('=== SCRIPTO v4 ===', 'info');
+  tlog('Start: 4MB Stor, 8MB RAM — sehr wenig!', 'info');
+  tlog('.code Datei kostet 2MB RAM waehrend sie laeuft.', 'info');
+  tlog('.dat Dateien: passiv, kein RAM-Verbrauch.', 'info');
+  tlog('bits = 0.05MB RAM pro bit (egal wo gespeichert).', 'info');
+  tlog('NEUE CMDS: copy, move, delete, create, bits, stop', 'info');
+  tlog('.code und .dat Dateien koennen bits speichern!', 'info');
+  tlog('Rechtsklick auf Datei = Kontextmenue', 'info');
+  tlog('Hover auf Datei = cp / mv / del Buttons', 'info');
+  tlog('Tipp: mine bits -> sell -> Shop -> mehr RAM!', 'info');
 })();
 </script>
 </body>
