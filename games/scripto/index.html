@@ -13,71 +13,81 @@
   --running:#8b5cf6;--font-mono:'IBM Plex Mono','JetBrains Mono',ui-monospace,monospace;
 }
 *{box-sizing:border-box;}
-body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-mono);font-size:16px;line-height:1.5;}
-.primary-nav{height:56px;display:flex;align-items:center;gap:24px;padding:0 16px;border-bottom:1px solid var(--hairline);background:var(--canvas);}
-.wordmark{font-weight:700;font-size:16px;letter-spacing:1px;}
-.nav-links{display:flex;gap:16px;font-size:14px;color:var(--mute);flex:1;flex-wrap:wrap;}
+body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-mono);font-size:16px;line-height:1.5;overflow:hidden;}
+.primary-nav{height:56px;display:flex;align-items:center;gap:16px;padding:0 16px;border-bottom:1px solid var(--hairline);background:var(--canvas);flex-wrap:nowrap;overflow:hidden;}
+.wordmark{font-weight:700;font-size:15px;letter-spacing:1px;white-space:nowrap;}
+.nav-links{display:flex;gap:12px;font-size:12px;color:var(--mute);flex:1;flex-wrap:wrap;}
 .nav-links span{white-space:nowrap;}
 #stat-ram{color:var(--running);}
 #stat-money{color:var(--success);font-weight:500;}
-.button-primary{background:var(--ink);color:var(--on-dark);font-family:var(--font-mono);font-size:14px;font-weight:500;border:none;border-radius:4px;padding:6px 16px;height:36px;cursor:pointer;}
+.button-primary{background:var(--ink);color:var(--on-dark);font-family:var(--font-mono);font-size:13px;font-weight:500;border:none;border-radius:4px;padding:5px 14px;height:32px;cursor:pointer;white-space:nowrap;}
 .button-primary:active{background:var(--ink-deep);}
-.button-secondary{background:var(--canvas);color:var(--ink);font-family:var(--font-mono);font-size:13px;font-weight:500;border:1px solid var(--hairline-strong);border-radius:4px;padding:4px 12px;cursor:pointer;}
-.badge-section-label{font-weight:700;font-size:14px;padding:8px 12px;border-bottom:1px solid var(--hairline);}
-.workspace{display:grid;grid-template-columns:240px 1fr 320px;height:calc(100vh - 56px - 48px);}
+.button-secondary{background:var(--canvas);color:var(--ink);font-family:var(--font-mono);font-size:12px;font-weight:500;border:1px solid var(--hairline-strong);border-radius:4px;padding:3px 10px;cursor:pointer;}
+.button-danger{background:var(--canvas);color:var(--danger);font-family:var(--font-mono);font-size:11px;border:1px solid var(--danger);border-radius:4px;padding:2px 7px;cursor:pointer;}
+.badge-section-label{font-weight:700;font-size:13px;padding:7px 12px;border-bottom:1px solid var(--hairline);background:var(--surface-soft);}
+.workspace{display:grid;grid-template-columns:260px 1fr 300px;height:calc(100vh - 56px - 40px);}
 .panel{border-right:1px solid var(--hairline);display:flex;flex-direction:column;overflow:hidden;}
 .terminal-panel{border-right:none;}
-.panel-actions{display:flex;gap:6px;padding:8px 12px;flex-wrap:wrap;}
-.panel-actions button{font-size:11px;padding:3px 8px;}
-.file-tree{overflow-y:auto;padding:4px 12px;flex:1;font-size:14px;}
-.file-row{display:flex;justify-content:space-between;align-items:center;padding:4px;cursor:pointer;border-radius:4px;}
+.panel-actions{display:flex;gap:5px;padding:7px 10px;flex-wrap:wrap;background:var(--canvas);border-bottom:1px solid var(--hairline);}
+.panel-actions button{font-size:11px;padding:2px 7px;}
+.file-tree{overflow-y:auto;flex:1;font-size:13px;}
+.file-row{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;cursor:pointer;gap:4px;}
 .file-row:hover{background:var(--surface-soft);}
 .file-row.active{background:var(--surface-card);}
-.file-row .fname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.file-row .fmeta{font-size:11px;color:var(--ash);}
-.folder-row{font-weight:500;}
-.folder-children{padding-left:14px;border-left:1px dashed var(--hairline);}
-.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;}
+.fname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
+.fmeta{font-size:11px;color:var(--ash);white-space:nowrap;}
+.fbit{font-size:11px;color:var(--running);white-space:nowrap;padding:0 4px;}
+.fdel{opacity:0;pointer-events:none;font-size:10px;padding:1px 5px;}
+.file-row:hover .fdel{opacity:1;pointer-events:auto;}
+.folder-row{font-weight:600;color:var(--mute);}
+.folder-children{padding-left:12px;border-left:1px dashed var(--hairline);}
+.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0;}
 .status-idle{background:var(--ash);}
-.status-running{background:var(--running);}
+.status-running{background:var(--running);animation:pulse 1.2s infinite;}
 .status-done{background:var(--success);}
 .status-error{background:var(--danger);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .editor-panel{position:relative;}
 #editor-filename{font-weight:700;}
-.editor-wrap{flex:1;display:flex;position:relative;overflow:hidden;font-size:14px;}
-.line-gutter{width:34px;background:var(--surface-soft);color:var(--ash);padding:12px 6px 12px 0;text-align:right;font-size:13px;line-height:1.6;user-select:none;overflow:hidden;}
-#code-editor{flex:1;border:none;outline:none;resize:none;font-family:var(--font-mono);font-size:14px;line-height:1.6;padding:12px;background:var(--canvas);color:var(--ink);}
-.autocomplete-box{position:absolute;background:var(--surface-card);border:1px solid var(--hairline-strong);border-radius:4px;font-size:13px;z-index:20;max-height:160px;overflow-y:auto;}
-.autocomplete-item{padding:4px 10px;cursor:pointer;}
+.editor-wrap{flex:1;display:flex;position:relative;overflow:hidden;font-size:13px;}
+.line-gutter{width:32px;background:var(--surface-soft);color:var(--ash);padding:10px 5px 10px 0;text-align:right;font-size:12px;line-height:1.65;user-select:none;overflow:hidden;flex-shrink:0;}
+#code-editor{flex:1;border:none;outline:none;resize:none;font-family:var(--font-mono);font-size:13px;line-height:1.65;padding:10px 12px;background:var(--canvas);color:var(--ink);tab-size:2;}
+.autocomplete-box{position:absolute;background:var(--surface-card);border:1px solid var(--hairline-strong);border-radius:4px;font-size:12px;z-index:20;max-height:140px;overflow-y:auto;min-width:120px;}
+.autocomplete-item{padding:3px 10px;cursor:pointer;}
 .autocomplete-item:hover,.autocomplete-item.sel{background:var(--surface-dark);color:var(--on-dark);}
-.editor-actions{display:flex;align-items:center;gap:8px;padding:8px 12px;border-top:1px solid var(--hairline);}
+.editor-actions{display:flex;align-items:center;gap:7px;padding:7px 12px;border-top:1px solid var(--hairline);background:var(--surface-soft);}
 .hint{font-size:11px;color:var(--ash);margin-left:auto;}
-.terminal-output{flex:1;overflow-y:auto;background:var(--surface-dark);color:var(--on-dark);font-size:13px;padding:10px 12px;}
-.term-line{margin-bottom:2px;white-space:pre-wrap;word-break:break-word;}
+.terminal-output{flex:1;overflow-y:auto;background:var(--surface-dark);color:var(--on-dark);font-size:12px;padding:8px 12px;}
+.term-line{margin-bottom:1px;white-space:pre-wrap;word-break:break-word;line-height:1.5;}
 .term-running{color:var(--running);}
 .term-done{color:var(--success);}
 .term-error{color:#ff6b60;}
 .term-info{color:var(--on-dark-mute);}
+.term-sell{color:#fbbf24;}
 .modal-overlay{position:fixed;inset:0;background:rgba(15,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:100;}
-.modal-card{background:var(--canvas);border-radius:4px;width:420px;max-height:80vh;overflow-y:auto;border:1px solid var(--hairline-strong);}
-#shop-items{padding:8px 12px;}
-.shop-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--hairline);font-size:14px;}
+.modal-card{background:var(--canvas);border-radius:4px;width:400px;max-height:80vh;overflow-y:auto;border:1px solid var(--hairline-strong);}
+#shop-items{padding:6px 12px;}
+.shop-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--hairline);font-size:13px;}
 .shop-row button{font-size:12px;}
 .inp-modal{position:fixed;inset:0;background:rgba(15,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:200;}
-.inp-box{background:var(--canvas);border:1px solid var(--hairline-strong);border-radius:4px;padding:20px 24px;width:300px;}
-.inp-box label{display:block;font-size:13px;font-weight:600;margin-bottom:8px;}
-.inp-box input{width:100%;font-family:var(--font-mono);font-size:14px;padding:6px 10px;border:1px solid var(--hairline-strong);border-radius:4px;background:var(--surface-soft);outline:none;}
+.inp-box{background:var(--canvas);border:1px solid var(--hairline-strong);border-radius:4px;padding:18px 22px;width:290px;}
+.inp-box label{display:block;font-size:12px;font-weight:600;margin-bottom:7px;}
+.inp-box input{width:100%;font-family:var(--font-mono);font-size:13px;padding:5px 9px;border:1px solid var(--hairline-strong);border-radius:4px;background:var(--surface-soft);outline:none;}
 .inp-box input:focus{border-color:var(--running);}
-.inp-btn-row{display:flex;gap:8px;margin-top:12px;justify-content:flex-end;}
-.footer-section{height:48px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--hairline);color:var(--mute);font-size:12px;}
+.inp-btn-row{display:flex;gap:7px;margin-top:10px;justify-content:flex-end;}
+.footer-section{height:40px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--hairline);color:var(--mute);font-size:11px;background:var(--surface-soft);}
+/* reference card */
+.ref-panel{border-top:1px solid var(--hairline);background:var(--surface-soft);padding:6px 12px;font-size:11px;color:var(--mute);line-height:1.6;}
+.ref-panel b{color:var(--ink);}
 </style>
 </head>
 <body>
 <nav class="primary-nav">
   <div class="wordmark">[SCRIPTO]</div>
   <div class="nav-links">
-    <span id="stat-storage">STOR 0.2/5.0MB</span>
-    <span id="stat-ram">RAM 0/1MB</span>
+    <span id="stat-storage">STOR 0/10MB</span>
+    <span id="stat-ram">RAM 0/16MB</span>
+    <span id="stat-bits">BITS free: 0</span>
     <span id="stat-tick">TICK 1000ms</span>
     <span id="stat-money">$ 0</span>
   </div>
@@ -89,21 +99,28 @@ body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-m
     <div class="panel-actions">
       <button class="button-secondary" id="btn-new-script">[+] script</button>
       <button class="button-secondary" id="btn-new-folder">[+] folder</button>
-      <button class="button-secondary" id="btn-new-save">[+] save</button>
+      <button class="button-secondary" id="btn-new-dat">[+] .dat</button>
     </div>
     <div id="file-tree" class="file-tree"></div>
   </section>
   <section class="panel editor-panel">
-    <div class="badge-section-label" id="editor-filename">[EDITOR] server.code</div>
+    <div class="badge-section-label" id="editor-filename">[EDITOR] —</div>
     <div class="editor-wrap">
       <div id="line-gutter" class="line-gutter"></div>
-      <textarea id="code-editor" spellcheck="false" autocomplete="off"></textarea>
+      <textarea id="code-editor" spellcheck="false" autocomplete="off" placeholder="// select a script..."></textarea>
       <div id="autocomplete-box" class="autocomplete-box" style="display:none;"></div>
     </div>
     <div class="editor-actions">
       <button class="button-primary" id="btn-run">[RUN]</button>
       <button class="button-secondary" id="btn-stop">[STOP]</button>
-      <span class="hint">Tab = Autocomplete</span>
+      <span class="hint">Tab = autocomplete</span>
+    </div>
+    <div class="ref-panel">
+      <b>mine bit</b> — +1 bit (3 ticks) &nbsp;|
+      <b>collect</b> — grab all free bits &nbsp;|
+      <b>store [file]</b> — move bits to .dat &nbsp;|
+      <b>sell [file]</b> — sell stored bits (3 ticks) &nbsp;|
+      <b>check [file]</b> — log stored bits
     </div>
   </section>
   <section class="panel terminal-panel">
@@ -128,433 +145,598 @@ body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-m
     </div>
   </div>
 </div>
-<footer class="footer-section"><span>scripto.local -- terminal crypto-mining puzzle</span></footer>
+<footer class="footer-section"><span>scripto v2 — bit mining puzzle · 0.1 MB RAM per stored bit</span></footer>
 <script>
-// ── Helpers ──────────────────────────────────────────────────────────────────
-function askUser(label, def) {
-  return new Promise(res => {
-    const m = document.getElementById('inp-modal');
-    const i = document.getElementById('inp-input');
-    const l = document.getElementById('inp-label');
-    l.textContent = label;
-    i.value = def || '';
-    m.style.display = 'flex';
-    setTimeout(() => { i.focus(); i.select(); }, 50);
-    const done = v => { m.style.display = 'none'; res(v); };
-    document.getElementById('inp-ok').onclick = () => done(i.value.trim() || null);
-    document.getElementById('inp-cancel').onclick = () => done(null);
-    i.onkeydown = e => {
-      if (e.key === 'Enter') done(i.value.trim() || null);
-      if (e.key === 'Escape') done(null);
+'use strict';
+// ─────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────
+function r2(n){ return Math.round(n*100)/100; }
+
+function askUser(label, def){
+  return new Promise(res=>{
+    const m=document.getElementById('inp-modal');
+    const i=document.getElementById('inp-input');
+    document.getElementById('inp-label').textContent=label;
+    i.value=def||'';
+    m.style.display='flex';
+    setTimeout(()=>{i.focus();i.select();},60);
+    const done=v=>{m.style.display='none';res(v);};
+    document.getElementById('inp-ok').onclick=()=>done(i.value.trim()||null);
+    document.getElementById('inp-cancel').onclick=()=>done(null);
+    i.onkeydown=e=>{
+      if(e.key==='Enter') done(i.value.trim()||null);
+      if(e.key==='Escape') done(null);
     };
   });
 }
 
-function r1(n) { return Math.round(n * 100) / 100; }
-
-// ── State ────────────────────────────────────────────────────────────────────
-const state = {
-  money: 0, storageMax: 5.0, ramMax: 1.0,
-  ramSpeedTier: 1, tickMs: 1000, saveSlots: 1,
-  files: {}, rootOrder: [], activeFileId: null,
-  nextId: 1, tickCount: 0
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+const S={
+  money:0,
+  storageMax:10.0,   // MB disk
+  ramMax:16.0,       // MB RAM — starts generous
+  ramSpeedTier:1,
+  tickMs:1000,
+  files:{},
+  rootOrder:[],
+  activeFileId:null,
+  nextId:1,
+  tickCount:0,
+  freeBits:0         // bits mined but not yet stored anywhere
 };
-const TICK_MS = { 1: 1000, 2: 500, 3: 200 };
+const TICK_MS={1:1000,2:500,3:200};
 
-function nid(p) { return p + (state.nextId++); }
+// RAM used by stored bits: 0.1 MB per bit in any .dat
+function bitsRamUsed(){
+  let t=0;
+  for(const id in S.files){
+    const f=S.files[id];
+    if(f.type==='dat') t+=f.bits;
+  }
+  return r2(t*0.1);
+}
+// RAM used by running scripts: 0.5 MB each
+function scriptsRamUsed(){
+  let t=0;
+  for(const id in S.files) if(S.files[id].running) t+=0.5;
+  return r2(t);
+}
+function totalRam(){ return r2(bitsRamUsed()+scriptsRamUsed()); }
+function totalStor(){
+  // each file costs 0.2 MB base disk
+  let t=0;
+  for(const id in S.files){ const f=S.files[id]; if(f.type!=='folder') t+=0.2; }
+  return r2(t);
+}
 
-function mkFile(name, type, pid, content) {
-  const id = nid('f');
-  const f = {
-    id, name, type, parentId: pid,
-    children: type === 'folder' ? [] : null,
-    content: content || '', status: 'idle',
-    currentLine: -1, pc: 0, program: null,
-    collected: 0, saveAmount: 0,
-    compressed: false, extracted: true, running: false
+function nid(p){ return p+(S.nextId++); }
+
+function mkFile(name,type,pid,content){
+  const id=nid('f');
+  const f={
+    id,name,type,parentId:pid,
+    children:type==='folder'?[]:null,
+    content:content||'',
+    status:'idle',currentLine:-1,
+    pc:0,program:null,
+    running:false,
+    // script-only: pending multi-tick actions
+    pendingAction:null, // {cmd,arg,ticksLeft}
+    // dat-only: stored bits
+    bits:0
   };
-  state.files[id] = f;
-  if (pid) state.files[pid].children.push(id);
-  else state.rootOrder.push(id);
+  S.files[id]=f;
+  if(pid) S.files[pid].children.push(id);
+  else S.rootOrder.push(id);
   return f;
 }
 
-function fsz(f) {
-  if (f.type === 'folder') return 0;
-  const l = (f.content.match(/\n/g) || []).length + (f.content.length ? 1 : 0);
-  return r1(0.1 + 0.1 * l);
-}
-function totalStor() {
-  let t = 0;
-  for (const id in state.files) t += fsz(state.files[id]);
-  return r1(t);
-}
-function totalRam() {
-  let t = 0;
-  for (const id in state.files) if (state.files[id].running) t += 1;
-  return r1(t);
-}
-function cntSave() {
-  return Object.values(state.files).filter(f => f.type === 'save').length;
+function deleteFile(id){
+  const f=S.files[id];
+  if(!f) return;
+  if(f.running) stopF(f);
+  // remove from parent list
+  if(f.parentId && S.files[f.parentId]){
+    S.files[f.parentId].children=S.files[f.parentId].children.filter(c=>c!==id);
+  } else {
+    S.rootOrder=S.rootOrder.filter(r=>r!==id);
+  }
+  // recursively delete children for folders
+  if(f.type==='folder' && f.children){
+    [...f.children].forEach(cid=>deleteFile(cid));
+  }
+  delete S.files[id];
+  if(S.activeFileId===id){
+    const remaining=Object.keys(S.files);
+    S.activeFileId=remaining.length?remaining[0]:null;
+    if(S.activeFileId) selF(S.activeFileId);
+    else {
+      document.getElementById('editor-filename').textContent='[EDITOR] —';
+      document.getElementById('code-editor').value='';
+    }
+  }
+  renderAll();
 }
 
-// ── Initial file ─────────────────────────────────────────────────────────────
-const sf = mkFile('server.code', 'script', null,
-  'repeat infinite\n  when collectable: collect\n  when storage.dat exists and collected >= 10: save storage.dat\n');
-state.activeFileId = sf.id;
+function findF(name,pid){
+  const ids=pid?S.files[pid].children:S.rootOrder;
+  if(!ids) return null;
+  for(const id of ids) if(S.files[id]&&S.files[id].name===name) return S.files[id];
+  return null;
+}
 
-// ── Parser ───────────────────────────────────────────────────────────────────
-function parse(src) {
-  const lines = src.split('\n');
-  function ind(l) { return l.match(/^\s*/)[0].length; }
-  function blk(si, idx) {
-    const b = { type: 'block', children: [] };
-    while (idx < lines.length) {
-      const raw = lines[idx];
-      if (raw.trim() === '') { idx++; continue; }
-      const i = ind(raw);
-      if (i < si) break;
-      const tr = raw.trim();
-      if (tr.startsWith('repeat')) {
-        const m = tr.match(/^repeat\s+(infinite|\d+)/);
-        const c = m ? (m[1] === 'infinite' ? Infinity : +m[1]) : Infinity;
-        const node = { type: 'repeat', count: c, lineNo: idx, children: [] };
+// ─────────────────────────────────────────────────────────────
+// INITIAL FILES
+// ─────────────────────────────────────────────────────────────
+const startScript=mkFile('miner.code','script',null,
+'repeat infinite\n  mine bit\n  when bits >= 5: collect\n  when wallet.dat bits >= 20: sell wallet.dat\n');
+const startDat=mkFile('wallet.dat','dat',null,'');
+S.activeFileId=startScript.id;
+
+// ─────────────────────────────────────────────────────────────
+// SCRIPTO LANG — PARSER
+// ─────────────────────────────────────────────────────────────
+function parse(src){
+  const lines=src.split('\n');
+  function ind(l){return l.match(/^\s*/)[0].length;}
+  function blk(si,idx){
+    const b={type:'block',children:[]};
+    while(idx<lines.length){
+      const raw=lines[idx];
+      if(raw.trim()===''){idx++;continue;}
+      const i=ind(raw); if(i<si) break;
+      const tr=raw.trim();
+      if(tr.startsWith('repeat')){
+        const m=tr.match(/^repeat\s+(infinite|\d+)/);
+        const c=m?(m[1]==='infinite'?Infinity:+m[1]):Infinity;
+        const node={type:'repeat',count:c,lineNo:idx,children:[]};
         idx++;
-        const inner = blk(i + 1, idx);
-        node.children = inner.b.children;
-        idx = inner.idx;
+        const inner=blk(i+1,idx);
+        node.children=inner.b.children; idx=inner.idx;
         b.children.push(node);
-      } else if (tr.startsWith('when')) {
-        const m = tr.match(/^when\s+(.+?):\s*(.+)$/);
+      } else if(tr.startsWith('when')){
+        const m=tr.match(/^when\s+(.+?):\s*(.+)$/);
         b.children.push(m
-          ? { type: 'when', cond: m[1].trim(), action: m[2].trim(), lineNo: idx }
-          : { type: 'error', msg: 'Syntax error', lineNo: idx });
+          ?{type:'when',cond:m[1].trim(),action:m[2].trim(),lineNo:idx}
+          :{type:'error',msg:'Syntax error: '+tr,lineNo:idx});
         idx++;
       } else {
-        b.children.push({ type: 'action', action: tr, lineNo: idx });
-        idx++;
+        b.children.push({type:'action',action:tr,lineNo:idx}); idx++;
       }
     }
-    return { b, idx };
+    return{b,idx};
   }
-  return { type: 'block', children: blk(0, 0).b.children };
+  return{type:'block',children:blk(0,0).b.children};
 }
 
-function flatten(ast) {
-  const s = [];
-  function w(n) {
-    if (n.type === 'block') { n.children.forEach(w); return; }
-    if (n.type === 'repeat') {
-      s.push({ type: 'rs', count: n.count, lineNo: n.lineNo });
+function flatten(ast){
+  const s=[];
+  function w(n){
+    if(n.type==='block'){n.children.forEach(w);return;}
+    if(n.type==='repeat'){
+      s.push({type:'rs',count:n.count,lineNo:n.lineNo});
       n.children.forEach(w);
-      s.push({ type: 're', lineNo: n.lineNo });
+      s.push({type:'re',lineNo:n.lineNo});
       return;
     }
     s.push(n);
   }
-  w(ast);
-  return s;
+  w(ast); return s;
 }
 
-// ── Eval ─────────────────────────────────────────────────────────────────────
-function findF(name, pid) {
-  const ids = pid ? state.files[pid].children : state.rootOrder;
-  for (const id of ids) if (state.files[id].name === name) return state.files[id];
-  return null;
-}
-function cmp(a, op, b) {
-  return op === '>=' ? a >= b : op === '<=' ? a <= b : op === '>' ? a > b : op === '<' ? a < b : a === b;
-}
-function evalCond(cond, f) {
-  cond = cond.trim();
-  if (cond === 'collectable') return true;
+// ─────────────────────────────────────────────────────────────
+// CONDITIONS
+// ─────────────────────────────────────────────────────────────
+function cmp(a,op,b){return op==='>='?a>=b:op==='<='?a<=b:op==='>'?a>b:op==='<'?a<b:a===b;}
+
+function evalCond(cond,f){
+  cond=cond.trim();
   let m;
-  if ((m = cond.match(/^(\S+)\s+exists$/))) return findF(m[1], f.parentId) !== null;
-  if ((m = cond.match(/^collected\s*(>=|<=|>|<|==)\s*(\d+)$/))) return cmp(f.collected, m[1], +m[2]);
-  if ((m = cond.match(/^storage\.dat\s+exists\s+and\s+collected\s*(>=|<=|>|<|==)\s*(\d+)$/)))
-    return findF('storage.dat', f.parentId) !== null && cmp(f.collected, m[1], +m[2]);
-  if ((m = cond.match(/^ram\s*(>=|<=|>|<|==)\s*([\d.]+)mb$/))) return cmp(state.ramMax, m[1], +m[2]);
-  if ((m = cond.match(/^(\S+)\s+size\s*(>=|<=|>|<|==)\s*([\d.]+)mb$/))) {
-    const t = findF(m[1], f.parentId);
-    return t ? cmp(t.saveAmount, m[2], +m[3]) : false;
+  // bits >= N  (free bits in world)
+  if((m=cond.match(/^bits\s*(>=|<=|>|<|==)\s*(\d+)$/))) return cmp(S.freeBits,m[1],+m[2]);
+  // [file].dat bits >= N
+  if((m=cond.match(/^(\S+)\s+bits\s*(>=|<=|>|<|==)\s*(\d+)$/))){
+    const t=findF(m[1],f.parentId); return t?cmp(t.bits,m[2],+m[3]):false;
   }
-  if (cond === 'extracted') return f.extracted;
+  // file exists
+  if((m=cond.match(/^(\S+)\s+exists$/))) return findF(m[1],f.parentId)!==null;
+  // ram >= Nmb
+  if((m=cond.match(/^ram\s*(>=|<=|>|<|==)\s*([\d.]+)mb$/))) return cmp(totalRam(),m[1],+m[2]);
+  // money >= N
+  if((m=cond.match(/^money\s*(>=|<=|>|<|==)\s*([\d.]+)$/))) return cmp(S.money,m[1],+m[2]);
   return false;
 }
-function execA(actionStr, f) {
-  const p = actionStr.trim().split(/\s+/), cmd = p[0], arg = p[1];
-  if (cmd === 'collect') {
-    f.collected++;
-    return { ok: true, log: 'collect() -> +1 (total ' + f.collected + ')' };
+
+// ─────────────────────────────────────────────────────────────
+// ACTIONS  (return {ok, log, ticks?})
+// ─────────────────────────────────────────────────────────────
+function execA(actionStr,f){
+  const parts=actionStr.trim().split(/\s+/);
+  const cmd=parts[0], arg=parts[1];
+
+  // ── mine bit ── 3-tick action
+  if(cmd==='mine' && arg==='bit'){
+    if(!f.pendingAction){
+      f.pendingAction={cmd:'mine',ticksLeft:3};
+      return{ok:true,log:'mine bit — started (3 ticks...)',skip:true};
+    }
+    f.pendingAction.ticksLeft--;
+    if(f.pendingAction.ticksLeft>0){
+      return{ok:true,log:'mine bit — '+f.pendingAction.ticksLeft+' tick(s) left',skip:true};
+    }
+    f.pendingAction=null;
+    S.freeBits++;
+    return{ok:true,log:'mine bit — done! free bits: '+S.freeBits};
   }
-  if (cmd === 'save') {
-    const t = arg ? findF(arg, f.parentId) : null;
-    if (!t) return { ok: false, log: "save: '" + arg + "' not found" };
-    t.saveAmount += f.collected;
-    const mv = f.collected;
-    f.collected = 0;
-    return { ok: true, log: 'save(' + arg + ') -> ' + mv + ' units (total ' + r1(t.saveAmount) + ')' };
+
+  // ── collect ── grab all free bits into this script's buffer
+  if(cmd==='collect'){
+    if(S.freeBits<=0) return{ok:true,log:'collect — no free bits'};
+    f.bits=(f.bits||0)+S.freeBits;
+    const got=S.freeBits; S.freeBits=0;
+    return{ok:true,log:'collect — grabbed '+got+' bit(s) (script holds: '+f.bits+'b)'};
   }
-  if (cmd === 'compress') {
-    const t = arg ? findF(arg, f.parentId) : null;
-    if (!t) return { ok: false, log: "compress: '" + arg + "' not found" };
-    t.compressed = true; t.extracted = false;
-    return { ok: true, log: 'compress(' + arg + ') ok' };
+
+  // ── store [file] ── move bits from script buffer -> .dat
+  if(cmd==='store'){
+    const t=arg?findF(arg,f.parentId):null;
+    if(!t||t.type!=='dat') return{ok:false,log:"store: '"+arg+"' not found or not a .dat"};
+    if(!(f.bits>0)) return{ok:true,log:'store: nothing to store'};
+    // RAM check: each bit costs 0.1 MB
+    const needed=f.bits*0.1;
+    if(totalRam()+needed>S.ramMax) return{ok:false,log:'store: not enough RAM (need '+r2(needed)+'MB more)'};
+    t.bits+=f.bits;
+    const mv=f.bits; f.bits=0;
+    return{ok:true,log:'store('+arg+') — moved '+mv+'b → now '+t.bits+'b stored'};
   }
-  if (cmd === 'extract') {
-    const t = arg ? findF(arg, f.parentId) : null;
-    if (!t) return { ok: false, log: "extract: '" + arg + "' not found" };
-    t.extracted = true; f.extracted = true;
-    return { ok: true, log: 'extract(' + arg + ') ok' };
+
+  // ── sell [file] ── 3-tick action, sells all bits in .dat
+  if(cmd==='sell'){
+    const t=arg?findF(arg,f.parentId):null;
+    if(!t||t.type!=='dat') return{ok:false,log:"sell: '"+arg+"' not found or not a .dat"};
+    if(t.bits<=0) return{ok:true,log:'sell('+arg+'): nothing to sell'};
+    if(!f.pendingAction){
+      f.pendingAction={cmd:'sell',arg,ticksLeft:3};
+      return{ok:true,log:'sell('+arg+') — started ('+t.bits+'b, 3 ticks...)',skip:true};
+    }
+    f.pendingAction.ticksLeft--;
+    if(f.pendingAction.ticksLeft>0){
+      return{ok:true,log:'sell('+arg+') — '+f.pendingAction.ticksLeft+' tick(s) left',skip:true};
+    }
+    f.pendingAction=null;
+    const earned=r2(t.bits*0.5);
+    const sold=t.bits;
+    t.bits=0; S.money=r2(S.money+earned);
+    return{ok:true,log:'sell('+arg+') — sold '+sold+'b → +$'+earned+' | total: $'+S.money};
   }
-  if (cmd === 'convert') {
-    const t = arg ? findF(arg, f.parentId) : null;
-    if (!t) return { ok: false, log: "convert: '" + arg + "' not found" };
-    if (state.ramMax < 5 && t.saveAmount > 50) return { ok: false, log: 'convert: needs >=5MB RAM' };
-    const rate = t.compressed ? 10 : 1;
-    const earned = r1(t.saveAmount * rate * 0.5);
-    state.money += earned; t.saveAmount = 0; t.compressed = false;
-    return { ok: true, log: 'convert(' + arg + ') -> +$' + earned + ' (x' + rate + ')' };
+
+  // ── check [file] ── log how many bits stored
+  if(cmd==='check'){
+    const t=arg?findF(arg,f.parentId):null;
+    if(!t) return{ok:false,log:"check: '"+arg+"' not found"};
+    const b=t.type==='dat'?t.bits:(t.bits||0);
+    return{ok:true,log:'check('+arg+') — '+b+' bit(s) stored'};
   }
-  return { ok: false, log: 'Unknown: ' + cmd };
+
+  return{ok:false,log:'Unknown command: '+cmd+' '+( arg||'')};
 }
 
-// ── Tick engine ──────────────────────────────────────────────────────────────
-let tmr = null;
+// ─────────────────────────────────────────────────────────────
+// TICK ENGINE
+// ─────────────────────────────────────────────────────────────
+let tmr=null;
 
-function startF(f) {
-  try { f.program = flatten(parse(f.content)); }
-  catch (e) { f.status = 'error'; log('[' + f.name + '] parse error: ' + e.message, 'error'); return; }
-  f.pc = 0; f.running = true; f.status = 'running'; f.currentLine = -1;
-  log('[' + f.name + '] started', 'info'); renderAll();
+function startF(f){
+  if(f.type!=='script'){ log('['+f.name+'] Only scripts can run.','error'); return; }
+  try{ f.program=flatten(parse(f.content)); }
+  catch(e){ f.status='error'; log('['+f.name+'] parse error: '+e.message,'error'); return; }
+  f.pc=0; f.running=true; f.status='running'; f.currentLine=-1;
+  f.bits=f.bits||0; f.pendingAction=null;
+  log('['+f.name+'] started','info'); renderAll();
 }
-function stopF(f) {
-  f.running = false; f.status = 'idle'; f.currentLine = -1;
-  log('[' + f.name + '] stopped', 'info'); renderAll();
+function stopF(f){
+  f.running=false; f.status='idle'; f.currentLine=-1; f.pendingAction=null;
+  log('['+f.name+'] stopped','info'); renderAll();
 }
-function tickF(f) {
-  if (!f.running || !f.program) return;
-  if (f.pc >= f.program.length) f.pc = 0;
-  const s = f.program[f.pc];
-  if (!s) { f.pc = 0; return; }
-  if (s.type === 'rs' || s.type === 're') { f.pc++; if (f.pc >= f.program.length) f.pc = 0; return tickF(f); }
-  f.currentLine = s.lineNo;
-  if (s.type === 'when') {
-    const ok = evalCond(s.cond, f);
-    if (ok) { const r = execA(s.action, f); f.status = r.ok ? 'running' : 'error'; log('[' + f.name + '] L' + (s.lineNo + 1) + ': ' + r.log, r.ok ? 'done' : 'error'); }
-    else log('[' + f.name + '] L' + (s.lineNo + 1) + ': cond=false', 'info');
-  } else if (s.type === 'action') {
-    const r = execA(s.action, f);
-    log('[' + f.name + '] L' + (s.lineNo + 1) + ': ' + r.log, r.ok ? 'done' : 'error');
-    f.status = r.ok ? 'running' : 'error';
-  } else if (s.type === 'error') {
-    log('[' + f.name + '] L' + (s.lineNo + 1) + ': ' + s.msg, 'error'); f.status = 'error';
-  }
-  f.pc++;
+
+function tickF(f){
+  if(!f.running||!f.program) return;
+  if(f.pc>=f.program.length) f.pc=0;
+  const s=f.program[f.pc];
+  if(!s){ f.pc=0; return; }
+  // skip loop control nodes instantly
+  if(s.type==='rs'||s.type==='re'){ f.pc++; if(f.pc>=f.program.length) f.pc=0; tickF(f); return; }
+  f.currentLine=s.lineNo;
+
+  if(s.type==='when'){
+    const ok=evalCond(s.cond,f);
+    if(ok){
+      // if we already have a pending action for this line, continue it
+      if(f.pendingAction) {
+        const r=execA(s.action,f);
+        if(!r.skip){ f.pendingAction=null; f.status=r.ok?'running':'error'; log('['+f.name+'] L'+(s.lineNo+1)+': '+r.log,r.ok?'done':'error'); f.pc++; }
+        else log('['+f.name+'] L'+(s.lineNo+1)+': '+r.log,'running');
+      } else {
+        const r=execA(s.action,f);
+        if(!r.skip){ f.status=r.ok?'running':'error'; log('['+f.name+'] L'+(s.lineNo+1)+': '+r.log,r.ok?'done':'error'); f.pc++; }
+        else { log('['+f.name+'] L'+(s.lineNo+1)+': '+r.log,'running'); /* stay on same line */ }
+      }
+    } else {
+      if(f.pendingAction) f.pendingAction=null; // condition dropped mid-action
+      f.pc++;
+    }
+  } else if(s.type==='action'){
+    if(f.pendingAction){
+      const r=execA(s.action,f);
+      if(!r.skip){ f.pendingAction=null; f.status=r.ok?'running':'error'; log('['+f.name+'] L'+(s.lineNo+1)+': '+r.log,r.ok?'done':'error'); f.pc++; }
+      else log('['+f.name+'] L'+(s.lineNo+1)+': '+r.log,'running');
+    } else {
+      const r=execA(s.action,f);
+      if(!r.skip){ f.status=r.ok?'running':'error'; log('['+f.name+'] L'+(s.lineNo+1)+': '+r.log,r.ok?'done':'error'); f.pc++; }
+      else { log('['+f.name+'] L'+(s.lineNo+1)+': '+r.log,'running'); }
+    }
+  } else if(s.type==='error'){
+    log('['+f.name+'] L'+(s.lineNo+1)+': '+s.msg,'error');
+    f.status='error'; f.pc++;
+  } else { f.pc++; }
 }
-function tick() {
-  state.tickCount++;
-  for (const id in state.files) {
-    const f = state.files[id];
-    if (f.type === 'script' && f.running) tickF(f);
-  }
+
+function tick(){
+  S.tickCount++;
+  for(const id in S.files){ const f=S.files[id]; if(f.type==='script'&&f.running) tickF(f); }
   renderAll();
 }
-function reloop() {
-  if (tmr) clearInterval(tmr);
-  state.tickMs = TICK_MS[state.ramSpeedTier];
-  tmr = setInterval(tick, state.tickMs);
+
+function reloop(){
+  if(tmr) clearInterval(tmr);
+  S.tickMs=TICK_MS[S.ramSpeedTier];
+  tmr=setInterval(tick,S.tickMs);
 }
 
-// ── Render ───────────────────────────────────────────────────────────────────
-function renderTree() {
-  const el = document.getElementById('file-tree');
-  el.innerHTML = '';
-  function rl(ids, c) {
-    for (const id of ids) {
-      const f = state.files[id];
-      const row = document.createElement('div');
-      row.className = 'file-row' + (f.type === 'folder' ? ' folder-row' : '') + (f.id === state.activeFileId ? ' active' : '');
-      const sc = f.type === 'script' ? 'status-' + f.status : '';
-      row.innerHTML =
-        '<span class="fname">' + (f.type === 'folder' ? '[D] ' : '<span class="status-dot ' + sc + '"></span>') + f.name + '</span>' +
-        '<span class="fmeta">' + (f.type !== 'folder' ? fsz(f) + 'MB' : '') + '</span>';
-      row.onclick = () => selF(f.id);
+// ─────────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────────
+function renderTree(){
+  const el=document.getElementById('file-tree'); el.innerHTML='';
+  function rl(ids,c){
+    if(!ids) return;
+    for(const id of ids){
+      const f=S.files[id]; if(!f) continue;
+      const row=document.createElement('div');
+      row.className='file-row'+(f.type==='folder'?' folder-row':'')+(f.id===S.activeFileId?' active':'');
+      // left: dot + name
+      const nameSpan=document.createElement('span');
+      nameSpan.className='fname';
+      if(f.type==='script'){
+        const dot=document.createElement('span');
+        dot.className='status-dot status-'+f.status;
+        nameSpan.appendChild(dot);
+      } else if(f.type==='folder'){
+        nameSpan.textContent='▸ ';
+      } else {
+        const dot=document.createElement('span');
+        dot.className='status-dot'; dot.style.background='#4ade80';
+        nameSpan.appendChild(dot);
+      }
+      nameSpan.appendChild(document.createTextNode(f.name));
+      row.appendChild(nameSpan);
+      // bits badge for .dat
+      if(f.type==='dat'){
+        const bb=document.createElement('span');
+        bb.className='fbit';
+        bb.textContent=f.bits+'b';
+        row.appendChild(bb);
+      }
+      // size
+      const meta=document.createElement('span');
+      meta.className='fmeta';
+      meta.textContent=f.type!=='folder'?'0.2MB':'';
+      row.appendChild(meta);
+      // delete button
+      const del=document.createElement('button');
+      del.className='button-danger fdel';
+      del.textContent='del';
+      del.title='Delete '+f.name;
+      del.onclick=e=>{ e.stopPropagation(); if(confirm('Delete "'+f.name+'"?')) deleteFile(f.id); };
+      row.appendChild(del);
+      row.onclick=()=>selF(f.id);
       c.appendChild(row);
-      if (f.type === 'folder') {
-        const cw = document.createElement('div');
-        cw.className = 'folder-children';
-        c.appendChild(cw);
-        rl(f.children, cw);
+      if(f.type==='folder'){
+        const cw=document.createElement('div'); cw.className='folder-children'; c.appendChild(cw);
+        rl(f.children,cw);
       }
     }
   }
-  rl(state.rootOrder, el);
+  rl(S.rootOrder,el);
 }
 
-function selF(id) {
-  state.activeFileId = id;
-  const f = state.files[id];
-  document.getElementById('editor-filename').textContent = '[EDITOR] ' + f.name;
-  document.getElementById('code-editor').value = f.content;
+function selF(id){
+  if(!S.files[id]) return;
+  S.activeFileId=id;
+  const f=S.files[id];
+  document.getElementById('editor-filename').textContent='[EDITOR] '+f.name;
+  const ed=document.getElementById('code-editor');
+  ed.value=f.content;
+  ed.disabled=(f.type!=='script');
   renderAll();
 }
 
-function renderGutter() {
-  const ed = document.getElementById('code-editor');
-  const g = document.getElementById('line-gutter');
-  const lines = ed.value.split('\n');
-  const f = state.files[state.activeFileId];
-  let h = '';
-  for (let i = 0; i < lines.length; i++) {
-    let c = '';
-    if (f && f.running && f.currentLine === i) c = 'color:#8b5cf6;font-weight:700;';
-    else if (f && f.status === 'error' && f.currentLine === i) c = 'color:#ff3b30;font-weight:700;';
-    h += '<div style="' + c + '">' + (i + 1) + '</div>';
+function renderGutter(){
+  const ed=document.getElementById('code-editor');
+  const g=document.getElementById('line-gutter');
+  if(!S.activeFileId||!S.files[S.activeFileId]){g.innerHTML='';return;}
+  const f=S.files[S.activeFileId];
+  const lines=ed.value.split('\n');
+  let h='';
+  for(let i=0;i<lines.length;i++){
+    let c='';
+    if(f.running&&f.currentLine===i) c='color:#8b5cf6;font-weight:700;';
+    else if(f.status==='error'&&f.currentLine===i) c='color:#ff3b30;font-weight:700;';
+    h+='<div style="'+c+'">'+(i+1)+'</div>';
   }
-  g.innerHTML = h;
+  g.innerHTML=h;
 }
 
-function renderAll() {
-  document.getElementById('stat-storage').textContent = 'STOR ' + totalStor() + '/' + state.storageMax + 'MB';
-  document.getElementById('stat-ram').textContent = 'RAM ' + totalRam() + '/' + state.ramMax + 'MB';
-  document.getElementById('stat-tick').textContent = 'TICK ' + state.tickMs + 'ms (Tier ' + state.ramSpeedTier + ')';
-  document.getElementById('stat-money').textContent = '$ ' + r1(state.money);
+function renderAll(){
+  const ramUsed=totalRam();
+  const ramPct=r2(ramUsed/S.ramMax*100);
+  document.getElementById('stat-storage').textContent='STOR '+totalStor()+'/'+S.storageMax+'MB';
+  document.getElementById('stat-ram').textContent='RAM '+ramUsed+'/'+S.ramMax+'MB ('+ramPct+'%)';
+  document.getElementById('stat-bits').textContent='BITS free: '+S.freeBits;
+  document.getElementById('stat-tick').textContent='TICK '+S.tickMs+'ms T'+S.ramSpeedTier;
+  document.getElementById('stat-money').textContent='$ '+r2(S.money);
+  if(ramUsed>S.ramMax*0.9) document.getElementById('stat-ram').style.color='#ff3b30';
+  else document.getElementById('stat-ram').style.color='var(--running)';
   renderTree();
   renderGutter();
 }
 
-function log(msg, kind) {
-  const out = document.getElementById('terminal-output');
-  const l = document.createElement('div');
-  l.className = 'term-line term-' + kind;
-  l.textContent = '[t' + state.tickCount + '] ' + msg;
+function log(msg,kind){
+  const out=document.getElementById('terminal-output');
+  const l=document.createElement('div');
+  l.className='term-line term-'+(kind||'info');
+  const ts='[t'+String(S.tickCount).padStart(4,'0')+'] ';
+  l.textContent=ts+msg;
   out.appendChild(l);
-  while (out.children.length > 200) out.removeChild(out.firstChild);
-  out.scrollTop = out.scrollHeight;
+  while(out.children.length>300) out.removeChild(out.firstChild);
+  out.scrollTop=out.scrollHeight;
 }
 
-// ── Autocomplete ─────────────────────────────────────────────────────────────
-const KW = ['repeat', 'infinite', 'when', 'collect', 'save', 'compress', 'extract', 'convert', 'collectable', 'exists', 'and', 'size', 'ram'];
+// ─────────────────────────────────────────────────────────────
+// AUTOCOMPLETE
+// ─────────────────────────────────────────────────────────────
+const KW=['repeat','infinite','when','mine bit','collect','store','sell','check','bits','exists','ram','money','and'];
 
-function onInput(e) {
-  const ed = e.target;
-  state.files[state.activeFileId].content = ed.value;
-  renderGutter();
-  ac(ed);
+function onInput(e){
+  const ed=e.target;
+  if(S.activeFileId&&S.files[S.activeFileId]) S.files[S.activeFileId].content=ed.value;
+  renderGutter(); ac(ed);
 }
-function onKey(e) {
-  const box = document.getElementById('autocomplete-box');
-  if (e.key === 'Tab' && box.style.display !== 'none') {
+function onKey(e){
+  const box=document.getElementById('autocomplete-box');
+  if(e.key==='Tab'&&box.style.display!=='none'){
     e.preventDefault();
-    const s = box.querySelector('.autocomplete-item.sel') || box.querySelector('.autocomplete-item');
-    if (s) applyAc(s.textContent);
-  } else if (e.key === 'Escape') {
-    box.style.display = 'none';
-  } else if (e.key === 'Tab') {
-    e.preventDefault();
-    ins(e.target, '  ');
+    const s=box.querySelector('.autocomplete-item.sel')||box.querySelector('.autocomplete-item');
+    if(s) applyAc(s.textContent);
+  } else if(e.key==='Escape'){
+    box.style.display='none';
+  } else if(e.key==='Tab'){
+    e.preventDefault(); ins(e.target,'  ');
   }
 }
-function ins(el, txt) {
-  const s = el.selectionStart;
-  el.value = el.value.slice(0, s) + txt + el.value.slice(s);
-  el.selectionStart = el.selectionEnd = s + txt.length;
-  state.files[state.activeFileId].content = el.value;
+function ins(el,txt){
+  const s=el.selectionStart;
+  el.value=el.value.slice(0,s)+txt+el.value.slice(s);
+  el.selectionStart=el.selectionEnd=s+txt.length;
+  if(S.activeFileId&&S.files[S.activeFileId]) S.files[S.activeFileId].content=el.value;
   renderGutter();
 }
-function ac(ed) {
-  const box = document.getElementById('autocomplete-box');
-  const pos = ed.selectionStart;
-  const m = (ed.value.slice(0, pos)).match(/[a-zA-Z_.]+$/);
-  if (!m) { box.style.display = 'none'; return; }
-  const frag = m[0].toLowerCase();
-  const fnames = Object.values(state.files).filter(f => f.type !== 'folder').map(f => f.name);
-  const opts = [...KW, ...fnames].filter(w => w.toLowerCase().startsWith(frag) && w.toLowerCase() !== frag);
-  if (!opts.length) { box.style.display = 'none'; return; }
-  box.innerHTML = opts.slice(0, 8).map((o, i) => '<div class="autocomplete-item' + (i === 0 ? ' sel' : '') + '">' + o + '</div>').join('');
-  box.querySelectorAll('.autocomplete-item').forEach(it => { it.onclick = () => applyAc(it.textContent.trim()); });
-  box.style.left = '12px'; box.style.top = '40px'; box.style.display = 'block';
+function ac(ed){
+  const box=document.getElementById('autocomplete-box');
+  const pos=ed.selectionStart;
+  const m=(ed.value.slice(0,pos)).match(/[a-zA-Z_.]+$/);
+  if(!m){box.style.display='none';return;}
+  const frag=m[0].toLowerCase();
+  const fnames=Object.values(S.files).map(f=>f.name);
+  const all=[...KW,...fnames];
+  const opts=all.filter(w=>w.toLowerCase().startsWith(frag)&&w.toLowerCase()!==frag);
+  if(!opts.length){box.style.display='none';return;}
+  box.innerHTML=opts.slice(0,8).map((o,i)=>'<div class="autocomplete-item'+(i===0?' sel':'')+'">'+o+'</div>').join('');
+  box.querySelectorAll('.autocomplete-item').forEach(it=>{ it.onclick=()=>applyAc(it.textContent.trim()); });
+  box.style.left='36px'; box.style.top='36px'; box.style.display='block';
 }
-function applyAc(word) {
-  const ed = document.getElementById('code-editor');
-  const pos = ed.selectionStart;
-  const m = (ed.value.slice(0, pos)).match(/[a-zA-Z_.]+$/);
-  const fl = m ? m[0].length : 0;
-  const nv = ed.value.slice(0, pos - fl) + word + ed.value.slice(pos);
-  ed.value = nv;
-  ed.selectionStart = ed.selectionEnd = pos - fl + word.length;
-  state.files[state.activeFileId].content = nv;
-  document.getElementById('autocomplete-box').style.display = 'none';
+function applyAc(word){
+  const ed=document.getElementById('code-editor');
+  const pos=ed.selectionStart;
+  const m=(ed.value.slice(0,pos)).match(/[a-zA-Z_.]+$/);
+  const fl=m?m[0].length:0;
+  const nv=ed.value.slice(0,pos-fl)+word+ed.value.slice(pos);
+  ed.value=nv; ed.selectionStart=ed.selectionEnd=pos-fl+word.length;
+  if(S.activeFileId&&S.files[S.activeFileId]) S.files[S.activeFileId].content=nv;
+  document.getElementById('autocomplete-box').style.display='none';
   renderGutter();
 }
 
-// ── Shop ─────────────────────────────────────────────────────────────────────
-const shopC = [
-  { label: 'Storage +10MB', cost: 50, fn: () => { state.storageMax += 10; } },
-  { label: 'RAM Capacity +1MB', cost: 100, fn: () => { state.ramMax += 1; } },
-  { label: 'RAM Speed Tier up', cost: 500, fn: () => { if (state.ramSpeedTier < 3) { state.ramSpeedTier++; reloop(); } } },
-  { label: 'Extra Save Slot', cost: 200, fn: () => { state.saveSlots++; } },
+// ─────────────────────────────────────────────────────────────
+// SHOP
+// ─────────────────────────────────────────────────────────────
+const SHOP=[
+  {label:'Storage +20MB',desc:'more disk',cost:30,fn:()=>{S.storageMax+=20;}},
+  {label:'RAM +8MB',desc:'store more bits',cost:80,fn:()=>{S.ramMax+=8;}},
+  {label:'RAM +32MB',desc:'bulk upgrade',cost:300,fn:()=>{S.ramMax+=32;}},
+  {label:'Speed Tier 2',desc:'500ms tick',cost:200,fn:()=>{if(S.ramSpeedTier<2){S.ramSpeedTier=2;reloop();}}},
+  {label:'Speed Tier 3',desc:'200ms tick',cost:800,fn:()=>{if(S.ramSpeedTier<3){S.ramSpeedTier=3;reloop();}}},
 ];
-function openShop() {
-  const c = document.getElementById('shop-items');
-  c.innerHTML = '';
-  shopC.forEach(item => {
-    const row = document.createElement('div');
-    row.className = 'shop-row';
-    row.innerHTML = '<span>' + item.label + ' -- $' + item.cost + '</span>';
-    const b = document.createElement('button');
-    b.className = 'button-primary'; b.textContent = 'buy';
-    b.onclick = () => {
-      if (state.money >= item.cost) {
-        state.money -= item.cost; item.fn();
-        log('Bought: ' + item.label, 'done'); renderAll(); openShop();
-      } else log('Not enough money.', 'error');
+function openShop(){
+  const c=document.getElementById('shop-items'); c.innerHTML='';
+  SHOP.forEach(item=>{
+    const row=document.createElement('div'); row.className='shop-row';
+    row.innerHTML='<span><b>'+item.label+'</b> <span style="color:var(--ash)">'+item.desc+'</span></span>';
+    const price=document.createElement('span');
+    price.style.cssText='display:flex;align-items:center;gap:8px;white-space:nowrap';
+    price.innerHTML='$'+item.cost;
+    const b=document.createElement('button'); b.className='button-primary'; b.textContent='buy';
+    b.onclick=()=>{
+      if(S.money>=item.cost){S.money-=item.cost;item.fn();log('Bought: '+item.label,'done');renderAll();openShop();}
+      else log('Not enough money.','error');
     };
-    row.appendChild(b); c.appendChild(row);
+    price.appendChild(b); row.appendChild(price); c.appendChild(row);
   });
-  document.getElementById('shop-modal').style.display = 'flex';
+  document.getElementById('shop-modal').style.display='flex';
 }
-function closeShop() { document.getElementById('shop-modal').style.display = 'none'; }
+function closeShop(){document.getElementById('shop-modal').style.display='none';}
 
-// ── New file UI ───────────────────────────────────────────────────────────────
-async function newFileUI(type) {
-  const af = state.files[state.activeFileId];
-  const pid = af && af.type === 'folder' ? af.id : (af ? af.parentId : null);
-  const def = type === 'script' ? 'script' + state.nextId + '.code' : type === 'folder' ? 'folder' + state.nextId : 'storage' + state.nextId + '.dat';
-  const name = await askUser('File name:', def);
-  if (!name) return;
-  if (type === 'save' && state.saveSlots <= cntSave()) { log('No free save slot.', 'error'); return; }
-  if (totalStor() + 0.1 > state.storageMax && type !== 'folder') { log('Not enough storage!', 'error'); return; }
-  const f = mkFile(name, type === 'save' ? 'save' : type, pid, type === 'script' ? 'repeat infinite\n  when collectable: collect\n' : '');
+// ─────────────────────────────────────────────────────────────
+// NEW FILE UI
+// ─────────────────────────────────────────────────────────────
+async function newFileUI(type){
+  const af=S.activeFileId?S.files[S.activeFileId]:null;
+  const pid=af&&af.type==='folder'?af.id:(af?af.parentId:null);
+  const def=type==='script'?'script'+S.nextId+'.code':type==='folder'?'folder'+S.nextId:'wallet'+S.nextId+'.dat';
+  const name=await askUser('File name:',def);
+  if(!name) return;
+  if(totalStor()+0.2>S.storageMax&&type!=='folder'){ log('Not enough disk storage!','error'); return; }
+  const template=type==='script'?'repeat infinite\n  mine bit\n  when bits >= 5: collect\n  when wallet.dat bits >= 20: sell wallet.dat\n':'';
+  const f=mkFile(name,type==='dat'?'dat':type,pid,type==='script'?template:'');
   renderAll(); selF(f.id);
 }
 
-// ── Boot — runs immediately, DOM is already ready ─────────────────────────────
-(function init() {
-  const ed = document.getElementById('code-editor');
-  ed.value = state.files[state.activeFileId].content;
-  ed.addEventListener('input', onInput);
-  ed.addEventListener('keydown', onKey);
-  ed.addEventListener('scroll', () => { document.getElementById('line-gutter').scrollTop = ed.scrollTop; });
+// ─────────────────────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────────────────────
+(function init(){
+  const ed=document.getElementById('code-editor');
+  ed.value=S.files[S.activeFileId].content;
+  ed.addEventListener('input',onInput);
+  ed.addEventListener('keydown',onKey);
+  ed.addEventListener('scroll',()=>{
+    document.getElementById('line-gutter').scrollTop=ed.scrollTop;
+  });
 
-  document.getElementById('btn-new-script').onclick = () => newFileUI('script');
-  document.getElementById('btn-new-folder').onclick = () => newFileUI('folder');
-  document.getElementById('btn-new-save').onclick   = () => newFileUI('save');
-  document.getElementById('btn-run').onclick = () => {
-    const f = state.files[state.activeFileId];
-    if (f.type !== 'script') { log('Only scripts can run.', 'error'); return; }
-    f.content = ed.value; startF(f);
+  document.getElementById('btn-new-script').onclick=()=>newFileUI('script');
+  document.getElementById('btn-new-folder').onclick=()=>newFileUI('folder');
+  document.getElementById('btn-new-dat').onclick=()=>newFileUI('dat');
+  document.getElementById('btn-run').onclick=()=>{
+    const f=S.files[S.activeFileId];
+    if(!f||f.type!=='script'){ log('Select a script file first.','error'); return; }
+    f.content=ed.value; startF(f);
   };
-  document.getElementById('btn-stop').onclick  = () => { const f = state.files[state.activeFileId]; if (f) stopF(f); };
-  document.getElementById('btn-shop').onclick  = openShop;
-  document.getElementById('btn-close-shop').onclick = closeShop;
+  document.getElementById('btn-stop').onclick=()=>{
+    const f=S.files[S.activeFileId]; if(f) stopF(f);
+  };
+  document.getElementById('btn-shop').onclick=openShop;
+  document.getElementById('btn-close-shop').onclick=closeShop;
 
-  renderAll();
+  selF(startScript.id);
   reloop();
-  log('Welcome to SCRIPTO. Write a script and press [RUN].', 'info');
-  log('Commands: collect  save [file]  compress [file]  extract [file]  convert [file]', 'info');
-  log('Tip: create a .dat save file first!', 'info');
+
+  log('=== SCRIPTO v2 ===','info');
+  log('New economy: mine bit (3 ticks), collect, store [.dat], sell [.dat] (3 ticks)','info');
+  log('RAM: 0.1MB per stored bit | check [file] = inspect stored bits','info');
+  log('Tip: select miner.code and press [RUN] to start!','info');
 })();
 </script>
 </body>
