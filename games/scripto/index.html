@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCRIPTO</title>
+<style>
+:root{
+  --primary:#201d1d;
+  --on-primary:#fdfcfc;
+  --ink:#201d1d;
+  --ink-deep:#0f0000;
+  --charcoal:#302c2c;
+  --body:#424245;
+  --mute:#646262;
+  --stone:#6e6e73;
+  --ash:#9a9898;
+  --canvas:#fdfcfc;
+  --surface-soft:#f8f7f7;
+  --surface-card:#f1eeee;
+  --surface-dark:#201d1d;
+  --surface-dark-elevated:#302c2c;
+  --hairline:rgba(15,0,0,0.12);
+  --hairline-strong:#646262;
+  --on-dark:#fdfcfc;
+  --on-dark-mute:#9a9898;
+  --accent:#007aff;
+  --warning:#ff9f0a;
+  --danger:#ff3b30;
+  --success:#30d158;
+  --running:#8b5cf6;
+  --font-mono:'IBM Plex Mono','JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--canvas);
+  color:var(--ink);
+  font-family:var(--font-mono);
+  font-size:16px;
+  line-height:1.5;
+}
+.primary-nav{
+  height:56px;
+  display:flex;
+  align-items:center;
+  gap:24px;
+  padding:0 16px;
+  border-bottom:1px solid var(--hairline);
+  background:var(--canvas);
+}
+.wordmark{font-weight:700;font-size:16px;letter-spacing:1px;}
+.nav-links{display:flex;gap:16px;font-size:14px;color:var(--mute);flex:1;}
+.nav-links span{white-space:nowrap;}
+#stat-ram{color:var(--running);}
+#stat-money{color:var(--success);font-weight:500;}
+.button-primary{
+  background:var(--primary);
+  color:var(--on-primary);
+  font-family:var(--font-mono);
+  font-size:14px;
+  font-weight:500;
+  border:none;
+  border-radius:4px;
+  padding:6px 16px;
+  height:36px;
+  cursor:pointer;
+}
+.button-primary:active{background:var(--ink-deep);}
+.button-secondary{
+  background:var(--canvas);
+  color:var(--ink);
+  font-family:var(--font-mono);
+  font-size:13px;
+  font-weight:500;
+  border:1px solid var(--hairline-strong);
+  border-radius:4px;
+  padding:4px 12px;
+  cursor:pointer;
+}
+.badge-news{
+  position:fixed;top:64px;right:16px;
+  background:var(--surface-dark);
+  color:var(--on-dark);
+  font-size:14px;
+  padding:6px 12px;
+  border-radius:4px;
+  z-index:50;
+}
+.badge-section-label{
+  font-weight:700;font-size:14px;
+  padding:8px 12px;
+  border-bottom:1px solid var(--hairline);
+}
+.workspace{
+  display:grid;
+  grid-template-columns:240px 1fr 320px;
+  height:calc(100vh - 56px - 48px);
+}
+.panel{
+  border-right:1px solid var(--hairline);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.terminal-panel{border-right:none;}
+.panel-actions{display:flex;gap:6px;padding:8px 12px;flex-wrap:wrap;}
+.panel-actions button{font-size:11px;padding:3px 8px;}
+.file-tree{overflow-y:auto;padding:4px 12px;flex:1;font-size:14px;}
+.file-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:4px 4px;cursor:pointer;border-radius:4px;
+}
+.file-row:hover{background:var(--surface-soft);}
+.file-row.active{background:var(--surface-card);}
+.file-row .fname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.file-row .fmeta{font-size:11px;color:var(--ash);}
+.folder-row{font-weight:500;}
+.folder-children{padding-left:14px;border-left:1px dashed var(--hairline);}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;}
+.status-idle{background:var(--ash);}
+.status-running{background:var(--running);}
+.status-done{background:var(--success);}
+.status-error{background:var(--danger);}
+.editor-panel{position:relative;}
+#editor-filename{font-weight:700;}
+.editor-wrap{
+  flex:1;display:flex;position:relative;overflow:hidden;
+  font-size:14px;
+}
+.line-gutter{
+  width:34px;background:var(--surface-soft);color:var(--ash);
+  padding:12px 6px 12px 0;text-align:right;font-size:13px;
+  line-height:1.6;user-select:none;overflow:hidden;
+}
+#code-editor{
+  flex:1;border:none;outline:none;resize:none;
+  font-family:var(--font-mono);font-size:14px;line-height:1.6;
+  padding:12px;background:var(--canvas);color:var(--ink);
+  white-space:pre;
+}
+.autocomplete-box{
+  position:absolute;background:var(--surface-card);
+  border:1px solid var(--hairline-strong);border-radius:4px;
+  font-size:13px;z-index:20;max-height:160px;overflow-y:auto;
+}
+.autocomplete-item{padding:4px 10px;cursor:pointer;}
+.autocomplete-item:hover, .autocomplete-item.sel{background:var(--surface-dark);color:var(--on-dark);}
+.editor-actions{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  border-top:1px solid var(--hairline);
+}
+.hint{font-size:11px;color:var(--ash);margin-left:auto;}
+.terminal-output{
+  flex:1;overflow-y:auto;background:var(--surface-dark);
+  color:var(--on-dark);font-size:13px;padding:10px 12px;
+}
+.term-line{margin-bottom:2px;white-space:pre-wrap;word-break:break-word;}
+.term-running{color:var(--running);}
+.term-done{color:var(--success);}
+.term-error{color:#ff6b60;}
+.term-info{color:var(--on-dark-mute);}
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(15,0,0,0.5);
+  display:flex;align-items:center;justify-content:center;z-index:100;
+}
+.modal-card{
+  background:var(--canvas);border-radius:4px;width:420px;max-height:80vh;
+  overflow-y:auto;border:1px solid var(--hairline-strong);
+}
+#shop-items{padding:8px 12px;}
+.shop-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--hairline);font-size:14px;
+}
+.shop-row button{font-size:12px;}
+.footer-section{
+  height:48px;display:flex;align-items:center;justify-content:center;
+  border-top:1px solid var(--hairline);color:var(--mute);font-size:12px;
+}
+</style>
+</head>
+<body>
+
+<nav class="primary-nav">
+  <div class="wordmark">[SCRIPTO]</div>
+  <div class="nav-links">
+    <span id="stat-storage">STOR 0.2/5.0MB</span>
+    <span id="stat-ram">RAM 0/1MB</span>
+    <span id="stat-tick">TICK 1000ms</span>
+    <span id="stat-money">$ 0</span>
+  </div>
+  <button class="button-primary" id="btn-shop">[+] SHOP</button>
+</nav>
+
+<div class="badge-news" id="toast" style="display:none;"></div>
+
+<main class="workspace">
+
+  <section class="panel files-panel">
+    <div class="badge-section-label">[FILES]</div>
+    <div class="panel-actions">
+      <button class="button-secondary" id="btn-new-script">[+] script</button>
+      <button class="button-secondary" id="btn-new-folder">[+] folder</button>
+      <button class="button-secondary" id="btn-new-save">[+] save</button>
+    </div>
+    <div id="file-tree" class="file-tree"></div>
+  </section>
+
+  <section class="panel editor-panel">
+    <div class="badge-section-label" id="editor-filename">[EDITOR] server.code</div>
+    <div class="editor-wrap">
+      <div id="line-gutter" class="line-gutter"></div>
+      <textarea id="code-editor" spellcheck="false" autocomplete="off"></textarea>
+      <div id="autocomplete-box" class="autocomplete-box" style="display:none;"></div>
+    </div>
+    <div class="editor-actions">
+      <button class="button-primary" id="btn-run">[RUN]</button>
+      <button class="button-secondary" id="btn-stop">[STOP]</button>
+      <span class="hint">Tab = Autovervollstaendigung</span>
+    </div>
+  </section>
+
+  <section class="panel terminal-panel">
+    <div class="badge-section-label">[TERMINAL]</div>
+    <div id="terminal-output" class="terminal-output"></div>
+  </section>
+
+</main>
+
+<div id="shop-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <div class="badge-section-label">[SHOP]</div>
+    <div id="shop-items"></div>
+    <button class="button-secondary" id="btn-close-shop">[x] close</button>
+  </div>
+</div>
+
+<footer class="footer-section">
+  <span>scripto.local — a terminal crypto-mining puzzle</span>
+</footer>
+
+<script>
+const state={money:0,storageMax:5.0,ramMax:1.0,ramSpeedTier:1,tickMs:1000,saveSlots:1,files:{},rootOrder:[],activeFileId:null,nextId:1,tickCount:0};
+const TICK_MS_BY_TIER={1:1000,2:500,3:200};
+function newId(p){return p+(state.nextId++);}
+function makeFile(name,type,parentId,content){
+  content=content||"";
+  const id=newId("f");
+  const file={id,name,type,parentId,children:type==="folder"?[]:null,content,status:"idle",currentLine:-1,programCounter:0,program:null,loopStack:[],collected:0,saveAmount:0,compressed:false,extracted:true,running:false};
+  state.files[id]=file;
+  if(parentId){state.files[parentId].children.push(id);}else{state.rootOrder.push(id);}
+  return file;
+}
+function fileSizeMb(f){if(f.type==="folder")return 0;const l=(f.content.match(/\n/g)||[]).length+(f.content.length?1:0);return round1(0.1+0.1*l);}
+function totalStorageUsed(){let t=0;for(const id in state.files)t+=fileSizeMb(state.files[id]);return round1(t);}
+function totalRamUsed(){let t=0;for(const id in state.files)if(state.files[id].running)t+=1.0;return round1(t);}
+function round1(n){return Math.round(n*100)/100;}
+
+const serverFile=makeFile("server.code","script",null,"repeat infinite\n  when collectable: collect\n  when storage.dat exists and collected >= 10: save storage.dat\n");
+state.activeFileId=serverFile.id;
+
+function parseProgram(src){
+  const lines=src.split("\n");
+  function indentOf(l){return l.match(/^\s*/)[0].length;}
+  function parseBlock(startIndent,idx){
+    const block={type:"block",children:[]};
+    while(idx<lines.length){
+      const raw=lines[idx];
+      if(raw.trim()===""){idx++;continue;}
+      const ind=indentOf(raw);
+      if(ind<startIndent)break;
+      const tr=raw.trim();
+      if(tr.startsWith("repeat")){
+        const m=tr.match(/^repeat\s+(infinite|\d+)/);
+        const count=m?(m[1]==="infinite"?Infinity:parseInt(m[1])):Infinity;
+        const node={type:"repeat",count,lineNo:idx,children:[]};
+        idx++;
+        const inner=parseBlock(ind+1,idx);
+        node.children=inner.block.children;
+        idx=inner.idx;
+        block.children.push(node);
+      }else if(tr.startsWith("when")){
+        const m=tr.match(/^when\s+(.+?):\s*(.+)$/);
+        if(m)block.children.push({type:"when",cond:m[1].trim(),action:m[2].trim(),lineNo:idx});
+        else block.children.push({type:"error",msg:"Syntax error in when",lineNo:idx});
+        idx++;
+      }else{
+        block.children.push({type:"action",action:tr,lineNo:idx});
+        idx++;
+      }
+    }
+    return{block,idx};
+  }
+  const result=parseBlock(0,0);
+  const root={type:"block",children:result.block.children};
+  return root;
+}
+function flattenProgram(ast){
+  const steps=[];
+  function walk(node){
+    if(node.type==="block"){node.children.forEach(walk);return;}
+    if(node.type==="repeat"){steps.push({type:"repeat_start",count:node.count,lineNo:node.lineNo});node.children.forEach(walk);steps.push({type:"repeat_end",lineNo:node.lineNo});return;}
+    steps.push(node);
+  }
+  walk(ast);
+  return steps;
+}
+function evalCondition(cond,file){
+  cond=cond.trim();
+  if(cond==="collectable")return true;
+  let m;
+  if((m=cond.match(/^(\S+)\s+exists$/)))return findFileByName(m[1],file.parentId)!==null;
+  if((m=cond.match(/^collected\s*(>=|<=|>|<|==)\s*(\d+)$/)))return compareNum(file.collected,m[1],parseInt(m[2]));
+  if((m=cond.match(/^storage\.dat\s+exists\s+and\s+collected\s*(>=|<=|>|<|==)\s*(\d+)$/))){
+    const t=findFileByName("storage.dat",file.parentId);
+    return t!==null&&compareNum(file.collected,m[1],parseInt(m[2]));
+  }
+  if((m=cond.match(/^ram\s*(>=|<=|>|<|==)\s*([\d.]+)mb$/)))return compareNum(state.ramMax,m[1],parseFloat(m[2]));
+  if((m=cond.match(/^(\S+)\s+size\s*(>=|<=|>|<|==)\s*([\d.]+)mb$/))){
+    const t=findFileByName(m[1],file.parentId);
+    if(!t)return false;
+    return compareNum(t.saveAmount,m[2],parseFloat(m[3]));
+  }
+  if((m=cond.match(/^extracted$/)))return file.extracted;
+  return false;
+}
+function compareNum(a,op,b){
+  switch(op){case">=":return a>=b;case"<=":return a<=b;case">":return a>b;case"<":return a<b;case"==":return a===b;}
+  return false;
+}
+function findFileByName(name,parentId){
+  const ids=parentId?state.files[parentId].children:state.rootOrder;
+  for(const id of ids)if(state.files[id].name===name)return state.files[id];
+  return null;
+}
+function execAction(actionStr,file){
+  const parts=actionStr.trim().split(/\s+/);
+  const cmd=parts[0];const arg=parts[1];
+  switch(cmd){
+    case"collect":file.collected+=1;return{ok:true,log:`collect() -> +1 fragment (total ${file.collected})`};
+    case"save":{
+      const t=arg?findFileByName(arg,file.parentId):null;
+      if(!t)return{ok:false,log:`save: Datei '${arg}' nicht gefunden`};
+      t.saveAmount+=file.collected;const mv=file.collected;file.collected=0;
+      return{ok:true,log:`save(${arg}) -> ${mv} Einheiten (gesamt ${round1(t.saveAmount)})`};
+    }
+    case"compress":{
+      const t=arg?findFileByName(arg,file.parentId):null;
+      if(!t)return{ok:false,log:`compress: '${arg}' nicht gefunden`};
+      t.compressed=true;t.extracted=false;
+      return{ok:true,log:`compress(${arg}) -> komprimiert (10:1)`};
+    }
+    case"extract":{
+      const t=arg?findFileByName(arg,file.parentId):null;
+      if(!t)return{ok:false,log:`extract: '${arg}' nicht gefunden`};
+      t.extracted=true;file.extracted=true;
+      return{ok:true,log:`extract(${arg}) -> entpackt`};
+    }
+    case"convert":{
+      const t=arg?findFileByName(arg,file.parentId):null;
+      if(!t)return{ok:false,log:`convert: '${arg}' nicht gefunden`};
+      if(state.ramMax<5&&t.saveAmount>50)return{ok:false,log:`convert FEHLER: benoetigt >=5MB RAM`};
+      const rate=t.compressed?10:1;const earned=round1(t.saveAmount*rate*0.5);
+      state.money+=earned;t.saveAmount=0;t.compressed=false;
+      return{ok:true,log:`convert(${arg}) -> +$${earned} (x${rate})`};
+    }
+    default:return{ok:false,log:`Unbekannter Befehl: ${cmd}`};
+  }
+}
+let tickTimer=null;
+function startFile(file){
+  try{file.program=flattenProgram(parseProgram(file.content));}catch(e){file.status="error";logTerm(`[${file.name}] Parse-Fehler: ${e.message}`,"error");return;}
+  file.programCounter=0;file.loopStack=[];file.running=true;file.status="running";file.currentLine=-1;
+  logTerm(`[${file.name}] gestartet`,"info");renderAll();
+}
+function stopFile(file){file.running=false;file.status="idle";file.currentLine=-1;logTerm(`[${file.name}] gestoppt`,"info");renderAll();}
+function tickFile(file){
+  if(!file.running||!file.program)return;
+  const steps=file.program;
+  if(file.programCounter>=steps.length)file.programCounter=0;
+  const step=steps[file.programCounter];
+  if(!step){file.programCounter=0;return;}
+  if(step.type==="repeat_start"||step.type==="repeat_end"){file.programCounter++;if(file.programCounter>=steps.length)file.programCounter=0;return tickFile(file);}
+  file.currentLine=step.lineNo;
+  if(step.type==="when"){
+    const ok=evalCondition(step.cond,file);
+    if(ok){const res=execAction(step.action,file);file.status=res.ok?"running":"error";logTerm(`[${file.name}] L${step.lineNo+1}: ${res.log}`,res.ok?"done":"error");}
+    else logTerm(`[${file.name}] L${step.lineNo+1}: when false`,"info");
+  }else if(step.type==="action"){
+    const res=execAction(step.action,file);logTerm(`[${file.name}] L${step.lineNo+1}: ${res.log}`,res.ok?"done":"error");file.status=res.ok?"running":"error";
+  }else if(step.type==="error"){logTerm(`[${file.name}] L${step.lineNo+1}: ${step.msg}`,"error");file.status="error";}
+  file.programCounter++;
+}
+function gameTick(){state.tickCount++;for(const id in state.files){const f=state.files[id];if(f.type==="script"&&f.running)tickFile(f);}renderAll();}
+function restartTickLoop(){if(tickTimer)clearInterval(tickTimer);state.tickMs=TICK_MS_BY_TIER[state.ramSpeedTier];tickTimer=setInterval(gameTick,state.tickMs);}
+
+function renderFileTree(){
+  const el=document.getElementById("file-tree");el.innerHTML="";
+  function renderList(ids,container){
+    for(const id of ids){
+      const f=state.files[id];
+      const row=document.createElement("div");
+      row.className="file-row"+(f.type==="folder"?" folder-row":"")+(f.id===state.activeFileId?" active":"");
+      const sc=f.type==="script"?`status-${f.status}`:"";
+      row.innerHTML=`<span class="fname">${f.type==="folder"?"\uD83D\uDCC1":`<span class="status-dot ${sc}"></span>`}${f.name}</span><span class="fmeta">${f.type!=="folder"?fileSizeMb(f)+"MB":""}</span>`;
+      row.onclick=()=>selectFile(f.id);container.appendChild(row);
+      if(f.type==="folder"){const cw=document.createElement("div");cw.className="folder-children";container.appendChild(cw);renderList(f.children,cw);}
+    }
+  }
+  renderList(state.rootOrder,el);
+}
+function selectFile(id){
+  state.activeFileId=id;const f=state.files[id];
+  document.getElementById("editor-filename").textContent=`[EDITOR] ${f.name}`;
+  document.getElementById("code-editor").value=f.content;renderAll();
+}
+function renderGutter(){
+  const editor=document.getElementById("code-editor");
+  const gutter=document.getElementById("line-gutter");
+  const lines=editor.value.split("\n");
+  const f=state.files[state.activeFileId];
+  let html="";
+  for(let i=0;i<lines.length;i++){
+    let color="";
+    if(f&&f.running&&f.currentLine===i)color="color:#8b5cf6;font-weight:700;";
+    else if(f&&f.status==="error"&&f.currentLine===i)color="color:#ff3b30;font-weight:700;";
+    html+=`<div style="${color}">${i+1}</div>`;
+  }
+  gutter.innerHTML=html;
+}
+document.addEventListener("DOMContentLoaded",init);
+function init(){
+  renderAll();
+  const editor=document.getElementById("code-editor");
+  editor.value=state.files[state.activeFileId].content;
+  editor.addEventListener("input",onEditorInput);
+  editor.addEventListener("keydown",onEditorKeydown);
+  editor.addEventListener("scroll",()=>{document.getElementById("line-gutter").scrollTop=editor.scrollTop;});
+  document.getElementById("btn-new-script").onclick=()=>createFileUI("script");
+  document.getElementById("btn-new-folder").onclick=()=>createFileUI("folder");
+  document.getElementById("btn-new-save").onclick=()=>createFileUI("save");
+  document.getElementById("btn-run").onclick=()=>{
+    const f=state.files[state.activeFileId];
+    if(f.type!=="script"){logTerm("Nur Skripte koennen ausgefuehrt werden.","error");return;}
+    f.content=editor.value;startFile(f);
+  };
+  document.getElementById("btn-stop").onclick=()=>{const f=state.files[state.activeFileId];if(f)stopFile(f);};
+  document.getElementById("btn-shop").onclick=openShop;
+  document.getElementById("btn-close-shop").onclick=closeShop;
+  restartTickLoop();
+  logTerm("Willkommen bei SCRIPTO. Schreibe dein erstes Skript und druecke [RUN].","info");
+  logTerm("Befehle: collect  save [datei]  compress [datei]  extract [datei]  convert [datei]","info");
+  logTerm("Erstelle zuerst eine save-Datei namens storage.dat!","info");
+}
+function createFileUI(type){
+  const activeFile=state.files[state.activeFileId];
+  const parentId=activeFile&&activeFile.type==="folder"?activeFile.id:(activeFile?activeFile.parentId:null);
+  let name;
+  if(type==="script")name=prompt("Skriptname:","script"+state.nextId+".code");
+  else if(type==="folder")name=prompt("Ordnername:","ordner"+state.nextId);
+  else name=prompt("Save-Dateiname:","storage"+state.nextId+".dat");
+  if(!name)return;
+  if(type==="save"&&state.saveSlots<=countSaveFiles()){logTerm("Kein freier Save-Slot.","error");return;}
+  if(totalStorageUsed()+0.1>state.storageMax&&type!=="folder"){logTerm("Nicht genug Speicher!","error");return;}
+  const f=makeFile(name,type==="save"?"save":type,parentId,type==="script"?"repeat infinite\n  when collectable: collect\n":"");
+  renderAll();selectFile(f.id);
+}
+function countSaveFiles(){return Object.values(state.files).filter(f=>f.type==="save").length;}
+function logTerm(msg,kind){
+  const out=document.getElementById("terminal-output");
+  const line=document.createElement("div");
+  line.className="term-line term-"+kind;
+  line.textContent=`[t${state.tickCount}] ${msg}`;
+  out.appendChild(line);
+  while(out.children.length>200)out.removeChild(out.firstChild);
+  out.scrollTop=out.scrollHeight;
+}
+const shopCatalog=[
+  {label:"Speicher +10MB",cost:50,apply:()=>{state.storageMax+=10;}},
+  {label:"RAM Kapazitaet +1MB",cost:100,apply:()=>{state.ramMax+=1;}},
+  {label:"RAM Speed Tier erhoehen",cost:500,apply:()=>{if(state.ramSpeedTier<3){state.ramSpeedTier++;restartTickLoop();}}},
+  {label:"Zusaetzlicher Save-Slot",cost:200,apply:()=>{state.saveSlots++;}},
+];
+function openShop(){
+  const modal=document.getElementById("shop-modal");
+  const container=document.getElementById("shop-items");
+  container.innerHTML="";
+  shopCatalog.forEach(item=>{
+    const row=document.createElement("div");row.className="shop-row";
+    row.innerHTML=`<span>${item.label} &mdash; $${item.cost}</span>`;
+    const btn=document.createElement("button");btn.className="button-primary";btn.textContent="kaufen";
+    btn.onclick=()=>{
+      if(state.money>=item.cost){state.money-=item.cost;item.apply();logTerm(`Gekauft: ${item.label}`,"done");renderAll();openShop();}
+      else logTerm(`Nicht genug Geld fuer ${item.label}`,"error");
+    };
+    row.appendChild(btn);container.appendChild(row);
+  });
+  modal.style.display="flex";
+}
+function closeShop(){document.getElementById("shop-modal").style.display="none";}
+const KEYWORDS=["repeat","infinite","when","collect","save","compress","extract","convert","collectable","exists","and","size","ram"];
+function onEditorInput(e){
+  const editor=e.target;
+  state.files[state.activeFileId].content=editor.value;
+  renderGutter();showAutocomplete(editor);
+}
+function onEditorKeydown(e){
+  const box=document.getElementById("autocomplete-box");
+  if(e.key==="Tab"&&box.style.display!=="none"){e.preventDefault();const sel=box.querySelector(".autocomplete-item.sel")||box.querySelector(".autocomplete-item");if(sel)applyAutocomplete(sel.textContent);}
+  else if(e.key==="Escape")box.style.display="none";
+  else if(e.key==="Tab"){e.preventDefault();insertAtCursor(e.target,"  ");}
+}
+function insertAtCursor(el,text){const s=el.selectionStart,end=el.selectionEnd;el.value=el.value.slice(0,s)+text+el.value.slice(end);el.selectionStart=el.selectionEnd=s+text.length;state.files[state.activeFileId].content=el.value;renderGutter();}
+function showAutocomplete(editor){
+  const box=document.getElementById("autocomplete-box");
+  const pos=editor.selectionStart;
+  const text=editor.value.slice(0,pos);
+  const match=text.match(/[a-zA-Z_.]+$/);
+  if(!match||match[0].length<1){box.style.display="none";return;}
+  const frag=match[0].toLowerCase();
+  const fileNames=Object.values(state.files).filter(f=>f.type!=="folder").map(f=>f.name);
+  const options=[...KEYWORDS,...fileNames].filter(w=>w.toLowerCase().startsWith(frag)&&w.toLowerCase()!==frag);
+  if(options.length===0){box.style.display="none";return;}
+  box.innerHTML=options.slice(0,8).map((o,i)=>`<div class="autocomplete-item${i===0?" sel":""} ">${o}</div>`).join("");
+  box.querySelectorAll(".autocomplete-item").forEach(item=>{item.onclick=()=>applyAutocomplete(item.textContent.trim());});
+  box.style.left="12px";box.style.top="40px";box.style.display="block";
+}
+function applyAutocomplete(word){
+  const editor=document.getElementById("code-editor");
+  const pos=editor.selectionStart;
+  const text=editor.value;
+  const before=text.slice(0,pos);
+  const match=before.match(/[a-zA-Z_.]+$/);
+  const fragLen=match?match[0].length:0;
+  const newText=text.slice(0,pos-fragLen)+word+text.slice(pos);
+  editor.value=newText;
+  editor.selectionStart=editor.selectionEnd=pos-fragLen+word.length;
+  state.files[state.activeFileId].content=newText;
+  document.getElementById("autocomplete-box").style.display="none";
+  renderGutter();
+}
+function renderAll(){
+  document.getElementById("stat-storage").textContent=`STOR ${totalStorageUsed()}/${state.storageMax}MB`;
+  document.getElementById("stat-ram").textContent=`RAM ${totalRamUsed()}/${state.ramMax}MB`;
+  document.getElementById("stat-tick").textContent=`TICK ${state.tickMs}ms (Tier ${state.ramSpeedTier})`;
+  document.getElementById("stat-money").textContent=`$ ${round1(state.money)}`;
+  renderFileTree();renderGutter();
+}
+</script>
+</body>
+</html>
