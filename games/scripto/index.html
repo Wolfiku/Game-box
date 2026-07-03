@@ -4,1266 +4,1193 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SCRIPTO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --ink:#201d1d;--ink-deep:#0f0000;--canvas:#fdfcfc;--surface-soft:#f8f7f7;
-  --surface-card:#f1eeee;--surface-dark:#201d1d;--hairline:rgba(15,0,0,0.12);
-  --hl:#646262;--on-dark:#fdfcfc;--on-dark-mute:#9a9898;
-  --ash:#9a9898;--mute:#646262;--danger:#ff3b30;--success:#30d158;
-  --run:#8b5cf6;--gold:#fbbf24;--cyan:#22d3ee;--orange:#fb923c;
-  --font:'IBM Plex Mono','JetBrains Mono',ui-monospace,monospace;
+/* ─── DESIGN TOKENS (opencode.ai DESIGN-2.md) ─── */
+:root {
+  --ink:            #201d1d;
+  --ink-deep:       #0f0000;
+  --charcoal:       #302c2c;
+  --body:           #424245;
+  --mute:           #646262;
+  --stone:          #6e6e73;
+  --ash:            #9a9898;
+  --canvas:         #fdfcfc;
+  --surface-soft:   #f8f7f7;
+  --surface-card:   #f1eeee;
+  --surface-dark:   #201d1d;
+  --surface-dark-el:#302c2c;
+  --hairline:       rgba(15,0,0,0.12);
+  --hairline-strong:#646262;
+  --on-dark:        #fdfcfc;
+  --on-dark-mute:   #9a9898;
+  --accent:         #007aff;
+  --warning:        #ff9f0a;
+  --danger:         #ff3b30;
+  --success:        #30d158;
+  --purple:         #bf5af2;
+
+  --font: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --r-sm: 4px;
+  --r-none: 0px;
 }
-*{box-sizing:border-box;}
-body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font);font-size:13px;line-height:1.5;overflow:hidden;}
-.nav{height:52px;display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid var(--hairline);background:var(--canvas);flex-wrap:wrap;}
-.wordmark{font-weight:700;font-size:14px;letter-spacing:1px;white-space:nowrap;}
-.stats{display:flex;gap:8px;font-size:11px;color:var(--mute);flex:1;flex-wrap:wrap;}
-.stats span{white-space:nowrap;}
-#s-ram{color:var(--run);}#s-money{color:var(--success);font-weight:600;}
-.btn{font-family:var(--font);cursor:pointer;border-radius:4px;border:none;font-size:12px;font-weight:500;padding:4px 10px;height:26px;}
-.btn-ink{background:var(--ink);color:var(--on-dark);}
-.btn-ink:hover{background:#3a3737;}
-.btn-out{background:var(--canvas);color:var(--ink);border:1px solid var(--hl);}
-.btn-out:hover{background:var(--surface-soft);}
-.btn-sm{font-size:10px;padding:1px 5px;height:auto;border-radius:3px;}
-.btn-del{background:transparent;color:var(--danger);border:1px solid var(--danger);opacity:0;pointer-events:none;transition:opacity .15s;}
-.btn-cp{background:transparent;color:var(--ash);border:1px solid var(--hairline);opacity:0;pointer-events:none;transition:opacity .15s;}
-.workspace{display:grid;grid-template-columns:260px 1fr 300px;height:calc(100vh - 52px - 34px);}
-.panel{border-right:1px solid var(--hairline);display:flex;flex-direction:column;overflow:hidden;}
-.term-panel{border-right:none;}
-.plabel{font-weight:700;font-size:11px;padding:5px 10px;border-bottom:1px solid var(--hairline);background:var(--surface-soft);display:flex;align-items:center;gap:6px;}
-.pactions{display:flex;gap:4px;padding:5px 8px;background:var(--canvas);border-bottom:1px solid var(--hairline);flex-wrap:wrap;}
-.ftree{overflow-y:auto;flex:1;}
-.frow{display:flex;align-items:center;gap:3px;padding:3px 8px;cursor:pointer;position:relative;min-height:24px;}
-.frow:hover{background:var(--surface-soft);}
-.frow:hover .btn-del,.frow:hover .btn-cp{opacity:1;pointer-events:auto;}
-.frow.active{background:var(--surface-card);}
-.frow.folder-row{font-weight:600;color:var(--mute);}
-.fname{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;}
-.fbadge{font-size:9px;border-radius:3px;padding:1px 4px;white-space:nowrap;margin-left:2px;}
-.fb-bits{color:var(--run);background:rgba(139,92,246,0.12);}
-.fb-cur{color:var(--gold);background:rgba(251,191,36,0.12);}
-.fb-zero{opacity:0.25;}
-.fmb{font-size:9px;color:var(--ash);margin-left:1px;}
-.sdot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0;}
-.s-idle{background:var(--ash);}
-.s-running{background:var(--run);animation:pulse 1.1s infinite;}
-.s-done{background:var(--success);}
-.s-error{background:var(--danger);}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.fcindent{padding-left:10px;border-left:1px dashed rgba(0,0,0,0.08);}
-.epanel{position:relative;}
-.ewrap{flex:1;display:flex;position:relative;overflow:hidden;}
-.gutter{width:28px;background:var(--surface-soft);color:var(--ash);padding:8px 3px 8px 0;text-align:right;font-size:10px;line-height:1.65;user-select:none;overflow:hidden;flex-shrink:0;}
-#editor{flex:1;border:none;outline:none;resize:none;font-family:var(--font);font-size:11px;line-height:1.65;padding:8px 10px;background:var(--canvas);color:var(--ink);tab-size:2;}
-.acbox{position:absolute;background:var(--surface-card);border:1px solid var(--hl);border-radius:4px;font-size:11px;z-index:20;max-height:120px;overflow-y:auto;min-width:150px;}
-.acitem{padding:3px 8px;cursor:pointer;}
-.acitem:hover,.acitem.sel{background:var(--surface-dark);color:var(--on-dark);}
-.eactions{display:flex;align-items:center;gap:5px;padding:5px 10px;border-top:1px solid var(--hairline);background:var(--surface-soft);}
-.hint{font-size:9px;color:var(--ash);margin-left:auto;}
-.refbar{border-top:1px solid var(--hairline);background:var(--surface-soft);padding:4px 10px;font-size:9px;color:var(--mute);line-height:1.8;overflow-x:auto;white-space:nowrap;}
-.refbar b{color:var(--ink);}
-.tout{flex:1;overflow-y:auto;background:var(--surface-dark);color:var(--on-dark);font-size:10px;padding:6px 10px;}
-.tl{margin-bottom:1px;white-space:pre-wrap;word-break:break-all;line-height:1.5;}
-.tl-run{color:var(--run);}
-.tl-ok{color:var(--success);}
-.tl-err{color:#ff6b60;}
-.tl-info{color:var(--on-dark-mute);}
-.tl-sell{color:var(--gold);}
-.tl-send{color:var(--cyan);}
-.tl-warn{color:var(--orange);}
-.server-tabs{display:flex;gap:0;border-bottom:1px solid var(--hairline);background:var(--surface-soft);overflow-x:auto;}
-.stab{font-size:10px;padding:4px 10px;cursor:pointer;border-right:1px solid var(--hairline);white-space:nowrap;color:var(--mute);}
-.stab.active{background:var(--canvas);color:var(--ink);font-weight:700;}
-.modal{position:fixed;inset:0;background:rgba(15,0,0,.52);display:flex;align-items:center;justify-content:center;z-index:100;}
-.mcard{background:var(--canvas);border-radius:4px;border:1px solid var(--hl);width:500px;max-height:85vh;overflow-y:auto;}
-.shoprow{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--hairline);font-size:11px;gap:6px;}
-.shoprow-left{display:flex;flex-direction:column;gap:1px;flex:1;}
-.shoprow-right{display:flex;align-items:center;gap:6px;white-space:nowrap;}
-.upg-bar{display:flex;gap:2px;margin-top:2px;}
-.upg-pip{width:9px;height:5px;border-radius:2px;background:var(--surface-card);border:1px solid var(--hl);}
-.upg-pip.on{background:var(--run);border-color:var(--run);}
-.shop-section{padding:6px 12px;font-size:10px;font-weight:700;color:var(--mute);background:var(--surface-soft);border-bottom:1px solid var(--hairline);letter-spacing:.5px;}
-.inp-modal{position:fixed;inset:0;background:rgba(15,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:200;}
-.inp-box{background:var(--canvas);border:1px solid var(--hl);border-radius:4px;padding:16px 18px;width:320px;}
-.inp-box label{display:block;font-size:11px;font-weight:600;margin-bottom:5px;}
-.inp-box input{width:100%;font-family:var(--font);font-size:11px;padding:4px 7px;border:1px solid var(--hl);border-radius:4px;background:var(--surface-soft);outline:none;}
-.inp-box input:focus{border-color:var(--run);}
-.inp-btns{display:flex;gap:5px;margin-top:8px;justify-content:flex-end;}
-.foot{height:34px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--hairline);color:var(--ash);font-size:9px;background:var(--surface-soft);}
-.ctx-menu{position:fixed;background:var(--canvas);border:1px solid var(--hl);border-radius:4px;z-index:300;min-width:140px;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,.15);}
-.ctx-item{padding:5px 12px;cursor:pointer;}
-.ctx-item:hover{background:var(--surface-soft);}
-.ctx-sep{height:1px;background:var(--hairline);margin:2px 0;}
-.net-panel{border-top:1px solid var(--hairline);padding:6px 10px;font-size:10px;background:var(--surface-soft);max-height:110px;overflow-y:auto;}
-.transfer-row{display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid var(--hairline);}
-.tprog{flex:1;height:4px;background:var(--surface-card);border-radius:2px;overflow:hidden;}
-.tprog-bar{height:4px;background:var(--cyan);border-radius:2px;transition:width .3s;}
-.cur-table{width:100%;border-collapse:collapse;}
-.cur-table th,.cur-table td{padding:3px 8px;border-bottom:1px solid var(--hairline);font-size:10px;text-align:left;}
-.cur-table th{background:var(--surface-soft);color:var(--mute);font-weight:600;}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/* ─── LAYOUT ─── */
+#app {
+  display: grid;
+  grid-template-rows: 56px 1fr 28px;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ─── PRIMARY NAV ─── */
+#nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--canvas);
+  height: 56px;
+  flex-shrink: 0;
+}
+#wordmark {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+#nav-sep { flex: 1; }
+.nav-stat {
+  font-size: 13px;
+  color: var(--mute);
+  white-space: nowrap;
+}
+.nav-stat span { color: var(--ink); font-weight: 700; }
+#btn-shop {
+  background: var(--ink);
+  color: var(--on-dark);
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 4px 14px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  height: 32px;
+  white-space: nowrap;
+}
+#btn-shop:hover { background: var(--ink-deep); }
+
+/* ─── MAIN GRID (3 panels) ─── */
+#main {
+  display: grid;
+  grid-template-columns: 220px 1fr 280px;
+  overflow: hidden;
+  border-top: none;
+}
+
+/* ─── PANEL BASE ─── */
+.panel {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--hairline);
+  overflow: hidden;
+}
+.panel:last-child { border-right: none; }
+
+.panel-header {
+  padding: 8px 12px 6px;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mute);
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--canvas);
+}
+.panel-header button {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--mute);
+  padding: 1px 7px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.panel-header button:hover { color: var(--ink); border-color: var(--ink); }
+
+/* ─── FILE PANEL ─── */
+#panel-files { background: var(--canvas); }
+#file-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--body);
+  border-left: 2px solid transparent;
+  user-select: none;
+}
+.file-item:hover { background: var(--surface-soft); }
+.file-item.active {
+  background: var(--surface-card);
+  color: var(--ink);
+  font-weight: 500;
+  border-left-color: var(--ink);
+}
+.file-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--ash);
+}
+.file-dot.running  { background: var(--purple); }
+.file-dot.done     { background: var(--success); }
+.file-dot.error    { background: var(--danger); }
+.file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-btn-run {
+  font-size: 11px;
+  color: var(--mute);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  padding: 1px 5px;
+  border-radius: var(--r-sm);
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.file-item:hover .file-btn-run { opacity: 1; }
+.file-btn-run:hover { background: var(--surface-card); color: var(--ink); }
+
+#file-actions {
+  padding: 8px 12px;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+#file-actions input {
+  flex: 1;
+  background: var(--surface-soft);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  padding: 5px 8px;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--ink);
+  outline: none;
+}
+#file-actions input:focus { background: var(--canvas); border-color: var(--ink); }
+#file-actions button {
+  background: var(--ink);
+  color: var(--on-dark);
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 5px 10px;
+  font-family: var(--font);
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+}
+#file-actions button:hover { background: var(--ink-deep); }
+
+/* ─── EDITOR PANEL ─── */
+#panel-editor {
+  background: var(--canvas);
+  position: relative;
+}
+#editor-wrap {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+#line-nums {
+  width: 38px;
+  padding: 8px 0;
+  background: var(--surface-soft);
+  border-right: 1px solid var(--hairline);
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--ash);
+  line-height: 1.6;
+  text-align: right;
+  flex-shrink: 0;
+  user-select: none;
+}
+.ln { padding-right: 8px; display: block; height: 22.4px; }
+.ln.active-line { color: var(--ink); font-weight: 700; background: var(--surface-card); }
+
+#editor {
+  flex: 1;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.6;
+  tab-size: 2;
+  white-space: pre;
+  overflow: auto;
+  caret-color: var(--accent);
+}
+
+#autocomplete {
+  display: none;
+  position: absolute;
+  bottom: 40px;
+  left: 48px;
+  background: var(--surface-dark);
+  border: 1px solid var(--surface-dark-el);
+  border-radius: var(--r-sm);
+  z-index: 100;
+  min-width: 160px;
+  overflow: hidden;
+}
+.ac-item {
+  padding: 5px 12px;
+  color: var(--on-dark);
+  font-size: 13px;
+  cursor: pointer;
+}
+.ac-item:hover, .ac-item.selected { background: var(--surface-dark-el); }
+
+#editor-info {
+  padding: 4px 12px;
+  border-top: 1px solid var(--hairline);
+  font-size: 11px;
+  color: var(--mute);
+  flex-shrink: 0;
+  display: flex;
+  gap: 16px;
+  background: var(--surface-soft);
+}
+
+/* ─── TERMINAL PANEL ─── */
+#panel-terminal {
+  background: var(--surface-dark);
+  border-right: none;
+}
+#panel-terminal .panel-header {
+  background: var(--surface-dark);
+  color: var(--ash);
+  border-bottom-color: var(--charcoal);
+}
+#panel-terminal .panel-header button {
+  border-color: var(--charcoal);
+  color: var(--ash);
+}
+#panel-terminal .panel-header button:hover {
+  border-color: var(--on-dark-mute);
+  color: var(--on-dark);
+}
+#terminal-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.t-line { display: flex; gap: 8px; margin-bottom: 2px; }
+.t-time { color: var(--ash); flex-shrink: 0; }
+.t-msg  { color: var(--on-dark-mute); word-break: break-all; }
+.t-msg.info    { color: var(--on-dark); }
+.t-msg.success { color: var(--success); }
+.t-msg.warn    { color: var(--warning); }
+.t-msg.error   { color: var(--danger); }
+.t-msg.purple  { color: var(--purple); }
+.t-msg.accent  { color: var(--accent); }
+
+#terminal-stats {
+  padding: 8px 12px;
+  border-top: 1px solid var(--charcoal);
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  background: var(--surface-dark-el);
+}
+.t-stat { font-size: 11px; color: var(--ash); }
+.t-stat span { color: var(--on-dark); }
+
+/* ─── STATUS BAR ─── */
+#statusbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  border-top: 1px solid var(--hairline);
+  font-size: 11px;
+  color: var(--mute);
+  background: var(--surface-soft);
+}
+.sb-item { white-space: nowrap; }
+.sb-item span { color: var(--ink); font-weight: 500; }
+
+/* ─── MODAL ─── */
+#modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15,0,0,0.55);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+}
+#modal-overlay.open { display: flex; }
+
+#modal {
+  background: var(--canvas);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-none);
+  width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+#modal h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hairline);
+}
+.shop-section { margin-bottom: 20px; }
+.shop-section h3 {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mute);
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+.shop-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.shop-row:last-child { border-bottom: none; }
+.shop-info { flex: 1; }
+.shop-name { font-size: 14px; font-weight: 500; color: var(--ink); }
+.shop-desc { font-size: 12px; color: var(--mute); }
+.shop-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--body);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.shop-btn {
+  background: var(--ink);
+  color: var(--on-dark);
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 4px 14px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.shop-btn:hover { background: var(--ink-deep); }
+.shop-btn:disabled { background: var(--surface-card); color: var(--ash); cursor: default; }
+#modal-close {
+  background: none;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-sm);
+  padding: 6px 18px;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+  margin-top: 16px;
+}
+#modal-close:hover { background: var(--surface-card); }
+
+/* ─── SCROLLBARS ─── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--hairline-strong); border-radius: 3px; }
+
+/* ─── TUTORIAL OVERLAY ─── */
+#tutorial {
+  display: none;
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-dark);
+  color: var(--on-dark);
+  border-radius: var(--r-sm);
+  padding: 12px 20px;
+  font-size: 13px;
+  z-index: 500;
+  text-align: center;
+  border: 1px solid var(--surface-dark-el);
+  max-width: 420px;
+}
+#tutorial.visible { display: block; }
+#tutorial strong { color: var(--accent); }
 </style>
 </head>
 <body>
-<nav class="nav">
-  <div class="wordmark">[SCRIPTO]</div>
-  <div class="stats">
-    <span id="s-stor">STOR 0/4MB</span>
-    <span id="s-ram">RAM 0/8MB</span>
-    <span id="s-tick">TICK 1000ms</span>
-    <span id="s-money" style="color:var(--success);">bits $0</span>
-    <span id="s-abaut" style="color:var(--gold);">abaut 0</span>
-    <span id="s-transfers" style="color:var(--cyan);"></span>
+
+<div id="app">
+
+  <!-- NAV -->
+  <nav id="nav">
+    <div id="wordmark">[SCRIPTO]</div>
+    <div id="nav-sep"></div>
+    <div class="nav-stat">[MONEY] <span id="stat-money">0</span> §</div>
+    <div class="nav-stat">[TICK] <span id="stat-tick">0</span></div>
+    <div class="nav-stat">[RAM] <span id="stat-ram">0</span>/<span id="stat-rammax">16</span> MB</div>
+    <button id="btn-shop">[+] SHOP</button>
+  </nav>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- FILES PANEL -->
+    <div class="panel" id="panel-files">
+      <div class="panel-header">
+        [FILES]
+        <button id="btn-del">[-] DEL</button>
+      </div>
+      <div id="file-list"></div>
+      <div id="file-actions">
+        <input id="new-file-name" placeholder="filename.spt" maxlength="24" />
+        <button id="btn-new-file">[+]</button>
+      </div>
+    </div>
+
+    <!-- EDITOR PANEL -->
+    <div class="panel" id="panel-editor">
+      <div class="panel-header">
+        [EDITOR] <span id="editor-filename" style="color:var(--ink);font-weight:700;">—</span>
+        <button id="btn-run">[>] RUN</button>
+        <button id="btn-stop" style="display:none;">[x] STOP</button>
+      </div>
+      <div id="editor-wrap">
+        <div id="line-nums"></div>
+        <textarea id="editor" spellcheck="false" placeholder="// select a file to edit"></textarea>
+        <div id="autocomplete"></div>
+      </div>
+      <div id="editor-info">
+        <span class="sb-item">LINES: <span id="info-lines">0</span></span>
+        <span class="sb-item">MEM COST: <span id="info-mem">0.0</span> MB</span>
+        <span class="sb-item">RAM COST: <span id="info-ram-cost">1</span> MB while running</span>
+        <span class="sb-item" style="margin-left:auto;color:var(--mute)">TAB = autocomplete</span>
+      </div>
+    </div>
+
+    <!-- TERMINAL PANEL -->
+    <div class="panel" id="panel-terminal">
+      <div class="panel-header">
+        [TERMINAL]
+        <button id="btn-clear-log">[-] CLEAR</button>
+      </div>
+      <div id="terminal-log"></div>
+      <div id="terminal-stats">
+        <div class="t-stat">[FILES] <span id="ts-files">0</span></div>
+        <div class="t-stat">[RUNNING] <span id="ts-running">0</span></div>
+        <div class="t-stat">[DATA] <span id="ts-data">0</span></div>
+        <div class="t-stat">[SPEED] <span id="ts-speed">1000</span>ms</div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- STATUS BAR -->
+  <div id="statusbar">
+    <span class="sb-item">[SCRIPTO] v0.1</span>
+    <span class="sb-item">STORAGE: <span id="sb-storage">0.0</span>/<span id="sb-storagemax">32.0</span> MB</span>
+    <span class="sb-item">SAVE SLOTS: <span id="sb-slots">3</span></span>
+    <span class="sb-item" id="sb-msg" style="margin-left:auto;color:var(--mute)">ready.</span>
   </div>
-  <button class="btn btn-out btn-sm" id="btn-currencies" style="font-size:10px;">[?] currencies</button>
-  <button class="btn btn-ink" id="btn-shop" style="font-size:11px;">[+] SHOP</button>
-</nav>
-<main class="workspace">
-  <!-- FILE PANEL -->
-  <section class="panel">
-    <div class="plabel">[FILES] <span id="file-count" style="color:var(--ash);font-weight:400;font-size:9px;"></span></div>
-    <div class="pactions">
-      <button class="btn btn-out btn-sm" id="btn-ns">[+].code</button>
-      <button class="btn btn-out btn-sm" id="btn-nd">[+].dat</button>
-      <button class="btn btn-out btn-sm" id="btn-nf">[+]folder</button>
-    </div>
-    <div id="ftree" class="ftree"></div>
-    <div class="net-panel" id="net-panel">
-      <div style="font-size:9px;color:var(--mute);margin-bottom:3px;font-weight:700;">TRANSFERS</div>
-      <div id="transfer-list"><span style="color:var(--ash);font-size:9px;">none</span></div>
-    </div>
-  </section>
-  <!-- EDITOR PANEL -->
-  <section class="panel epanel">
-    <div class="plabel" id="eplabel">[EDITOR] —</div>
-    <div class="ewrap">
-      <div id="gutter" class="gutter"></div>
-      <textarea id="editor" spellcheck="false" autocomplete="off" placeholder="// select a .code file..."></textarea>
-      <div id="acbox" class="acbox" style="display:none;"></div>
-    </div>
-    <div class="eactions">
-      <button class="btn btn-ink" id="btn-run">[RUN]</button>
-      <button class="btn btn-out" id="btn-stop">[STOP]</button>
-      <span class="hint">Tab=AC | Ctrl+S=save | RMB=menu</span>
-    </div>
-    <div class="refbar" id="refbar">
-      <b>mine</b> cur &nbsp;|&nbsp;
-      <b>collect</b>(f) &nbsp;|&nbsp;
-      <b>store</b>(f) &nbsp;|&nbsp;
-      <b>sell</b>(f) bits only &nbsp;|&nbsp;
-      <b>compress</b>(f) 5tk &nbsp;|&nbsp;
-      <b>extract</b>(f) 5tk &nbsp;|&nbsp;
-      <b>send</b>(f) to (srv/path) 25tk &nbsp;|&nbsp;
-      <b>convert</b>(f) cur→bits &nbsp;|&nbsp;
-      <b>run</b>(f) &nbsp;|&nbsp;
-      <b>if/while/repeat N times/repeat if(...)</b>
-    </div>
-  </section>
-  <!-- TERMINAL PANEL -->
-  <section class="panel term-panel">
-    <div class="plabel">[TERMINAL] <span id="srv-label" style="color:var(--cyan);font-size:9px;"></span></div>
-    <div class="server-tabs" id="server-tabs"></div>
-    <div id="tout" class="tout"></div>
-  </section>
-</main>
+
+</div><!-- /app -->
+
 <!-- SHOP MODAL -->
-<div id="shop-modal" class="modal" style="display:none;">
-  <div class="mcard">
-    <div class="plabel">[SHOP] <span id="shop-money" style="color:var(--success);font-size:10px;"></span></div>
-    <div id="shop-body"></div>
-    <div style="padding:8px 12px;"><button class="btn btn-out" id="btn-close-shop">[x] close</button></div>
-  </div>
-</div>
-<!-- CURRENCIES MODAL -->
-<div id="cur-modal" class="modal" style="display:none;">
-  <div class="mcard">
-    <div class="plabel">[CURRENCIES] — 20 tiers</div>
-    <div id="cur-body" style="padding:8px;"></div>
-    <div style="padding:8px 12px;"><button class="btn btn-out" id="btn-close-cur">[x] close</button></div>
-  </div>
-</div>
-<!-- INPUT MODAL -->
-<div id="inp-modal" class="inp-modal" style="display:none;">
-  <div class="inp-box">
-    <label id="inp-label">Name:</label>
-    <input id="inp-input" type="text" autocomplete="off"/>
-    <div class="inp-btns">
-      <button class="btn btn-out" id="inp-cancel">[x]</button>
-      <button class="btn btn-ink" id="inp-ok">[ok]</button>
+<div id="modal-overlay">
+  <div id="modal">
+    <h2>[SHOP] — upgrade your system</h2>
+
+    <div class="shop-section">
+      <h3>[STORAGE]</h3>
+      <div class="shop-row">
+        <div class="shop-info">
+          <div class="shop-name">[+] Storage +32 MB</div>
+          <div class="shop-desc">expand total file storage by 32 MB</div>
+        </div>
+        <div class="shop-price" id="shop-storage-price">50 §</div>
+        <button class="shop-btn" data-shop="storage">buy</button>
+      </div>
     </div>
+
+    <div class="shop-section">
+      <h3>[RAM]</h3>
+      <div class="shop-row">
+        <div class="shop-info">
+          <div class="shop-name">[+] RAM +16 MB</div>
+          <div class="shop-desc">run more scripts simultaneously</div>
+        </div>
+        <div class="shop-price" id="shop-ram-price">80 §</div>
+        <button class="shop-btn" data-shop="ram">buy</button>
+      </div>
+    </div>
+
+    <div class="shop-section">
+      <h3>[SPEED]</h3>
+      <div class="shop-row">
+        <div class="shop-info">
+          <div class="shop-name">[+] Tick Speed Tier 2</div>
+          <div class="shop-desc">500ms tick interval (currently <span id="shop-cur-speed">1000</span>ms)</div>
+        </div>
+        <div class="shop-price">120 §</div>
+        <button class="shop-btn" data-shop="speed2">buy</button>
+      </div>
+      <div class="shop-row">
+        <div class="shop-info">
+          <div class="shop-name">[+] Tick Speed Tier 3</div>
+          <div class="shop-desc">200ms tick interval</div>
+        </div>
+        <div class="shop-price">350 §</div>
+        <button class="shop-btn" data-shop="speed3">buy</button>
+      </div>
+    </div>
+
+    <div class="shop-section">
+      <h3>[SAVE SLOTS]</h3>
+      <div class="shop-row">
+        <div class="shop-info">
+          <div class="shop-name">[+] +3 Save Slots</div>
+          <div class="shop-desc">store more .save files</div>
+        </div>
+        <div class="shop-price">60 §</div>
+        <button class="shop-btn" data-shop="slots">buy</button>
+      </div>
+    </div>
+
+    <button id="modal-close">[x] close</button>
   </div>
 </div>
-<div id="ctx-menu" class="ctx-menu" style="display:none;"></div>
-<footer class="foot">scripto v4 · 20 currencies · send/compress/extract/convert · multi-server network · upgrade shop</footer>
+
+<!-- TUTORIAL -->
+<div id="tutorial" class="visible" id="tutorial">
+  write a script: <strong>repeat infinite</strong> / <strong>when collectable: collect</strong> / <strong>save result</strong><br>
+  press <strong>[&gt;] RUN</strong> or click <strong>[-&gt;]</strong> next to a file — click to dismiss
+</div>
+
 <script>
-'use strict';
-const r2 = n => Math.round(n*100)/100;
-const r3 = n => Math.round(n*1000)/1000;
+// ═══════════════════════════════════════════════════════
+// SCRIPTO ENGINE
+// ═══════════════════════════════════════════════════════
 
-// ── 20 CURRENCIES ──────────────────────────────────────────────────────────
-const CURRENCIES = [
-  { id:'bit',    name:'bit',    tier:1,  mineT:1,  weight:0.01, convertV:1,    color:'#8b5cf6', desc:'Basic unit' },
-  { id:'byte',   name:'byte',   tier:2,  mineT:2,  weight:0.02, convertV:4,    color:'#7c3aed', desc:'8 bits worth' },
-  { id:'nibble', name:'nibble', tier:3,  mineT:2,  weight:0.02, convertV:2,    color:'#6d28d9', desc:'Half a byte' },
-  { id:'kbit',   name:'kbit',   tier:4,  mineT:3,  weight:0.05, convertV:12,   color:'#4f46e5', desc:'1024 bits' },
-  { id:'kbyte',  name:'kbyte',  tier:5,  mineT:4,  weight:0.08, convertV:40,   color:'#4338ca', desc:'1 kilobyte' },
-  { id:'abaut',  name:'abaut',  tier:6,  mineT:4,  weight:0.10, convertV:80,   color:'#fbbf24', desc:'Transport token — must be sent' },
-  { id:'mbit',   name:'mbit',   tier:7,  mineT:5,  weight:0.15, convertV:150,  color:'#0891b2', desc:'Megabit' },
-  { id:'mbyte',  name:'mbyte',  tier:8,  mineT:6,  weight:0.20, convertV:500,  color:'#0e7490', desc:'Megabyte unit' },
-  { id:'packet', name:'packet', tier:9,  mineT:6,  weight:0.25, convertV:900,  color:'#22d3ee', desc:'Network packet token' },
-  { id:'frame',  name:'frame',  tier:10, mineT:7,  weight:0.30, convertV:1500, color:'#10b981', desc:'Data frame' },
-  { id:'block',  name:'block',  tier:11, mineT:8,  weight:0.40, convertV:2500, color:'#059669', desc:'Storage block' },
-  { id:'sector', name:'sector', tier:12, mineT:9,  weight:0.50, convertV:4000, color:'#d97706', desc:'Disk sector' },
-  { id:'cluster',name:'cluster',tier:13, mineT:10, weight:0.65, convertV:6500, color:'#b45309', desc:'Disk cluster' },
-  { id:'page',   name:'page',   tier:14, mineT:12, weight:0.80, convertV:10000,color:'#ef4444', desc:'Memory page' },
-  { id:'chunk',  name:'chunk',  tier:15, mineT:14, weight:1.00, convertV:16000,color:'#dc2626', desc:'Data chunk' },
-  { id:'shard',  name:'shard',  tier:16, mineT:16, weight:1.30, convertV:25000,color:'#f97316', desc:'Data shard' },
-  { id:'node',   name:'node',   tier:17, mineT:18, weight:1.60, convertV:40000,color:'#a855f7', desc:'Network node token' },
-  { id:'kernel', name:'kernel', tier:18, mineT:20, weight:2.00, convertV:65000,color:'#9333ea', desc:'OS kernel token' },
-  { id:'core',   name:'core',   tier:19, mineT:25, weight:2.50, convertV:100000,color:'#ec4899', desc:'CPU core token' },
-  { id:'nexus',  name:'nexus',  tier:20, mineT:30, weight:3.00, convertV:200000,color:'#f43f5e', desc:'Ultimate currency' }
-];
-const CUR_BY_ID = {};
-CURRENCIES.forEach(c => CUR_BY_ID[c.id] = c);
+const KEYWORDS = ['repeat','infinite','when','collectable','collect','save','compress','extract','convert','end'];
 
-// currencies that CANNOT be sold directly — must be sent & converted
-const MUST_SEND = new Set(['abaut','mbit','mbyte','packet','frame','block','sector','cluster','page','chunk','shard','node','kernel','core','nexus']);
-
-// ── SERVERS ─────────────────────────────────────────────────────────────────
-const SERVERS = [
-  { id:'local',  name:'local',  ram:8,  stor:4,  speed:1, owned:true,  upgLevel:0 },
-  { id:'alpha',  name:'alpha',  ram:16, stor:10, speed:1, owned:false, upgLevel:0 },
-  { id:'beta',   name:'beta',   ram:32, stor:20, speed:2, owned:false, upgLevel:0 },
-  { id:'gamma',  name:'gamma',  ram:64, stor:40, speed:3, owned:false, upgLevel:0 },
-  { id:'nexus',  name:'nexus',  ram:128,stor:100,speed:3, owned:false, upgLevel:0 }
-];
-const SERVER_COSTS = { alpha:500, beta:2000, gamma:10000, nexus:100000 };
-const SERVER_UPG = [
-  { label:'+16 RAM +8 Stor',   ramBonus:16, storBonus:8,  cost:300 },
-  { label:'+32 RAM +16 Stor',  ramBonus:32, storBonus:16, cost:1200 },
-  { label:'+64 RAM +32 Stor',  ramBonus:64, storBonus:32, cost:5000 }
-];
-
-// ── STATE ────────────────────────────────────────────────────────────────────
-const S = {
+// ─── STATE ───
+let state = {
   money: 0,
   tick: 0,
-  nextId: 1,
-  activeId: null,
-  activeServerId: 'local',
-  files: {},          // id -> file (local)
-  serverFiles: {},    // serverId -> { id -> file }
-  rootOrder: [],
-  serverRootOrder: {},// serverId -> [id, ...]
-  transfers: [],      // active network transfers
-  upgLevels: { storage:0, ram:0, speed:0, mineSpeed:0, sellRate:0 },
-  storMax: 4, ramMax: 8, speedTier: 1, tickMs: 1000,
-  mineTicks: 3, sellTicks: 3, sellRate: 0.5
+  ram: 0,
+  ramMax: 16,
+  storageMax: 32,
+  speed: 1000,
+  saveSlots: 3,
+  files: [],          // {id, name, code, status:'idle'|'running'|'done'|'error', pc, loops, data, saves}
+  activeFile: null,   // id
+  tickInterval: null,
+  storageBought: 0,
+  speedTier: 1,
 };
 
-// init server file stores
-SERVERS.forEach(sv => {
-  S.serverFiles[sv.id] = {};
-  S.serverRootOrder[sv.id] = [];
+// ─── DOM ───
+const $fileList   = document.getElementById('file-list');
+const $editor     = document.getElementById('editor');
+const $lineNums   = document.getElementById('line-nums');
+const $editorFile = document.getElementById('editor-filename');
+const $termLog    = document.getElementById('terminal-log');
+const $btnRun     = document.getElementById('btn-run');
+const $btnStop    = document.getElementById('btn-stop');
+const $newFileName = document.getElementById('new-file-name');
+const $statMoney  = document.getElementById('stat-money');
+const $statTick   = document.getElementById('stat-tick');
+const $statRam    = document.getElementById('stat-ram');
+const $statRamMax = document.getElementById('stat-rammax');
+const $infoLines  = document.getElementById('info-lines');
+const $infoMem    = document.getElementById('info-mem');
+const $infoRamCost= document.getElementById('info-ram-cost');
+const $autocomplete = document.getElementById('autocomplete');
+const $sbStorage  = document.getElementById('sb-storage');
+const $sbStorageMax = document.getElementById('sb-storagemax');
+const $sbSlots    = document.getElementById('sb-slots');
+const $sbMsg      = document.getElementById('sb-msg');
+const $tsFiles    = document.getElementById('ts-files');
+const $tsRunning  = document.getElementById('ts-running');
+const $tsData     = document.getElementById('ts-data');
+const $tsSpeed    = document.getElementById('ts-speed');
+const $tutorial   = document.getElementById('tutorial');
+
+// ─── UTILS ───
+let logId = 0;
+function log(msg, cls = '') {
+  const d = new Date();
+  const ts = d.toTimeString().slice(0,8);
+  const div = document.createElement('div');
+  div.className = 't-line';
+  div.innerHTML = `<span class="t-time">${ts}</span><span class="t-msg ${cls}">${escHtml(msg)}</span>`;
+  $termLog.appendChild(div);
+  if ($termLog.children.length > 400) $termLog.removeChild($termLog.firstChild);
+  $termLog.scrollTop = $termLog.scrollHeight;
+}
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function setStatus(msg){ $sbMsg.textContent = msg; }
+function uid(){ return Math.random().toString(36).slice(2,8); }
+
+// ─── STORAGE CALC ───
+function fileMemCost(file){
+  const lines = file.code.split('\n').filter(l=>l.trim()).length;
+  return 0.1 + lines * 0.1;
+}
+function totalStorage(){
+  return state.files.reduce((a,f)=>a+fileMemCost(f),0);
+}
+
+// ─── FILE OPERATIONS ───
+function createFile(name){
+  if(!name || !name.trim()) return;
+  if(!name.endsWith('.spt') && !name.endsWith('.save') && !name.endsWith('.spt2')){
+    name = name + '.spt';
+  }
+  if(state.files.find(f=>f.name===name)){ setStatus('file exists'); return; }
+  const isSave = name.endsWith('.save');
+  const slots = state.files.filter(f=>f.name.endsWith('.save')).length;
+  if(isSave && slots >= state.saveSlots){ setStatus(`[x] max save slots (${state.saveSlots}) reached — buy more`); return; }
+  const f = { id: uid(), name, code: isSave ? '// save file\n' : '// new script\nrepeat infinite\n  when collectable: collect\nend\n', status:'idle', pc:0, loops:0, data:0, saves:0 };
+  state.files.push(f);
+  selectFile(f.id);
+  renderFileList();
+  log(`[+] created ${name}`, 'info');
+}
+
+function deleteActiveFile(){
+  if(!state.activeFile) return;
+  const f = getFile(state.activeFile);
+  if(!f) return;
+  if(f.status==='running') stopFile(f.id);
+  state.files = state.files.filter(x=>x.id!==state.activeFile);
+  state.activeFile = null;
+  $editor.value = '';
+  $editorFile.textContent = '—';
+  $btnRun.style.display = 'flex';
+  $btnStop.style.display = 'none';
+  renderFileList();
+  updateEditorInfo();
+  log(`[-] deleted ${f.name}`, 'warn');
+}
+
+function getFile(id){ return state.files.find(f=>f.id===id); }
+
+function selectFile(id){
+  const f = getFile(id);
+  if(!f) return;
+  // save current edit if different
+  if(state.activeFile && state.activeFile !== id){
+    const prev = getFile(state.activeFile);
+    if(prev) prev.code = $editor.value;
+  }
+  state.activeFile = id;
+  $editor.value = f.code;
+  $editorFile.textContent = f.name;
+  $btnRun.style.display  = f.status==='running' ? 'none' : '';
+  $btnStop.style.display = f.status==='running' ? '' : 'none';
+  renderFileList();
+  updateLineNums();
+  updateEditorInfo();
+}
+
+function renderFileList(){
+  $fileList.innerHTML = '';
+  state.files.forEach(f=>{
+    const div = document.createElement('div');
+    div.className = 'file-item' + (f.id===state.activeFile ? ' active' : '');
+    div.dataset.id = f.id;
+    const dot = document.createElement('div');
+    dot.className = 'file-dot ' + (f.status==='running'?'running':f.status==='done'?'done':f.status==='error'?'error':'');
+    const name = document.createElement('span');
+    name.className = 'file-name';
+    name.textContent = f.name;
+    const runBtn = document.createElement('button');
+    runBtn.className = 'file-btn-run';
+    runBtn.textContent = f.status==='running' ? '[x]' : '[>]';
+    runBtn.onclick = (e)=>{ e.stopPropagation(); f.status==='running' ? stopFile(f.id) : runFile(f.id); };
+    div.appendChild(dot);
+    div.appendChild(name);
+    div.appendChild(runBtn);
+    div.onclick = ()=>selectFile(f.id);
+    $fileList.appendChild(div);
+  });
+  $tsFiles.textContent = state.files.length;
+  $tsRunning.textContent = state.files.filter(f=>f.status==='running').length;
+  $sbStorage.textContent = totalStorage().toFixed(1);
+  $sbStorageMax.textContent = state.storageMax.toFixed(0);
+  $sbSlots.textContent = state.saveSlots;
+}
+
+// ─── EDITOR ───
+function updateLineNums(){
+  const lines = $editor.value.split('\n');
+  $infoLines.textContent = lines.length;
+  $lineNums.innerHTML = lines.map((_, i)=>`<span class="ln">${i+1}</span>`).join('');
+}
+
+function updateEditorInfo(){
+  if(!state.activeFile){ $infoLines.textContent = 0; $infoMem.textContent = '0.0'; return; }
+  const f = getFile(state.activeFile);
+  if(!f) return;
+  const lines = f.code.split('\n').filter(l=>l.trim()).length;
+  $infoLines.textContent = $editor.value.split('\n').length;
+  $infoMem.textContent = (0.1 + lines*0.1).toFixed(1);
+}
+
+$editor.addEventListener('input', ()=>{
+  if(state.activeFile){ const f = getFile(state.activeFile); if(f) f.code = $editor.value; }
+  updateLineNums();
+  updateEditorInfo();
+  $autocomplete.style.display = 'none';
 });
 
-// ── HELPERS ──────────────────────────────────────────────────────────────────
-function nid() { return 'f' + (S.nextId++); }
+$editor.addEventListener('scroll', ()=>{
+  $lineNums.scrollTop = $editor.scrollTop;
+});
 
-function allFiles(serverId) {
-  return serverId === 'local' ? S.files : (S.serverFiles[serverId] || {});
-}
-function rootOrder(serverId) {
-  return serverId === 'local' ? S.rootOrder : (S.serverRootOrder[serverId] || []);
-}
-
-function mkFile(name, type, pid, content, serverId) {
-  const sid = serverId || 'local';
-  const store = allFiles(sid);
-  const order = rootOrder(sid);
-  const id = nid();
-  const f = {
-    id, name, type, parentId: pid || null,
-    serverId: sid,
-    children: type === 'folder' ? [] : null,
-    content: content !== undefined ? content : '',
-    status: 'idle', currentLine: -1,
-    pc: 0, program: null, running: false,
-    pendingAction: null,
-    inventory: {},  // currencyId -> amount
-    loopStack: []
-  };
-  store[id] = f;
-  if (pid && store[pid]) store[pid].children.push(id);
-  else order.push(id);
-  return f;
-}
-
-function getInv(f, curId) { return f.inventory[curId] || 0; }
-function addInv(f, curId, amt) { f.inventory[curId] = (f.inventory[curId] || 0) + amt; if (f.inventory[curId] < 0) f.inventory[curId] = 0; }
-function totalInv(f) { let t = 0; for (const k in f.inventory) t += f.inventory[k]; return t; }
-function invWeight(f) {
-  let w = 0;
-  for (const k in f.inventory) {
-    const c = CUR_BY_ID[k]; if (!c) continue;
-    w += f.inventory[k] * c.weight;
-  }
-  return r3(w);
-}
-function invSummary(f) {
-  const parts = [];
-  for (const k in f.inventory) {
-    if (f.inventory[k] > 0) parts.push(`${f.inventory[k]}${k}`);
-  }
-  return parts.join(' ') || '0';
-}
-
-function fileStor(f) {
-  if (!f || f.type === 'folder') return 0;
-  const base = f.type === 'script' ? 0.5 : 0.2;
-  return r3(base + invWeight(f));
-}
-function totalStor(sid) {
-  const store = allFiles(sid || 'local');
-  let t = 0; for (const id in store) t += fileStor(store[id]); return r3(t);
-}
-function scriptsRam(sid) {
-  const store = allFiles(sid || 'local');
-  let t = 0; for (const id in store) if (store[id].running) t += 2.0; return r2(t);
-}
-function invRam(sid) {
-  const store = allFiles(sid || 'local');
-  let t = 0;
-  for (const id in store) t += invWeight(store[id]);
-  return r3(t);
-}
-function totalRam(sid) { return r2(scriptsRam(sid) + invRam(sid)); }
-function serverRamMax(sv) { return sv.ram; }
-function serverStorMax(sv) { return sv.stor; }
-
-function uniqueName(base, pid, sid) {
-  const store = allFiles(sid || 'local');
-  const siblings = pid ? (store[pid] ? store[pid].children : []) : rootOrder(sid || 'local');
-  const names = new Set((siblings || []).map(id => store[id] && store[id].name));
-  if (!names.has(base)) return base;
-  const dot = base.lastIndexOf('.');
-  const stem = dot >= 0 ? base.slice(0, dot) : base;
-  const ext  = dot >= 0 ? base.slice(dot) : '';
-  let i = 2;
-  while (names.has(`${stem}(${i})${ext}`)) i++;
-  return `${stem}(${i})${ext}`;
-}
-
-function resolvePath(pathStr, fromFile, serverId) {
-  if (!pathStr) return null;
-  const sid = serverId || fromFile.serverId || 'local';
-  const store = allFiles(sid);
-  const order = rootOrder(sid);
-  const parts = pathStr.replace(/\\/g, '/').split('/').filter(Boolean);
-  let currentPid = fromFile.parentId;
-  for (let i = 0; i < parts.length - 1; i++) {
-    const p = parts[i];
-    if (p === '..') {
-      const cur = currentPid ? store[currentPid] : null;
-      currentPid = cur ? cur.parentId : null;
+$editor.addEventListener('keydown', (e)=>{
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    const word = currentWord();
+    const matches = KEYWORDS.filter(k=>k.startsWith(word) && k!==word);
+    const filenames = state.files.map(f=>f.name).filter(n=>n.startsWith(word)&&n!==word);
+    const all = [...matches, ...filenames];
+    if(all.length === 1){
+      completeWord(word, all[0]);
+    } else if(all.length > 1){
+      showAutocomplete(all, word);
     } else {
-      const searchIn = currentPid ? (store[currentPid] ? store[currentPid].children : []) : order;
-      const fld = (searchIn || []).map(id => store[id]).find(f2 => f2 && f2.type === 'folder' && f2.name === p);
-      if (!fld) return null;
-      currentPid = fld.id;
+      insertAtCursor('  ');
     }
-  }
-  const lastName = parts[parts.length - 1];
-  const searchIn = currentPid ? (store[currentPid] ? store[currentPid].children : []) : order;
-  for (const id of (searchIn || [])) {
-    if (store[id] && store[id].name === lastName) return store[id];
-  }
-  return null;
-}
-
-function deleteFile(id, sid) {
-  const store = allFiles(sid || 'local');
-  const order = rootOrder(sid || 'local');
-  const f = store[id]; if (!f) return;
-  if (f.running) stopF(f);
-  if (f.parentId && store[f.parentId]) {
-    store[f.parentId].children = store[f.parentId].children.filter(c => c !== id);
+  } else if(e.key === 'Escape'){
+    $autocomplete.style.display = 'none';
+  } else if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    if($autocomplete.style.display !== 'none'){
+      e.preventDefault();
+      const items = $autocomplete.querySelectorAll('.ac-item');
+      let sel = [...items].findIndex(i=>i.classList.contains('selected'));
+      items[sel]?.classList.remove('selected');
+      sel = e.key==='ArrowDown' ? (sel+1)%items.length : (sel-1+items.length)%items.length;
+      items[sel]?.classList.add('selected');
+    }
+  } else if(e.key === 'Enter'){
+    if($autocomplete.style.display !== 'none'){
+      e.preventDefault();
+      const sel = $autocomplete.querySelector('.ac-item.selected') || $autocomplete.querySelector('.ac-item');
+      if(sel){ const word = currentWord(); completeWord(word, sel.dataset.val); $autocomplete.style.display='none'; }
+    }
   } else {
-    const ro = rootOrder(sid || 'local');
-    const idx = ro.indexOf(id); if (idx >= 0) ro.splice(idx, 1);
+    $autocomplete.style.display = 'none';
   }
-  if (f.type === 'folder' && f.children) [...f.children].forEach(cid => deleteFile(cid, sid || 'local'));
-  delete store[id];
-  if (S.activeId === id) {
-    const rem = Object.keys(S.files);
-    S.activeId = rem.length ? rem[0] : null;
-    if (S.activeId) selF(S.activeId);
-    else { document.getElementById('eplabel').textContent = '[EDITOR] —'; document.getElementById('editor').value = ''; }
-  }
-  renderAll();
+});
+
+function currentWord(){
+  const s = $editor.selectionStart;
+  const text = $editor.value.slice(0, s);
+  const m = text.match(/\S+$/);
+  return m ? m[0] : '';
 }
 
-// ── PARSER ───────────────────────────────────────────────────────────────────
-function parseSrc(src) {
-  const lines = src.split('\n');
-  const ind = l => l.match(/^\s*/)[0].length;
-  function blk(minInd, idx) {
-    const children = [];
-    while (idx < lines.length) {
-      const raw = lines[idx];
-      if (!raw.trim() || raw.trim().startsWith('//')) { idx++; continue; }
-      const i = ind(raw); if (i < minInd) break;
-      const tr = raw.trim(); let m;
-      if ((m = tr.match(/^repeat\s+(\d+)\s+times?$/i))) {
-        const node = { type:'loop', kind:'count', count:+m[1], lineNo:idx, children:[] };
-        idx++; const r = blk(i+1,idx); node.children=r.children; idx=r.idx; children.push(node); continue;
-      }
-      if ((m = tr.match(/^repeat\s+if\s+\((.+)\)$/i))) {
-        const node = { type:'loop', kind:'cond', cond:m[1].trim(), lineNo:idx, children:[] };
-        idx++; const r = blk(i+1,idx); node.children=r.children; idx=r.idx; children.push(node); continue;
-      }
-      if ((m = tr.match(/^repeat(\s+infinite)?$/i))) {
-        const node = { type:'loop', kind:'infinite', lineNo:idx, children:[] };
-        idx++; const r = blk(i+1,idx); node.children=r.children; idx=r.idx; children.push(node); continue;
-      }
-      if ((m = tr.match(/^while\s+\((.+)\)$/i))) {
-        const node = { type:'loop', kind:'while', cond:m[1].trim(), lineNo:idx, children:[] };
-        idx++; const r = blk(i+1,idx); node.children=r.children; idx=r.idx; children.push(node); continue;
-      }
-      if ((m = tr.match(/^if\s+\((.+)\)$/i))) {
-        const node = { type:'if', cond:m[1].trim(), lineNo:idx, children:[], elseChildren:[] };
-        idx++; const r2_ = blk(i+1,idx); node.children=r2_.children; idx=r2_.idx;
-        if (idx < lines.length && lines[idx].trim() === 'else') {
-          idx++; const r3_ = blk(i+1,idx); node.elseChildren=r3_.children; idx=r3_.idx;
-        }
-        children.push(node); continue;
-      }
-      if ((m = tr.match(/^when\s+(.+?):\s*(.+)$/))) {
-        children.push({ type:'when', cond:m[1].trim(), action:m[2].trim(), lineNo:idx }); idx++; continue;
-      }
-      children.push({ type:'action', action:tr, lineNo:idx }); idx++;
-    }
-    return { children, idx };
-  }
-  return { type:'block', children:blk(0,0).children };
+function completeWord(word, full){
+  const s = $editor.selectionStart;
+  const before = $editor.value.slice(0, s - word.length);
+  const after  = $editor.value.slice(s);
+  $editor.value = before + full + after;
+  $editor.selectionStart = $editor.selectionEnd = before.length + full.length;
+  $editor.dispatchEvent(new Event('input'));
 }
 
-function flatten(ast) {
-  const ops = [];
-  function walk(node) {
-    if (node.type === 'block') { node.children.forEach(walk); return; }
-    if (node.type === 'loop') {
-      ops.push({ type:'LOOP_START', kind:node.kind, count:node.count, cond:node.cond, lineNo:node.lineNo });
-      node.children.forEach(walk);
-      ops.push({ type:'LOOP_END', lineNo:node.lineNo }); return;
-    }
-    if (node.type === 'if') {
-      ops.push({ type:'IF', cond:node.cond, lineNo:node.lineNo, hasElse:node.elseChildren.length>0 });
-      node.children.forEach(walk);
-      if (node.elseChildren.length > 0) { ops.push({ type:'ELSE', lineNo:node.lineNo }); node.elseChildren.forEach(walk); }
-      ops.push({ type:'ENDIF', lineNo:node.lineNo }); return;
-    }
-    ops.push(node);
-  }
-  walk(ast); return ops;
+function insertAtCursor(text){
+  const s = $editor.selectionStart, e = $editor.selectionEnd;
+  $editor.value = $editor.value.slice(0,s) + text + $editor.value.slice(e);
+  $editor.selectionStart = $editor.selectionEnd = s + text.length;
 }
 
-// ── CONDITIONS ───────────────────────────────────────────────────────────────
-function cmpOp(a, op, b) {
-  return op='>='?a>=b:op==='<='?a<=b:op==='>'?a>b:op==='<'?a<b:a==b;
-}
-function evalCond(cond, f) {
-  cond = cond.trim(); let m;
-  // file has X currency >= N
-  if ((m = cond.match(/^(\S+)\s+(\w+)\s*(>=|<=|>|<|==)\s*(\d+)$/))) {
-    const tgt = resolvePath(m[1], f);
-    if (!tgt) return false;
-    const cur = m[2].toLowerCase();
-    return cmpOp(getInv(tgt, cur), m[3], +m[4]);
-  }
-  if ((m = cond.match(/^money\s*(>=|<=|>|<|==)\s*([\d.]+)$/))) return cmpOp(S.money, m[1], +m[2]);
-  if ((m = cond.match(/^ram\s*(>=|<=|>|<|==)\s*([\d.]+)\s*mb?$/i))) return cmpOp(totalRam('local'), m[1], +m[2]);
-  if ((m = cond.match(/^stor(age)?\s*(>=|<=|>|<|==)\s*([\d.]+)\s*mb?$/i))) return cmpOp(totalStor('local'), m[2], +m[3]);
-  if ((m = cond.match(/^(\S+)\s+exists$/))) return resolvePath(m[1], f) !== null;
-  if ((m = cond.match(/^transfers?\s*(>=|<=|>|<|==)\s*(\d+)$/i))) return cmpOp(S.transfers.length, m[1], +m[2]);
-  return false;
-}
-
-// ── EXEC ACTION ──────────────────────────────────────────────────────────────
-function execAction(str, f) {
-  str = str.trim();
-  const parts = str.split(/\s+/);
-  const cmd = parts[0].toLowerCase();
-
-  // MINE <currency>
-  if (cmd === 'mine') {
-    const curId = (parts[1] || 'bit').toLowerCase();
-    const cur = CUR_BY_ID[curId];
-    if (!cur) return { ok:false, log:`mine: unknown currency '${curId}'` };
-    const ticks = Math.max(1, Math.floor(cur.mineT * (4 - S.upgLevels.mineSpeed) / 3));
-    if (!f.pendingAction) {
-      f.pendingAction = { cmd:'mine', curId, ticksLeft:ticks, totalTicks:ticks };
-      return { ok:true, skip:true, log:`mine ${curId} — started (${ticks}tk)` };
-    }
-    f.pendingAction.ticksLeft--;
-    if (f.pendingAction.ticksLeft > 0) return { ok:true, skip:true, log:`mine ${curId} — ${f.pendingAction.ticksLeft}tk left` };
-    f.pendingAction = null;
-    // check RAM for weight
-    const srv = SERVERS.find(s => s.id === 'local');
-    const wt = cur.weight;
-    if (totalRam('local') + wt > serverRamMax(srv)) return { ok:false, log:`mine ${curId}: not enough RAM (need ${wt}MB)` };
-    addInv(f, curId, 1);
-    return { ok:true, log:`mine — +1 ${curId} > ${f.name} [${invSummary(f)}]` };
-  }
-
-  // COLLECT <file>
-  if (cmd === 'collect') {
-    const arg = parts.slice(1).join(' ');
-    if (!arg) return { ok:false, log:'collect: missing arg' };
-    const src = resolvePath(arg, f);
-    if (!src) return { ok:false, log:`collect: '${arg}' not found` };
-    if (src.id === f.id) return { ok:false, log:'collect: self reference' };
-    if (totalInv(src) === 0) return { ok:true, log:`collect(${arg}): empty` };
-    const wt = invWeight(src);
-    const srv = SERVERS.find(s => s.id === 'local');
-    if (totalRam('local') + wt > serverRamMax(srv)) return { ok:false, log:`collect(${arg}): need ${wt}MB more RAM` };
-    for (const k in src.inventory) { addInv(f, k, src.inventory[k]); src.inventory[k] = 0; }
-    return { ok:true, log:`collect(${arg}) — moved to self [${invSummary(f)}]` };
-  }
-
-  // STORE <file>
-  if (cmd === 'store') {
-    const arg = parts.slice(1).join(' ');
-    if (!arg) return { ok:false, log:'store: missing arg' };
-    const dst = resolvePath(arg, f);
-    if (!dst) return { ok:false, log:`store: '${arg}' not found` };
-    if (dst.id === f.id) return { ok:false, log:'store: self reference' };
-    if (totalInv(f) === 0) return { ok:true, log:'store: nothing' };
-    for (const k in f.inventory) { addInv(dst, k, f.inventory[k]); f.inventory[k] = 0; }
-    return { ok:true, log:`store(${arg}) — moved to ${arg} [${invSummary(dst)}]` };
-  }
-
-  // SELL <file>  — bits ONLY
-  if (cmd === 'sell') {
-    const arg = parts.slice(1).join(' ');
-    if (!arg) return { ok:false, log:'sell: missing arg' };
-    const tgt = resolvePath(arg, f);
-    if (!tgt) return { ok:false, log:`sell: '${arg}' not found` };
-    const bits = getInv(tgt, 'bit');
-    if (bits <= 0) return { ok:true, log:`sell(${arg}): 0 bits (use convert first for other currencies)` };
-    if (!f.pendingAction) {
-      const t = Math.max(1, S.sellTicks - S.upgLevels.sellRate);
-      f.pendingAction = { cmd:'sell', arg, ticksLeft:t };
-      return { ok:true, skip:true, log:`sell(${arg}) ${bits}b — ${t}tk` };
-    }
-    f.pendingAction.ticksLeft--;
-    if (f.pendingAction.ticksLeft > 0) return { ok:true, skip:true, log:`sell(${arg}) — ${f.pendingAction.ticksLeft}tk` };
-    f.pendingAction = null;
-    const sold = getInv(tgt, 'bit'); tgt.inventory['bit'] = 0;
-    const rate = [0.5, 0.75, 1.25, 2.0, 3.5][S.upgLevels.sellRate] || 0.5;
-    const earned = r2(sold * rate);
-    S.money = r2(S.money + earned);
-    return { ok:true, kind:'sell', log:`sell(${arg}) ${sold}b → +$${earned} | $${S.money}` };
-  }
-
-  // COMPRESS <file>  — halves inventory weight (5 ticks)
-  if (cmd === 'compress') {
-    const arg = parts.slice(1).join(' ');
-    if (!arg) return { ok:false, log:'compress: missing arg' };
-    const tgt = resolvePath(arg, f);
-    if (!tgt) return { ok:false, log:`compress: '${arg}' not found` };
-    if (!f.pendingAction) {
-      f.pendingAction = { cmd:'compress', arg, ticksLeft:5, tgtId:tgt.id };
-      return { ok:true, skip:true, log:`compress(${arg}) — 5tk` };
-    }
-    f.pendingAction.ticksLeft--;
-    if (f.pendingAction.ticksLeft > 0) return { ok:true, skip:true, log:`compress(${arg}) — ${f.pendingAction.ticksLeft}tk` };
-    f.pendingAction = null;
-    const t2 = S.files[f.pendingAction ? f.pendingAction.tgtId : tgt.id] || tgt;
-    // mark compressed
-    t2._compressed = (t2._compressed || 0) + 1;
-    const before = invWeight(t2);
-    // halve all amounts (simulated compression = track a multiplier)
-    t2._compressRatio = (t2._compressRatio || 1) * 0.5;
-    return { ok:true, log:`compress(${arg}) — ratio x${t2._compressRatio} (${r2(before)}MB → ${r2(invWeight(t2)*t2._compressRatio)}MB effective)` };
-  }
-
-  // EXTRACT <file>  — reverses compression (5 ticks)
-  if (cmd === 'extract') {
-    const arg = parts.slice(1).join(' ');
-    if (!arg) return { ok:false, log:'extract: missing arg' };
-    const tgt = resolvePath(arg, f);
-    if (!tgt) return { ok:false, log:`extract: '${arg}' not found` };
-    if (!f.pendingAction) {
-      f.pendingAction = { cmd:'extract', arg, ticksLeft:5, tgtId:tgt.id };
-      return { ok:true, skip:true, log:`extract(${arg}) — 5tk` };
-    }
-    f.pendingAction.ticksLeft--;
-    if (f.pendingAction.ticksLeft > 0) return { ok:true, skip:true, log:`extract(${arg}) — ${f.pendingAction.ticksLeft}tk` };
-    f.pendingAction = null;
-    tgt._compressRatio = 1;
-    tgt._compressed = 0;
-    return { ok:true, log:`extract(${arg}) — fully extracted [${invSummary(tgt)}]` };
-  }
-
-  // SEND <file> to <server/path>  — 25 ticks, uses RAM = effective weight
-  if (cmd === 'send') {
-    const m2 = str.match(/^send\s+(\S+)\s+to\s+(\S+)$/i);
-    if (!m2) return { ok:false, log:'send: usage: send <file> to <server/path>' };
-    const srcName = m2[1]; const dstSpec = m2[2];
-    const src = resolvePath(srcName, f);
-    if (!src) return { ok:false, log:`send: '${srcName}' not found` };
-    if (totalInv(src) === 0) return { ok:true, log:`send(${srcName}): nothing to send` };
-    const slashIdx = dstSpec.indexOf('/');
-    const srvId = slashIdx >= 0 ? dstSpec.slice(0, slashIdx) : dstSpec;
-    const dstPath = slashIdx >= 0 ? dstSpec.slice(slashIdx+1) : '';
-    const dstSrv = SERVERS.find(s => s.id === srvId);
-    if (!dstSrv) return { ok:false, log:`send: unknown server '${srvId}'` };
-    if (!dstSrv.owned) return { ok:false, log:`send: server '${srvId}' not owned — buy in Shop` };
-    const effWeight = r3(invWeight(src) * (src._compressRatio || 1));
-    const srv = SERVERS.find(s => s.id === 'local');
-    if (totalRam('local') + effWeight > serverRamMax(srv)) return { ok:false, log:`send: not enough RAM for transfer (need ${effWeight}MB)` };
-    if (!f.pendingAction) {
-      f.pendingAction = { cmd:'send', srcId:src.id, srvId, dstPath, effWeight, ticksLeft:25, totalTicks:25 };
-      return { ok:true, skip:true, log:`send(${srcName})→${srvId} — 25tk (${effWeight}MB RAM held)` };
-    }
-    f.pendingAction.ticksLeft--;
-    if (f.pendingAction.ticksLeft > 0) return { ok:true, skip:true, log:`send → ${f.pendingAction.ticksLeft}tk (${f.pendingAction.effWeight}MB RAM)` };
-    // transfer complete
-    const pa = f.pendingAction; f.pendingAction = null;
-    const srcFile = S.files[pa.srcId];
-    if (!srcFile) return { ok:false, log:'send: source disappeared' };
-    // create file on destination server
-    const dstStore = S.serverFiles[pa.srvId];
-    const newName = uniqueName(srcFile.name, null, pa.srvId);
-    const newF = mkFile(newName, srcFile.type, null, srcFile.content, pa.srvId);
-    newF.inventory = JSON.parse(JSON.stringify(srcFile.inventory));
-    newF._compressRatio = srcFile._compressRatio || 1;
-    // remove from local (sent file is consumed)
-    deleteFile(pa.srcId, 'local');
-    tlog(`send → ${newName} arrived on [${pa.srvId}]`, 'send');
-    renderAll();
-    return { ok:true, kind:'send', log:`send(${srcFile.name})→${pa.srvId} DONE` };
-  }
-
-  // CONVERT <file>  — currencies → bits (uses convertV rate)
-  if (cmd === 'convert') {
-    const arg = parts.slice(1).join(' ');
-    if (!arg) return { ok:false, log:'convert: missing arg' };
-    const tgt = resolvePath(arg, f);
-    if (!tgt) return { ok:false, log:`convert: '${arg}' not found` };
-    let totalBits = 0;
-    for (const k in tgt.inventory) {
-      const cur = CUR_BY_ID[k];
-      if (!cur) continue;
-      if (k === 'bit') { totalBits += tgt.inventory[k]; continue; }
-      totalBits += tgt.inventory[k] * cur.convertV;
-      tgt.inventory[k] = 0;
-    }
-    if (totalBits === 0) return { ok:true, log:`convert(${arg}): nothing to convert` };
-    tgt.inventory['bit'] = Math.floor(totalBits);
-    return { ok:true, log:`convert(${arg}) → ${Math.floor(totalBits)} bits` };
-  }
-
-  // RUN <file>
-  if (cmd === 'run') {
-    const arg = str.slice(4).trim().replace(/[()]/g,'');
-    if (!arg) return { ok:false, log:'run: missing arg' };
-    const tgt = resolvePath(arg, f);
-    if (!tgt) return { ok:false, log:`run: '${arg}' not found` };
-    if (tgt.type !== 'script') return { ok:false, log:`run: '${arg}' not .code` };
-    if (totalRam('local') + 2.0 > S.ramMax) return { ok:false, log:`run(${arg}): not enough RAM` };
-    if (!tgt.running) startF(tgt);
-    return { ok:true, log:`run(${arg}) — launched` };
-  }
-
-  // STOP <file>
-  if (cmd === 'stop') {
-    const arg = str.slice(5).trim().replace(/[()]/g,'');
-    const tgt = resolvePath(arg, f);
-    if (!tgt) return { ok:false, log:`stop: '${arg}' not found` };
-    if (tgt.running) stopF(tgt);
-    return { ok:true, log:`stop(${arg}) — stopped` };
-  }
-
-  // WAIT <n>
-  if (cmd === 'wait') {
-    const n = parseInt(parts[1]) || 1;
-    if (!f.pendingAction) { f.pendingAction = { cmd:'wait', ticksLeft:n }; return { ok:true, skip:true, log:`wait ${n}tk` }; }
-    f.pendingAction.ticksLeft--;
-    if (f.pendingAction.ticksLeft > 0) return { ok:true, skip:true, log:`wait ${f.pendingAction.ticksLeft}tk` };
-    f.pendingAction = null; return { ok:true, log:'wait done' };
-  }
-
-  // DELETE <file>
-  if (cmd === 'delete') {
-    const arg = str.slice(7).trim().replace(/[()]/g,'');
-    if (!arg) return { ok:false, log:'delete: missing arg' };
-    const tgt = resolvePath(arg, f);
-    if (!tgt) return { ok:false, log:`delete: '${arg}' not found` };
-    if (tgt.id === f.id) return { ok:false, log:'delete: cannot delete self' };
-    deleteFile(tgt.id, 'local');
-    return { ok:true, log:`delete(${arg}) — done` };
-  }
-
-  // CREATE <name> <type>
-  if (cmd === 'create') {
-    const raw = str.slice(7).trim().replace(/[()]/g,'');
-    const [name, type] = raw.split(/[\s,]+/);
-    if (!name) return { ok:false, log:'create: usage: create name type' };
-    const t = (type||'dat').toLowerCase().replace('.','');
-    const ft = t === 'code' ? 'script' : 'dat';
-    if (resolvePath(name, f)) return { ok:true, log:`create(${name}): already exists` };
-    const stor = ft === 'script' ? 0.5 : 0.2;
-    if (totalStor('local') + stor > S.storMax) return { ok:false, log:'create: not enough storage' };
-    mkFile(name, ft, f.parentId, '');
-    renderAll();
-    return { ok:true, log:`create(${name}) — ok` };
-  }
-
-  // COPY <src> <dst>
-  if (cmd === 'copy') {
-    const raw = str.slice(5).trim().replace(/[()]/g,'');
-    const [srcName, dstName] = raw.split(/[\s,]+/);
-    if (!srcName) return { ok:false, log:'copy: usage: copy src [dstfolder]' };
-    const src = resolvePath(srcName, f);
-    if (!src) return { ok:false, log:`copy: '${srcName}' not found` };
-    if (src.type === 'folder') return { ok:false, log:'copy: cannot copy folders' };
-    if (totalStor('local') + fileStor(src) > S.storMax) return { ok:false, log:'copy: not enough storage' };
-    const dstPid = dstName ? (() => { const d = resolvePath(dstName, f); return d ? d.id : null; })() : f.parentId;
-    const nn = uniqueName(src.name, dstPid, 'local');
-    const nf = mkFile(nn, src.type, dstPid, src.content);
-    nf.inventory = JSON.parse(JSON.stringify(src.inventory));
-    renderAll();
-    return { ok:true, log:`copy(${srcName}) → ${nn}` };
-  }
-
-  // CHECK <file>
-  if (cmd === 'check') {
-    const arg = str.slice(6).trim().replace(/[()]/g,'') || null;
-    const tgt = arg ? resolvePath(arg, f) : f;
-    if (!tgt) return { ok:false, log:`check: '${arg}' not found` };
-    return { ok:true, log:`check(${arg||'self'}) [${invSummary(tgt)}] wt:${invWeight(tgt)}MB` };
-  }
-
-  return { ok:false, log:`Unknown cmd: ${str}` };
-}
-
-// ── TICK ENGINE ───────────────────────────────────────────────────────────────
-let tmr = null;
-
-function startF(f) {
-  if (f.type !== 'script') { tlog(`[${f.name}] not .code`, 'err'); return; }
-  if (totalRam('local') + 2.0 > S.ramMax) { tlog(`[${f.name}] not enough RAM (2MB needed)`, 'err'); return; }
-  try { f.program = flatten(parseSrc(f.content)); }
-  catch(e) { f.status='error'; tlog(`[${f.name}] parse error: ${e.message}`, 'err'); return; }
-  f.pc=0; f.running=true; f.status='running'; f.currentLine=-1; f.pendingAction=null; f.loopStack=[];
-  tlog(`[${f.name}] started`, 'info'); renderAll();
-}
-
-function stopF(f) {
-  f.running=false; f.status='idle'; f.currentLine=-1; f.pendingAction=null; f.loopStack=[];
-  tlog(`[${f.name}] stopped`, 'info'); renderAll();
-}
-
-function tickF(f) {
-  if (!f.running || !f.program) return;
-  if (f.pc >= f.program.length) { f.pc=0; f.loopStack=[]; }
-  if (f.pendingAction) {
-    const op = f.program[f.pc]; if (!op) { f.pendingAction=null; return; }
-    const actionStr = (op.type==='action'||op.type==='when') ? op.action : null;
-    if (!actionStr) { f.pendingAction=null; f.pc++; return; }
-    const r = execAction(actionStr, f);
-    if (r.skip) tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, 'run');
-    else { f.pendingAction=null; tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`, r.kind==='sell'?'sell':r.kind==='send'?'send':r.ok?'ok':'err'); f.pc++; }
-    return;
-  }
-  const op = f.program[f.pc]; if (!op) { f.pc=0; return; }
-  f.currentLine = op.lineNo||0;
-  if (op.type==='LOOP_START') {
-    const enters=(()=>{
-      if (op.kind==='infinite') return true;
-      if (op.kind==='count') { const se=f.loopStack.find(s=>s.pc===f.pc); if (!se){f.loopStack.push({pc:f.pc,rem:op.count});return op.count>0;} return se.rem>0; }
-      if (op.kind==='cond'||op.kind==='while') return evalCond(op.cond,f);
-      return false;
-    })();
-    if (enters){f.pc++;return;}
-    let depth=1;f.pc++;
-    while(f.pc<f.program.length&&depth>0){if(f.program[f.pc].type==='LOOP_START')depth++;if(f.program[f.pc].type==='LOOP_END')depth--;f.pc++;}
-    return;
-  }
-  if (op.type==='LOOP_END') {
-    let depth=1,si=f.pc-1;
-    while(si>=0&&depth>0){if(f.program[si].type==='LOOP_END')depth++;if(f.program[si].type==='LOOP_START')depth--;if(depth>0)si--;}
-    const start=f.program[si]; if(!start){f.pc++;return;}
-    if(start.kind==='count'){const se=f.loopStack.find(s=>s.pc===si);if(se){se.rem--;if(se.rem>0){f.pc=si+1;return;}else{f.loopStack=f.loopStack.filter(s=>s.pc!==si);f.pc++;return;}}}
-    if(start.kind==='cond'||start.kind==='while'){if(evalCond(start.cond,f)){f.pc=si+1;return;}else{f.pc++;return;}}
-    f.pc=si+1;return;
-  }
-  if (op.type==='IF') {
-    if(evalCond(op.cond,f)){f.pc++;return;}
-    let depth=1;f.pc++;
-    while(f.pc<f.program.length&&depth>0){const t=f.program[f.pc].type;if(t==='IF')depth++;if(t==='ENDIF')depth--;if(t==='ELSE'&&depth===1){f.pc++;return;}f.pc++;}
-    return;
-  }
-  if(op.type==='ELSE'){let depth=1;f.pc++;while(f.pc<f.program.length&&depth>0){const t=f.program[f.pc].type;if(t==='IF')depth++;if(t==='ENDIF')depth--;f.pc++;}return;}
-  if(op.type==='ENDIF'){f.pc++;return;}
-  if(op.type==='when'){if(evalCond(op.cond,f)){const r=execAction(op.action,f);if(r.skip)tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`,'run');else{tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`,r.kind==='sell'?'sell':r.kind==='send'?'send':r.ok?'ok':'err');f.pc++;}}else f.pc++;return;}
-  if(op.type==='action'){const r=execAction(op.action,f);if(r.skip)tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`,'run');else{tlog(`[${f.name}] L${(op.lineNo||0)+1}: ${r.log}`,r.kind==='sell'?'sell':r.kind==='send'?'send':r.ok?'ok':'err');f.pc++;}return;}
-  f.pc++;
-}
-
-function tick() {
-  S.tick++;
-  for (const id in S.files) { const f=S.files[id]; if(f.type==='script'&&f.running) tickF(f); }
-  renderAll();
-}
-
-function reloop() {
-  if (tmr) clearInterval(tmr);
-  const ms = [1000,750,500,300,200][S.upgLevels.speed] || 1000;
-  S.tickMs = ms; tmr = setInterval(tick, ms);
-}
-
-// ── RENDER ────────────────────────────────────────────────────────────────────
-function renderTree() {
-  const el = document.getElementById('ftree');
-  el.innerHTML = '';
-  const fileCount = Object.values(S.files).filter(f=>f.type!=='folder').length;
-  document.getElementById('file-count').textContent = `${fileCount} files`;
-  function rl(ids, container, sid) {
-    const store = allFiles(sid||'local');
-    for (const id of (ids||[])) {
-      const f = store[id]; if(!f) continue;
-      const row = document.createElement('div');
-      row.className = 'frow'+(f.type==='folder'?' folder-row':'')+(f.id===S.activeId?' active':'');
-      if(f.type==='script'){const dot=document.createElement('span');dot.className=`sdot s-${f.status}`;row.appendChild(dot);}
-      else if(f.type==='dat'){const dot=document.createElement('span');dot.className='sdot';dot.style.background='#4ade80';row.appendChild(dot);}
-      else{const a=document.createElement('span');a.textContent='> ';a.style.cssText='color:var(--ash);font-size:9px;';row.appendChild(a);}
-      const nameEl=document.createElement('span');nameEl.className='fname';nameEl.textContent=f.name;row.appendChild(nameEl);
-      if(f.type!=='folder'){
-        // show all currency badges
-        for(const k in f.inventory){
-          if(!f.inventory[k]) continue;
-          const cur=CUR_BY_ID[k];
-          const b=document.createElement('span');
-          b.className='fbadge '+(k==='bit'?'fb-bits':'fb-cur');
-          if(f.inventory[k]===0) b.classList.add('fb-zero');
-          b.textContent=`${f.inventory[k]}${k}`;
-          if(cur) b.style.color=cur.color;
-          b.style.background=hexAlpha(cur?cur.color:'#888',0.12);
-          row.appendChild(b);
-        }
-        if(Object.keys(f.inventory).length===0||Object.values(f.inventory).every(v=>!v)){
-          const b=document.createElement('span');b.className='fbadge fb-bits fb-zero';b.textContent='0b';row.appendChild(b);
-        }
-        const mb=document.createElement('span');mb.className='fmb';mb.textContent=r2(fileStor(f))+'M';row.appendChild(mb);
-      }
-      const cpBtn=document.createElement('button');cpBtn.className='btn btn-sm btn-cp';cpBtn.textContent='cp';
-      cpBtn.onclick=e=>{e.stopPropagation();uiCopy(f.id);};
-      row.appendChild(cpBtn);
-      const del=document.createElement('button');del.className='btn btn-sm btn-del';del.textContent='del';
-      del.title=`Delete "${f.name}"`;del.onclick=e=>{e.stopPropagation();if(confirm(`Delete "${f.name}"?`))deleteFile(f.id,'local');};
-      row.appendChild(del);
-      row.onclick=()=>selF(f.id);
-      row.oncontextmenu=e=>{e.preventDefault();showCtxMenu(e.clientX,e.clientY,f);};
-      container.appendChild(row);
-      if(f.type==='folder'&&f.children){const sub=document.createElement('div');sub.className='fcindent';container.appendChild(sub);rl(f.children,sub,'local');}
-    }
-  }
-  rl(S.rootOrder, el, 'local');
-}
-
-function hexAlpha(hex, alpha) {
-  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
-
-function renderServerTabs() {
-  const el = document.getElementById('server-tabs'); el.innerHTML='';
-  const owned = SERVERS.filter(s=>s.owned);
-  owned.forEach(sv=>{
-    const tab=document.createElement('div');
-    tab.className='stab'+(sv.id===S.activeServerId?' active':'');
-    tab.textContent=`[${sv.name.toUpperCase()}]`;
-    tab.title=`RAM:${sv.ram}MB Stor:${sv.stor}MB Speed:${sv.speed}`;
-    tab.onclick=()=>{S.activeServerId=sv.id;renderServerTabs();};
-    el.appendChild(tab);
+function showAutocomplete(words, prefix){
+  $autocomplete.innerHTML = '';
+  words.slice(0,8).forEach((w,i)=>{
+    const div = document.createElement('div');
+    div.className = 'ac-item' + (i===0?' selected':'');
+    div.textContent = w;
+    div.dataset.val = w;
+    div.onclick = ()=>{ completeWord(prefix,w); $autocomplete.style.display='none'; };
+    $autocomplete.appendChild(div);
   });
-  document.getElementById('srv-label').textContent=`srv:${S.activeServerId}`;
+  $autocomplete.style.display = 'block';
 }
 
-function renderTransfers() {
-  const el=document.getElementById('transfer-list');
-  el.innerHTML='';
-  if(!S.transfers.length){el.innerHTML='<span style="color:var(--ash);font-size:9px;">none</span>';return;}
-  S.transfers.forEach(tr=>{
-    const row=document.createElement('div');row.className='transfer-row';
-    const prog=r2(((tr.totalTicks-tr.ticksLeft)/tr.totalTicks)*100);
-    row.innerHTML=`<span style="font-size:9px;color:var(--cyan);">${tr.name}</span><div class="tprog"><div class="tprog-bar" style="width:${prog}%"></div></div><span style="font-size:9px;color:var(--ash);">${tr.ticksLeft}tk</span>`;
-    el.appendChild(row);
+// ─── SCRIPTO LANG PARSER ───
+// Grammar:
+//   repeat N | repeat infinite
+//     STATEMENT
+//     ...
+//   end
+//
+//   when CONDITION: ACTION
+//   collect
+//   save FILENAME
+//   compress FILENAME
+//   extract FILENAME
+//   convert FILENAME
+
+function parseScript(code){
+  const raw = code.split('\n').map(l=>l.trim()).filter(l=>l && !l.startsWith('//'));
+  const instructions = [];
+  let i=0;
+  while(i<raw.length){
+    const line = raw[i];
+    if(line.startsWith('repeat ')){
+      const arg = line.slice(7).trim();
+      const count = arg==='infinite' ? Infinity : parseInt(arg)||1;
+      const body = [];
+      i++;
+      while(i<raw.length && raw[i]!=='end'){
+        body.push(raw[i]); i++;
+      }
+      i++; // skip end
+      instructions.push({type:'repeat', count, body});
+    } else {
+      instructions.push({type:'stmt', line});
+      i++;
+    }
+  }
+  return instructions;
+}
+
+function execStatement(line, file, tick){
+  const parts = line.split(/\s+/);
+  const cmd = parts[0];
+
+  if(cmd==='collect'){
+    const gain = 1 + Math.floor(Math.random()*3);
+    file.data += gain;
+    return {ok:true, msg:`collected ${gain} units (total ${file.data})`, cls:'success'};
+  }
+
+  if(cmd==='when'){
+    // when COND: ACTION
+    const rest = line.slice(5);
+    const ci = rest.indexOf(':');
+    if(ci<0) return {ok:false,msg:'syntax: when COND: ACTION', cls:'error'};
+    const cond = rest.slice(0,ci).trim();
+    const action = rest.slice(ci+1).trim();
+    let condMet = false;
+    if(cond==='collectable') condMet = (tick % 3 === 0);
+    else if(cond==='data>0')  condMet = file.data > 0;
+    else if(cond==='always')  condMet = true;
+    else condMet = true;
+    if(condMet) return execStatement(action, file, tick);
+    return {ok:true, msg:`[when ${cond}] condition false`, cls:''};
+  }
+
+  if(cmd==='save'){
+    const target = parts[1] || (file.name.replace('.spt','.save'));
+    const saveFile = state.files.find(f=>f.name===target);
+    if(!saveFile) return {ok:false, msg:`[x] no file: ${target}`, cls:'error'};
+    if(file.data<=0) return {ok:false, msg:`[x] no data to save`, cls:'warn'};
+    const amount = Math.min(file.data, 10);
+    file.data -= amount;
+    saveFile.data = (saveFile.data||0) + amount;
+    file.saves++;
+    return {ok:true, msg:`saved ${amount} → ${target}`, cls:'accent'};
+  }
+
+  if(cmd==='compress'){
+    const target = parts[1];
+    const tf = state.files.find(f=>f.name===target);
+    if(!tf) return {ok:false, msg:`[x] no file: ${target}`, cls:'error'};
+    if((tf.data||0) < 5) return {ok:false, msg:`[x] need ≥5 data to compress`, cls:'warn'};
+    const orig = tf.data;
+    tf.data = Math.ceil(tf.data * 0.5);
+    return {ok:true, msg:`compressed ${target}: ${orig} → ${tf.data}`, cls:'purple'};
+  }
+
+  if(cmd==='extract'){
+    const target = parts[1];
+    const tf = state.files.find(f=>f.name===target);
+    if(!tf) return {ok:false, msg:`[x] no file: ${target}`, cls:'error'};
+    if((tf.data||0) <= 0) return {ok:false, msg:`[x] nothing to extract`, cls:'warn'};
+    const amount = Math.min(tf.data, 5);
+    tf.data -= amount;
+    file.data += amount;
+    return {ok:true, msg:`extracted ${amount} from ${target}`, cls:'purple'};
+  }
+
+  if(cmd==='convert'){
+    const target = parts[1];
+    const tf = target ? state.files.find(f=>f.name===target) : file;
+    const src = tf || file;
+    const ramFree = state.ramMax - state.ram;
+    if(src.data >= 50 && ramFree < 5) return {ok:false, msg:`[x] RAM too low for large convert`, cls:'error'};
+    if(src.data <= 0) return {ok:false, msg:`[x] no data to convert`, cls:'warn'};
+    const amount = Math.min(src.data, 10);
+    src.data -= amount;
+    const earned = amount * 10;
+    state.money += earned;
+    return {ok:true, msg:`converted ${amount} data → ${earned} §`, cls:'success'};
+  }
+
+  return {ok:false, msg:`[x] unknown command: ${cmd}`, cls:'error'};
+}
+
+// ─── RUN / STOP ───
+function runFile(id){
+  const f = getFile(id);
+  if(!f) return;
+  // save current edits
+  if(state.activeFile===id) f.code = $editor.value;
+
+  const ramCost = 1;
+  if(state.ram + ramCost > state.ramMax){
+    log(`[x] not enough RAM to run ${f.name}`, 'error');
+    setStatus('[x] out of RAM');
+    return;
+  }
+  if(totalStorage() > state.storageMax){
+    log(`[x] storage full — delete files`, 'error');
+    return;
+  }
+
+  try{ parseScript(f.code); } catch(e){ log(`[x] parse error in ${f.name}`, 'error'); return; }
+
+  f.status = 'running';
+  f.pc = 0;
+  f.loops = 0;
+  state.ram += ramCost;
+  log(`[>] running ${f.name}`, 'purple');
+  renderFileList();
+  if(state.activeFile===id){
+    $btnRun.style.display = 'none';
+    $btnStop.style.display = '';
+  }
+  updateStats();
+}
+
+function stopFile(id){
+  const f = getFile(id);
+  if(!f) return;
+  if(f.status!=='running') return;
+  f.status = 'done';
+  state.ram = Math.max(0, state.ram-1);
+  log(`[x] stopped ${f.name} (loops:${f.loops})`, 'warn');
+  renderFileList();
+  if(state.activeFile===id){
+    $btnRun.style.display = '';
+    $btnStop.style.display = 'none';
+  }
+  updateStats();
+}
+
+// ─── TICK LOOP ───
+function startTick(){
+  if(state.tickInterval) clearInterval(state.tickInterval);
+  state.tickInterval = setInterval(tick, state.speed);
+}
+
+function tick(){
+  state.tick++;
+  const running = state.files.filter(f=>f.status==='running');
+  running.forEach(f=>{
+    const instructions = parseScript(f.code);
+    if(!instructions.length){ stopFile(f.id); return; }
+    // execute one top-level instruction per tick
+    const pc = f.pc % instructions.length;
+    const instr = instructions[pc];
+    if(instr.type==='repeat'){
+      f.loops++;
+      const loopsLeft = instr.count === Infinity ? true : (f._repeatCount = (f._repeatCount||0)+1) <= instr.count;
+      if(loopsLeft || instr.count===Infinity){
+        instr.body.forEach(line=>{
+          const res = execStatement(line, f, state.tick);
+          if(res.msg && (res.cls==='error'||res.cls==='success'||res.cls==='purple'||res.cls==='accent')){
+            log(`  ${f.name}: ${res.msg}`, res.cls);
+          }
+        });
+      } else {
+        f.pc++;
+      }
+    } else {
+      const res = execStatement(instr.line, f, state.tick);
+      if(res.msg && res.cls) log(`  ${f.name}: ${res.msg}`, res.cls);
+      if(!res.ok && res.cls==='error'){ f.status='error'; state.ram=Math.max(0,state.ram-1); renderFileList(); return; }
+      f.pc++;
+    }
+    if(f.pc >= instructions.length && instr.count!==Infinity) {
+      f.status='done'; state.ram=Math.max(0,state.ram-1);
+    }
   });
-  const count=S.transfers.length;
-  document.getElementById('s-transfers').textContent=count?`↑${count} tx`:'';
+  updateStats();
+  renderFileList();
 }
 
-function renderAll() {
-  const ram=totalRam('local');const stor=totalStor('local');
-  const srv=SERVERS.find(s=>s.id==='local');
-  document.getElementById('s-stor').textContent=`STOR ${r2(stor)}/${srv.stor}MB`;
-  document.getElementById('s-ram').textContent=`RAM ${r2(ram)}/${srv.ram}MB`;
-  document.getElementById('s-tick').textContent=`TICK ${S.tickMs}ms`;
-  document.getElementById('s-money').textContent=`$${r2(S.money)}`;
-  // count abaut globally
-  let abautTotal=0;
-  for(const id in S.files){const f=S.files[id];abautTotal+=getInv(f,'abaut');}
-  document.getElementById('s-abaut').textContent=abautTotal?`abaut:${abautTotal}`:'';
-  const ramEl=document.getElementById('s-ram');
-  ramEl.style.color=ram>srv.ram*0.85?'var(--danger)':'var(--run)';
-  renderTree();renderGutter();renderServerTabs();renderTransfers();
-  if(S.activeId&&S.files[S.activeId]){
-    const f=S.files[S.activeId];
-    document.getElementById('eplabel').textContent=`[EDITOR] ${f.name}  [${invSummary(f)}]`;
-  }
+// ─── STATS ───
+function updateStats(){
+  $statMoney.textContent = state.money.toFixed(0);
+  $statTick.textContent  = state.tick;
+  $statRam.textContent   = state.ram;
+  $statRamMax.textContent = state.ramMax;
+  const totalData = state.files.reduce((a,f)=>a+(f.data||0),0);
+  $tsData.textContent = totalData;
+  $tsSpeed.textContent = state.speed;
+  document.getElementById('shop-cur-speed').textContent = state.speed;
 }
 
-function tlog(msg,kind){
-  const out=document.getElementById('tout');
-  const l=document.createElement('div');
-  l.className=`tl tl-${kind||'info'}`;
-  l.textContent=`[t${String(S.tick).padStart(4,'0')}] ${msg}`;
-  out.appendChild(l);
-  while(out.children.length>800)out.removeChild(out.firstChild);
-  out.scrollTop=out.scrollHeight;
-}
+// ─── BUTTONS ───
+document.getElementById('btn-new-file').onclick = ()=>{
+  createFile($newFileName.value.trim());
+  $newFileName.value = '';
+};
+$newFileName.addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('btn-new-file').click(); });
+document.getElementById('btn-del').onclick = deleteActiveFile;
+$btnRun.onclick  = ()=>{ if(state.activeFile) runFile(state.activeFile); };
+$btnStop.onclick = ()=>{ if(state.activeFile) stopFile(state.activeFile); };
+document.getElementById('btn-clear-log').onclick = ()=>{ $termLog.innerHTML=''; };
+$tutorial.onclick = ()=>$tutorial.classList.remove('visible');
 
-function renderGutter(){
-  const ed=document.getElementById('editor');
-  const g=document.getElementById('gutter');
-  if(!S.activeId||!S.files[S.activeId]){g.innerHTML='';return;}
-  const f=S.files[S.activeId];
-  const lines=ed.value.split('\n');let h='';
-  for(let i=0;i<lines.length;i++){
-    let style='';
-    if(f.running&&f.currentLine===i)style='color:var(--run);font-weight:700;';
-    else if(f.status==='error'&&f.currentLine===i)style='color:var(--danger);font-weight:700;';
-    h+=`<div style="${style}">${i+1}</div>`;
-  }
-  g.innerHTML=h;
-}
-
-function selF(id){
-  if(!S.files[id])return;
-  S.activeId=id;
-  const f=S.files[id];
-  document.getElementById('eplabel').textContent=`[EDITOR] ${f.name}  [${invSummary(f)}]`;
-  const ed=document.getElementById('editor');
-  ed.value=f.content;
-  ed.disabled=(f.type!=='script');
-  renderGutter();renderTree();
-}
-
-// ── SHOP ──────────────────────────────────────────────────────────────────────
-const UPGRADES = {
-  storage:  { label:'Storage',    desc:'Disk space', levels:[
-    {label:'+4MB stor',  cost:15,  apply:()=>{SERVERS.find(s=>s.id==='local').stor+=4;}},
-    {label:'+10MB stor', cost:50,  apply:()=>{SERVERS.find(s=>s.id==='local').stor+=10;}},
-    {label:'+50MB stor', cost:200, apply:()=>{SERVERS.find(s=>s.id==='local').stor+=50;}},
-    {label:'+200MB stor',cost:1000,apply:()=>{SERVERS.find(s=>s.id==='local').stor+=200;}}
-  ]},
-  ram: { label:'RAM', desc:'.code=2MB, weights vary', levels:[
-    {label:'+4MB RAM',  cost:30,   apply:()=>{SERVERS.find(s=>s.id==='local').ram+=4;}},
-    {label:'+12MB RAM', cost:100,  apply:()=>{SERVERS.find(s=>s.id==='local').ram+=12;}},
-    {label:'+32MB RAM', cost:400,  apply:()=>{SERVERS.find(s=>s.id==='local').ram+=32;}},
-    {label:'+128MB RAM',cost:2000, apply:()=>{SERVERS.find(s=>s.id==='local').ram+=128;}}
-  ]},
-  speed: { label:'CPU Speed', desc:'Tick interval', levels:[
-    {label:'750ms', cost:100,  apply:()=>{S.upgLevels.speed=1;reloop();}},
-    {label:'500ms', cost:350,  apply:()=>{S.upgLevels.speed=2;reloop();}},
-    {label:'300ms', cost:900,  apply:()=>{S.upgLevels.speed=3;reloop();}},
-    {label:'200ms', cost:3000, apply:()=>{S.upgLevels.speed=4;reloop();}}
-  ]},
-  mineSpeed: { label:'Mine Speed', desc:'Ticks per mine', levels:[
-    {label:'x1.33 faster', cost:80,   apply:()=>{S.upgLevels.mineSpeed=1;}},
-    {label:'x2.0 faster',  cost:300,  apply:()=>{S.upgLevels.mineSpeed=2;}},
-    {label:'x3.0 faster',  cost:1200, apply:()=>{S.upgLevels.mineSpeed=3;}}
-  ]},
-  sellRate: { label:'Sell Rate', desc:'$ per bit', levels:[
-    {label:'$0.75/b', cost:80,   apply:()=>{S.upgLevels.sellRate=1;}},
-    {label:'$1.25/b', cost:300,  apply:()=>{S.upgLevels.sellRate=2;}},
-    {label:'$2.00/b', cost:1200, apply:()=>{S.upgLevels.sellRate=3;}},
-    {label:'$3.50/b', cost:5000, apply:()=>{S.upgLevels.sellRate=4;}}
-  ]}
+// ─── SHOP ───
+document.getElementById('btn-shop').onclick = ()=>{
+  updateShopButtons();
+  document.getElementById('modal-overlay').classList.add('open');
+};
+document.getElementById('modal-close').onclick = ()=>{
+  document.getElementById('modal-overlay').classList.remove('open');
+};
+document.getElementById('modal-overlay').onclick = (e)=>{
+  if(e.target===document.getElementById('modal-overlay'))
+    document.getElementById('modal-overlay').classList.remove('open');
 };
 
-function renderShop(){
-  const body=document.getElementById('shop-body');
-  body.innerHTML='';
-  document.getElementById('shop-money').textContent=`$${r2(S.money)}`;
+function updateShopButtons(){
+  document.querySelectorAll('.shop-btn').forEach(btn=>{
+    const item = btn.dataset.shop;
+    if(item==='storage'){
+      const price = 50 + state.storageBought * 30;
+      document.getElementById('shop-storage-price').textContent = price + ' §';
+      btn.disabled = state.money < price;
+    } else if(item==='ram'){
+      const price = 80 + Math.floor((state.ramMax-16)/16)*40;
+      document.getElementById('shop-ram-price').textContent = price + ' §';
+      btn.disabled = state.money < price;
+    } else if(item==='speed2'){
+      btn.disabled = state.speedTier >= 2 || state.money < 120;
+      if(state.speedTier>=2) btn.textContent = '[✓] owned';
+    } else if(item==='speed3'){
+      btn.disabled = state.speedTier >= 3 || state.money < 350;
+      if(state.speedTier>=3) btn.textContent = '[✓] owned';
+    } else if(item==='slots'){
+      btn.disabled = state.money < 60;
+    }
+  });
+}
 
-  // LOCAL SERVER UPGRADES
-  const sec1=document.createElement('div');sec1.className='shop-section';sec1.textContent='LOCAL SERVER UPGRADES';body.appendChild(sec1);
-  const info=document.createElement('div');info.style.cssText='padding:6px 12px;font-size:10px;color:var(--mute);';
-  const srv=SERVERS.find(s=>s.id==='local');
-  info.textContent=`RAM ${r2(totalRam('local'))}/${srv.ram}MB | Stor ${r2(totalStor('local'))}/${srv.stor}MB | Tick ${S.tickMs}ms`;
-  body.appendChild(info);
-  for(const key in UPGRADES){
-    const upg=UPGRADES[key];const lvl=S.upgLevels[key];
-    const maxed=lvl>=upg.levels.length;
-    const nextLevel=maxed?null:upg.levels[lvl];
-    const row=document.createElement('div');row.className='shoprow';
-    const left=document.createElement('div');left.className='shoprow-left';
-    const title=document.createElement('div');title.innerHTML=`<b>${upg.label}</b> <span style="color:var(--ash);font-size:9px;">${upg.desc}</span>`;left.appendChild(title);
-    const bar=document.createElement('div');bar.className='upg-bar';
-    for(let i=0;i<upg.levels.length;i++){const pip=document.createElement('div');pip.className='upg-pip'+(i<lvl?' on':'');bar.appendChild(pip);}
-    left.appendChild(bar);
-    row.appendChild(left);
-    const right=document.createElement('div');right.className='shoprow-right';
-    if(!maxed){
-      const inf2=document.createElement('span');inf2.style.cssText='font-size:9px;color:var(--mute);';inf2.textContent=`Lv${lvl+1}: ${nextLevel.label} $${nextLevel.cost}`;right.appendChild(inf2);
-      const btn=document.createElement('button');btn.className='btn btn-ink btn-sm';btn.textContent='upgrade';
-      btn.onclick=()=>{
-        if(S.money>=nextLevel.cost){S.money=r2(S.money-nextLevel.cost);nextLevel.apply();S.upgLevels[key]++;tlog(`Upgrade ${upg.label} Lv${S.upgLevels[key]}`,'ok');renderAll();renderShop();}
-        else tlog(`Not enough money for ${upg.label} Lv${lvl+1}`,'err');
-      };right.appendChild(btn);
-    } else { const d=document.createElement('span');d.style.cssText='font-size:9px;color:var(--success);';d.textContent='MAXED';right.appendChild(d); }
-    row.appendChild(right);body.appendChild(row);
+document.querySelectorAll('.shop-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const item = btn.dataset.shop;
+    if(item==='storage'){
+      const price = 50 + state.storageBought * 30;
+      if(state.money < price){ setStatus('[x] not enough money'); return; }
+      state.money -= price;
+      state.storageMax += 32;
+      state.storageBought++;
+      log(`[+] storage expanded to ${state.storageMax} MB`, 'success');
+    } else if(item==='ram'){
+      const price = 80 + Math.floor((state.ramMax-16)/16)*40;
+      if(state.money < price){ setStatus('[x] not enough money'); return; }
+      state.money -= price;
+      state.ramMax += 16;
+      log(`[+] RAM expanded to ${state.ramMax} MB`, 'success');
+    } else if(item==='speed2'){
+      if(state.speedTier>=2||state.money<120){ return; }
+      state.money -= 120; state.speedTier=2; state.speed=500;
+      startTick();
+      log('[+] speed upgraded: 500ms/tick', 'purple');
+    } else if(item==='speed3'){
+      if(state.speedTier>=3||state.money<350){ return; }
+      state.money -= 350; state.speedTier=3; state.speed=200;
+      startTick();
+      log('[+] speed upgraded: 200ms/tick', 'purple');
+    } else if(item==='slots'){
+      if(state.money<60){ return; }
+      state.money -= 60; state.saveSlots += 3;
+      log(`[+] save slots: ${state.saveSlots}`, 'success');
+    }
+    updateStats();
+    updateShopButtons();
+    renderFileList();
+  });
+});
+
+// ─── INIT ───
+function init(){
+  // seed with starter files
+  createFile('main.spt');
+  const f = state.files[0];
+  if(f){
+    f.code = `// starter script — earns money each tick\nrepeat infinite\n  when collectable: collect\n  when data>0: convert\nend\n`;
+    selectFile(f.id);
   }
-
-  // OTHER SERVERS
-  const sec2=document.createElement('div');sec2.className='shop-section';sec2.textContent='NETWORK SERVERS';body.appendChild(sec2);
-  SERVERS.filter(s=>s.id!=='local').forEach(sv=>{
-    const row=document.createElement('div');row.className='shoprow';
-    const left=document.createElement('div');left.className='shoprow-left';
-    left.innerHTML=`<b>${sv.name}</b> <span style="font-size:9px;color:var(--ash);">RAM:${sv.ram}MB Stor:${sv.stor}MB Speed:${sv.speed}</span>`;
-    if(sv.owned){
-      // show upgrade levels
-      const upgLvl = sv.upgLevel||0;
-      const barDiv=document.createElement('div');barDiv.className='upg-bar';
-      SERVER_UPG.forEach((_,i)=>{const p=document.createElement('div');p.className='upg-pip'+(i<upgLvl?' on':'');barDiv.appendChild(p);});
-      left.appendChild(barDiv);
-    }
-    row.appendChild(left);
-    const right=document.createElement('div');right.className='shoprow-right';
-    if(!sv.owned){
-      const cost=SERVER_COSTS[sv.id]||9999;
-      const inf=document.createElement('span');inf.style.cssText='font-size:9px;color:var(--mute);';inf.textContent=`$${cost}`;right.appendChild(inf);
-      const btn=document.createElement('button');btn.className='btn btn-ink btn-sm';btn.textContent='buy server';
-      btn.onclick=()=>{
-        if(S.money>=cost){S.money=r2(S.money-cost);sv.owned=true;tlog(`Server [${sv.name}] unlocked!`,'ok');renderAll();renderShop();}
-        else tlog(`Not enough money for server ${sv.name}`,'err');
-      };right.appendChild(btn);
-    } else {
-      const upgLvl=sv.upgLevel||0;
-      const maxed=upgLvl>=SERVER_UPG.length;
-      if(!maxed){
-        const nextU=SERVER_UPG[upgLvl];
-        const inf=document.createElement('span');inf.style.cssText='font-size:9px;color:var(--mute);';inf.textContent=`Lv${upgLvl+1}: ${nextU.label} $${nextU.cost}`;right.appendChild(inf);
-        const btn=document.createElement('button');btn.className='btn btn-ink btn-sm';btn.textContent='upgrade';
-        btn.onclick=()=>{
-          if(S.money>=nextU.cost){S.money=r2(S.money-nextU.cost);sv.ram+=nextU.ramBonus;sv.stor+=nextU.storBonus;sv.upgLevel=(sv.upgLevel||0)+1;tlog(`Server [${sv.name}] upgraded Lv${sv.upgLevel}`,'ok');renderAll();renderShop();}
-          else tlog(`Not enough money to upgrade ${sv.name}`,'err');
-        };right.appendChild(btn);
-      } else { const d=document.createElement('span');d.style.cssText='font-size:9px;color:var(--success);';d.textContent='MAXED';right.appendChild(d); }
-    }
-    row.appendChild(right);body.appendChild(row);
-  });
+  log('[SCRIPTO] ready. create scripts, run them, earn money.', 'info');
+  log('keywords: repeat N|infinite, when COND: ACTION, collect, save, compress, extract, convert', '');
+  updateStats();
+  startTick();
 }
 
-// ── CURRENCIES TABLE ─────────────────────────────────────────────────────────
-function renderCurrencies(){
-  const body=document.getElementById('cur-body');
-  let h='<table class="cur-table"><thead><tr><th>Tier</th><th>Name</th><th>Mine Tks</th><th>Weight</th><th>→ Bits</th><th>Must Send?</th><th>Info</th></tr></thead><tbody>';
-  CURRENCIES.forEach(c=>{
-    const ms=MUST_SEND.has(c.id);
-    h+=`<tr><td style="color:${c.color};font-weight:700;">${c.tier}</td><td style="color:${c.color};">${c.name}</td><td>${c.mineT}tk</td><td>${c.weight}MB</td><td>${c.convertV.toLocaleString()}</td><td style="color:${ms?'var(--gold)':'var(--ash)'}">${ms?'YES — send first':'no'}</td><td style="color:var(--ash);">${c.desc}</td></tr>`;
-  });
-  h+='</tbody></table>';
-  body.innerHTML=h;
-}
-
-// ── CONTEXT MENU ─────────────────────────────────────────────────────────────
-function showCtxMenu(x,y,f){
-  const m=document.getElementById('ctx-menu');
-  m.innerHTML=`
-    <div class="ctx-item" data-act="open">Open in Editor</div>
-    ${f.type!=='folder'?`
-    <div class="ctx-sep"></div>
-    <div class="ctx-item" data-act="copy">Copy</div>
-    ${f.type==='script'&&!f.running?'<div class="ctx-item" data-act="run">Run</div>':''}
-    ${f.running?'<div class="ctx-item" data-act="stop">Stop</div>':''}
-    `:''}
-    <div class="ctx-sep"></div>
-    <div class="ctx-item" style="color:var(--danger)" data-act="del">Delete</div>
-  `;
-  m.style.cssText=`display:block;left:${x}px;top:${y}px;`;
-  m.querySelectorAll('.ctx-item').forEach(it=>{
-    it.onclick=()=>{
-      m.style.display='none';
-      const act=it.dataset.act;
-      if(act==='open')selF(f.id);
-      else if(act==='copy')uiCopy(f.id);
-      else if(act==='run')startF(f);
-      else if(act==='stop')stopF(f);
-      else if(act==='del'){if(confirm(`Delete "${f.name}"?`))deleteFile(f.id,'local');}
-    };
-  });
-  setTimeout(()=>document.addEventListener('click',function h(){m.style.display='none';document.removeEventListener('click',h);},{once:true}),10);
-}
-
-async function askUser(label,def){
-  return new Promise(res=>{
-    const m=document.getElementById('inp-modal');
-    const inp=document.getElementById('inp-input');
-    document.getElementById('inp-label').textContent=label;
-    inp.value=def||'';
-    m.style.display='flex';
-    setTimeout(()=>{inp.focus();inp.select();},60);
-    const done=v=>{m.style.display='none';res(v);};
-    document.getElementById('inp-ok').onclick=()=>done(inp.value.trim()||null);
-    document.getElementById('inp-cancel').onclick=()=>done(null);
-    inp.onkeydown=e=>{if(e.key==='Enter')done(inp.value.trim()||null);if(e.key==='Escape')done(null);};
-  });
-}
-
-async function uiCopy(id){
-  const f=S.files[id];if(!f||f.type==='folder')return;
-  const ans=await askUser(`Copy "${f.name}" to folder (empty = same folder):`, '');
-  if(ans===null)return;
-  const dstPid=ans.trim()?(()=>{const d=resolvePath(ans.trim(),f);return d?d.id:null;})():f.parentId;
-  if(totalStor('local')+fileStor(f)>SERVERS.find(s=>s.id==='local').stor){tlog('copy: not enough storage','err');return;}
-  const nn=uniqueName(f.name,dstPid,'local');
-  const nf=mkFile(nn,f.type,dstPid,f.content,'local');
-  nf.inventory=JSON.parse(JSON.stringify(f.inventory));
-  tlog(`copy → ${nn}`,'ok');renderAll();
-}
-
-async function newFileUI(type){
-  const af=S.activeId?S.files[S.activeId]:null;
-  const pid=af&&af.type==='folder'?af.id:(af?af.parentId:null);
-  const stor=type==='script'?0.5:type==='folder'?0:0.2;
-  if(stor>0&&totalStor('local')+stor>SERVERS.find(s=>s.id==='local').stor){tlog('Not enough storage! Buy more in Shop.','err');return;}
-  const def=type==='script'?`script${S.nextId}.code`:type==='folder'?`folder${S.nextId}`:`data${S.nextId}.dat`;
-  const name=await askUser('Filename:',def);
-  if(!name)return;
-  const finalName=uniqueName(name,pid,'local');
-  // NEW FILES ARE EMPTY
-  const f=mkFile(finalName,type,pid,'','local');
-  renderAll();selF(f.id);
-  tlog(`Created: ${finalName} (empty)`,'ok');
-}
-
-// ── AUTOCOMPLETE ─────────────────────────────────────────────────────────────
-const KW = [
-  'mine bit','mine byte','mine nibble','mine kbit','mine kbyte','mine abaut','mine mbit','mine mbyte','mine packet','mine frame','mine block','mine sector','mine cluster','mine page','mine chunk','mine shard','mine node','mine kernel','mine core','mine nexus',
-  'collect','store','sell','check','convert','compress','extract',
-  'send','to',
-  'run','stop','wait','delete','create','copy',
-  'repeat','repeat infinite','repeat if','while','if','else','times',
-  'when','exists','money','ram','storage','transfers',
-  'local','alpha','beta','gamma'
-];
-
-function onInput(e){
-  const ed=e.target;
-  if(S.activeId&&S.files[S.activeId])S.files[S.activeId].content=ed.value;
-  renderGutter();doAc(ed);
-}
-function onKey(e){
-  const box=document.getElementById('acbox');
-  if(e.key==='Tab'&&box.style.display!=='none'){e.preventDefault();const sel=box.querySelector('.acitem.sel')||box.querySelector('.acitem');if(sel)applyAc(sel.textContent.trim());return;}
-  if(e.key==='Escape'){box.style.display='none';return;}
-  if(e.key==='Tab'){e.preventDefault();insText(e.target,'  ');}
-  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();const f=S.files[S.activeId];if(f)f.content=e.target.value;tlog('saved','info');}
-}
-function insText(el,txt){
-  const s=el.selectionStart;el.value=el.value.slice(0,s)+txt+el.value.slice(s);
-  el.selectionStart=el.selectionEnd=s+txt.length;
-  if(S.activeId&&S.files[S.activeId])S.files[S.activeId].content=el.value;
-  renderGutter();
-}
-function doAc(ed){
-  const box=document.getElementById('acbox');
-  const pos=ed.selectionStart;
-  const m=(ed.value.slice(0,pos)).match(/[\w./]+$/);
-  if(!m){box.style.display='none';return;}
-  const frag=m[0].toLowerCase();
-  const fnames=Object.values(S.files).filter(f=>f.type!=='folder').map(f=>f.name);
-  const curNames=CURRENCIES.map(c=>c.id);
-  const all=[...KW,...fnames,...curNames];
-  const opts=all.filter(w=>w.toLowerCase().startsWith(frag)&&w.toLowerCase()!==frag);
-  if(!opts.length){box.style.display='none';return;}
-  box.innerHTML=opts.slice(0,8).map((o,i)=>`<div class="acitem${i===0?' sel':''}">${o}</div>`).join('');
-  box.querySelectorAll('.acitem').forEach(it=>{it.onclick=()=>applyAc(it.textContent.trim());});
-  box.style.left='30px';box.style.top='38px';box.style.display='block';
-}
-function applyAc(word){
-  const ed=document.getElementById('editor');
-  const pos=ed.selectionStart;
-  const m=(ed.value.slice(0,pos)).match(/[\w./]+$/);
-  const fl=m?m[0].length:0;
-  const nv=ed.value.slice(0,pos-fl)+word+ed.value.slice(pos);
-  ed.value=nv;ed.selectionStart=ed.selectionEnd=pos-fl+word.length;
-  if(S.activeId&&S.files[S.activeId])S.files[S.activeId].content=nv;
-  document.getElementById('acbox').style.display='none';
-  renderGutter();
-}
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
-// Create initial file (empty)
-const F_MAIN = mkFile('main.code','script',null,
-`// SCRIPTO v4 — 20 currencies
-// mine <currency>  collect <file>  store <file>
-// sell <file>  (bits only!)
-// compress <file>  extract <file>  (5tk each)
-// send <file> to <server/path>  (25tk)
-// convert <file>  (currencies -> bits)
-// repeat N times / repeat if (cond) / while (cond)
-
-// TIER 1-5: mine and sell directly as bits
-// TIER 6+: must send to server, convert, sell
-
-repeat infinite
-  mine bit
-  when main.code bit >= 5: sell main.code
-`,'local');
-S.activeId = F_MAIN.id;
-
-(function init(){
-  const ed=document.getElementById('editor');
-  ed.value=S.files[S.activeId].content;
-  ed.addEventListener('input',onInput);
-  ed.addEventListener('keydown',onKey);
-  ed.addEventListener('scroll',()=>{document.getElementById('gutter').scrollTop=ed.scrollTop;});
-
-  document.getElementById('btn-ns').onclick=()=>newFileUI('script');
-  document.getElementById('btn-nd').onclick=()=>newFileUI('dat');
-  document.getElementById('btn-nf').onclick=()=>newFileUI('folder');
-  document.getElementById('btn-run').onclick=()=>{
-    const f=S.files[S.activeId];if(!f||f.type!=='script'){tlog('Select a .code file first','err');return;}
-    f.content=ed.value;startF(f);
-  };
-  document.getElementById('btn-stop').onclick=()=>{const f=S.files[S.activeId];if(f)stopF(f);};
-  document.getElementById('btn-shop').onclick=()=>{renderShop();document.getElementById('shop-modal').style.display='flex';};
-  document.getElementById('btn-close-shop').onclick=()=>document.getElementById('shop-modal').style.display='none';
-  document.getElementById('btn-currencies').onclick=()=>{renderCurrencies();document.getElementById('cur-modal').style.display='flex';};
-  document.getElementById('btn-close-cur').onclick=()=>document.getElementById('cur-modal').style.display='none';
-  document.addEventListener('click',()=>document.getElementById('acbox').style.display='none');
-
-  selF(F_MAIN.id);
-  reloop();
-
-  tlog('=== SCRIPTO v4 ==='  , 'info');
-  tlog('20 currencies — tier 1-5 can be sold as bits directly', 'info');
-  tlog('tier 6+ (abaut and above) MUST be sent to a server first', 'info');
-  tlog('send <file> to <server/path> — 25 ticks, uses RAM', 'info');
-  tlog('compress(file) 5tk = halve RAM cost for sending', 'info');
-  tlog('extract(file) 5tk = restore after arrival', 'info');
-  tlog('convert(file) = turn currencies into bits, then sell', 'info');
-  tlog('Buy servers in Shop to unlock destinations!', 'info');
-  tlog('[?] currencies button = full tier table', 'info');
-  tlog('New files are empty. Ctrl+S saves.', 'info');
-})();
+init();
 </script>
 </body>
 </html>
