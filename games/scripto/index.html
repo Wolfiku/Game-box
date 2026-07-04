@@ -1,1 +1,896 @@
-{c5_content}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SCRIPTO</title>
+<style>
+:root{
+  --ink:#201d1d;--ink-deep:#0f0000;--charcoal:#302c2c;--body-c:#424245;
+  --mute:#646262;--ash:#9a9898;--canvas:#fdfcfc;--surface-soft:#f8f7f7;
+  --surface-card:#f1eeee;--surface-dark:#201d1d;--surface-dark-el:#302c2c;
+  --hairline:rgba(15,0,0,0.12);--hairline-strong:#646262;
+  --on-dark:#fdfcfc;--on-dark-mute:#9a9898;
+  --accent:#007aff;--warning:#ff9f0a;--danger:#ff3b30;--success:#30d158;--purple:#bf5af2;
+  --font:'JetBrains Mono','IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+  --r:4px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:#fdfcfc;background:var(--canvas);color:#201d1d;color:var(--ink);font-family:var(--font);font-size:13px;line-height:1.5;overflow:hidden;}
+#app{display:grid;grid-template-rows:52px 1fr 24px;height:100vh;width:100%;min-height:0;}
+#nav{display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--hairline);background:var(--canvas);height:52px;}
+#wordmark{font-weight:700;font-size:15px;letter-spacing:.06em;margin-right:8px;}
+.nstat{font-size:11px;color:var(--mute);white-space:nowrap;}
+.nstat b{color:var(--ink);}
+#nav-gap{flex:1;}
+nav button{font-family:var(--font);font-size:11px;padding:3px 8px;border:1px solid var(--hairline-strong);border-radius:var(--r);background:var(--canvas);color:var(--ink);cursor:pointer;}
+nav button:hover{background:var(--surface-card);}
+#main{display:grid;grid-template-columns:220px 1fr 260px;overflow:hidden;min-height:0;height:100%;}
+.panel{display:flex;flex-direction:column;border-right:1px solid var(--hairline);overflow:hidden;background:var(--canvas);min-height:0;}
+.panel:last-child{border-right:none;}
+.ph{padding:6px 11px 5px;border-bottom:1px solid var(--hairline);display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--mute);flex-shrink:0;background:var(--surface-soft);}
+.ph-btn{font-family:var(--font);font-size:10px;padding:2px 6px;border:1px solid var(--hairline-strong);border-radius:var(--r);background:transparent;color:var(--mute);cursor:pointer;}
+.ph-btn:hover{color:var(--ink);border-color:var(--ink);}
+.ph-btn.red{color:var(--danger);border-color:var(--danger);}
+/* FILE LIST */
+#file-list{flex:1;overflow-y:auto;padding:4px 0;}
+.frow{display:flex;align-items:center;gap:6px;padding:3px 10px;cursor:pointer;font-size:12px;}
+.frow:hover{background:var(--surface-card);}
+.frow.active{background:var(--surface-card);}
+.fdot{width:7px;height:7px;border-radius:50%;background:var(--ash);flex-shrink:0;}
+.fdot.running{background:var(--purple);}
+.fdot.mining{background:var(--accent);}
+.fdot.selling{background:var(--warning);}
+.fdot.done{background:var(--success);}
+.fdot.error{background:var(--danger);}
+.fname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fbits{font-size:10px;color:var(--mute);}
+.frow-folder{font-size:11px;color:var(--mute);padding:2px 10px;display:flex;align-items:center;gap:4px;}
+#file-actions{padding:6px 8px;border-top:1px solid var(--hairline);display:flex;gap:4px;flex-shrink:0;}
+#file-actions input{flex:1;font-family:var(--font);font-size:11px;padding:3px 6px;border:1px solid var(--hairline-strong);border-radius:var(--r);background:var(--canvas);color:var(--ink);outline:none;}
+#file-actions input:focus{border-color:var(--accent);}
+#file-actions button{font-family:var(--font);font-size:10px;padding:3px 7px;border:1px solid var(--accent);border-radius:var(--r);background:transparent;color:var(--accent);cursor:pointer;white-space:nowrap;}
+#file-actions button:hover{background:var(--accent);color:#fff;}
+/* EDITOR */
+#hint-bar{padding:3px 10px;font-size:10px;color:var(--ash);border-bottom:1px solid var(--hairline);background:var(--surface-soft);flex-shrink:0;display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+#hint-bar code{background:var(--surface-card);padding:0 3px;border-radius:2px;font-size:10px;}
+#editor-wrap{display:flex;flex:1;overflow:hidden;position:relative;}
+#line-nums{padding:8px 6px;font-size:13px;line-height:1.6;color:var(--ash);text-align:right;background:var(--surface-soft);border-right:1px solid var(--hairline);min-width:32px;user-select:none;overflow:hidden;flex-shrink:0;white-space:pre;}
+#editor{flex:1;padding:8px 10px;font-family:var(--font);font-size:13px;line-height:1.6;border:none;outline:none;resize:none;background:var(--canvas);color:var(--ink);tab-size:2;}
+#autocomplete{position:absolute;background:var(--surface-card);border:1px solid var(--hairline-strong);border-radius:var(--r);box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:100;min-width:140px;display:none;max-height:180px;overflow-y:auto;}
+.ac-item{padding:4px 10px;font-size:12px;cursor:pointer;}
+.ac-item:hover,.ac-item.sel{background:var(--accent);color:#fff;}
+#ed-info{padding:4px 10px;font-size:10px;color:var(--mute);border-top:1px solid var(--hairline);display:flex;gap:10px;flex-shrink:0;background:var(--surface-soft);}
+/* TERMINAL */
+#panel-terminal{background:var(--surface-dark);}
+#panel-terminal .ph{background:var(--surface-dark);color:var(--ash);border-bottom-color:var(--charcoal);}
+#panel-terminal .ph-btn{border-color:var(--charcoal);color:var(--ash);}
+#panel-terminal .ph-btn:hover{border-color:var(--on-dark-mute);color:var(--on-dark);}
+#tlog{flex:1;overflow-y:auto;padding:8px 10px;font-size:11px;line-height:1.7;}
+.tlog-line{color:var(--ash);}
+.tlog-line.ok{color:var(--success);}
+.tlog-line.err{color:var(--danger);}
+.tlog-line.warn{color:var(--warning);}
+.tlog-line.info{color:var(--accent);}
+.tlog-line.pur{color:var(--purple);}
+#term-stats{padding:6px 10px;border-top:1px solid var(--charcoal);font-size:10px;color:var(--on-dark-mute);display:flex;flex-wrap:wrap;gap:8px;flex-shrink:0;}
+.ts b{color:var(--on-dark);}
+/* STATUSBAR */
+#statusbar{display:flex;align-items:center;gap:12px;padding:0 12px;font-size:10px;background:var(--surface-card);border-top:1px solid var(--hairline);color:var(--mute);overflow:hidden;flex-shrink:0;}
+.sb b{color:var(--ink);}
+/* OVERLAY / SHOP */
+#overlay{display:none;position:fixed;inset:0;background:rgba(15,0,0,.5);z-index:200;align-items:center;justify-content:center;}
+#overlay.open{display:flex;}
+#modal{background:var(--canvas);border:1px solid var(--hairline-strong);width:480px;max-height:82vh;overflow-y:auto;padding:0;}
+.modal-hd{padding:14px 16px;border-bottom:1px solid var(--hairline);display:flex;align-items:center;justify-content:space-between;}
+.modal-hd h2{font-size:13px;font-weight:700;}
+.mclose{font-family:var(--font);font-size:11px;padding:2px 8px;border:1px solid var(--hairline-strong);border-radius:var(--r);background:transparent;color:var(--mute);cursor:pointer;}
+.mclose:hover{color:var(--ink);}
+.modal-body{padding:14px 16px;}
+.shop-section{margin-bottom:16px;}
+.shop-section h3{font-size:11px;font-weight:700;color:var(--mute);margin-bottom:8px;letter-spacing:.06em;}
+.shop-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--hairline);font-size:12px;}
+.shop-row:last-child{border-bottom:none;}
+.shop-row .slbl{flex:1;}
+.shop-row .stag{font-size:10px;color:var(--mute);}
+.shop-btn{font-family:var(--font);font-size:10px;padding:2px 8px;border:1px solid var(--accent);border-radius:var(--r);background:transparent;color:var(--accent);cursor:pointer;white-space:nowrap;}
+.shop-btn:hover{background:var(--accent);color:#fff;}
+.shop-btn:disabled{border-color:var(--ash);color:var(--ash);cursor:not-allowed;}
+/* TUTORIAL */
+#tut-overlay{display:none;position:fixed;inset:0;background:rgba(15,0,0,.6);z-index:1000;align-items:center;justify-content:center;}
+#tut-overlay.open{display:flex;}
+#tut-box{background:var(--canvas);border:1px solid var(--hairline-strong);width:480px;max-height:80vh;overflow-y:auto;padding:24px;}
+#tut-box h2{font-size:14px;font-weight:700;margin-bottom:12px;}
+#tut-body p{font-size:12px;margin-bottom:10px;line-height:1.7;}
+#tut-body code{background:var(--surface-card);padding:1px 4px;border-radius:2px;}
+.tut-tip{background:var(--surface-soft);border:1px solid var(--hairline);border-radius:var(--r);padding:8px 12px;font-size:11px;margin-bottom:10px;line-height:1.6;}
+#tut-footer{display:flex;align-items:center;gap:8px;margin-top:16px;border-top:1px solid var(--hairline);padding-top:12px;}
+#tut-prog{flex:1;font-size:11px;color:var(--mute);}
+.tut-btn{font-family:var(--font);font-size:11px;padding:4px 12px;border:1px solid var(--hairline-strong);border-radius:var(--r);background:transparent;color:var(--ink);cursor:pointer;}
+.tut-btn:hover{background:var(--surface-card);}
+.tut-btn.primary{border-color:var(--accent);color:var(--accent);}
+.tut-btn.primary:hover{background:var(--accent);color:#fff;}
+.tut-btn:disabled{opacity:.4;cursor:not-allowed;}
+/* HIGHLIGHT */
+.line-highlight{position:absolute;left:0;right:0;pointer-events:none;opacity:.18;}
+.line-highlight.active{background:var(--purple);}
+.line-highlight.error{background:var(--danger);}
+</style>
+</head>
+<body>
+<div id="app">
+
+<nav id="nav">
+  <div id="wordmark">[SCRIPTO]</div>
+  <div id="nav-gap"></div>
+  <div class="nstat">[§] <b id="s-money">0</b></div>
+  <div class="nstat">[TICK] <b id="s-tick">0</b></div>
+  <div class="nstat">[RAM] <b id="s-ram">0.0</b>/<b id="s-rammax">2</b>MB</div>
+  <div class="nstat">[RATE] <b id="s-rate">0.10§/bit</b></div>
+  <button id="btn-tut">[?] TUTORIAL</button>
+  <button id="btn-shop">[+] SHOP</button>
+</nav>
+
+<div id="main">
+
+  <div class="panel">
+    <div class="ph">[FILES] <div style="flex:1"></div>
+      <button class="ph-btn red" id="btn-del">[-] DEL</button>
+    </div>
+    <div id="file-list"></div>
+    <div id="file-actions">
+      <input id="new-fname" placeholder="name.code or folder/f.dat">
+      <button id="btn-new">[+] FILE</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-editor" style="position:relative;">
+    <div class="ph">[EDITOR] <b id="ed-fname" style="font-size:12px;">—</b>
+      <div style="flex:1"></div>
+      <button class="ph-btn" id="btn-run">[&gt;] RUN</button>
+      <button class="ph-btn red" id="btn-stop" style="display:none;">[■] STOP</button>
+    </div>
+    <div id="hint-bar">
+      <code>mine bit</code> <code>sell</code> <code>collect path</code> <code>store path</code>
+      <code>repeat N times</code> <code>repeat if (cond)</code> <code>if (cond)</code>
+      <code>check bits</code> <code>run path</code> &nbsp;<span style="color:var(--warning)">10 bits = 1§</span> &nbsp;<span style="color:var(--accent)">TAB=autocomplete</span>
+    </div>
+    <div id="editor-wrap">
+      <div id="line-nums">1</div>
+      <textarea id="editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+      <div id="autocomplete"></div>
+    </div>
+    <div id="ed-info">
+      <span>[LINES] <b id="ei-lines">0</b></span>
+      <span>[BITS] <b id="ei-bits">0</b></span>
+      <span>[RAM] <b id="ei-ram">0.0</b>MB</span>
+      <span>[FREE] <b id="ei-free">0.0</b>MB</span>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-terminal">
+    <div class="ph">[TERMINAL]
+      <div style="flex:1"></div>
+      <button class="ph-btn" id="btn-clr">[x] CLR</button>
+    </div>
+    <div id="tlog"></div>
+    <div id="term-stats">
+      <div class="ts">[FILES] <b id="ts-files">0</b></div>
+      <div class="ts">[RUN] <b id="ts-run">0</b></div>
+      <div class="ts">[MINE] <b id="ts-mine">0</b></div>
+      <div class="ts">[FOLDERS] <b id="ts-folders">0</b></div>
+      <div class="ts">[RATE] <b id="ts-mktlvl">0.10</b>§/b</div>
+      <div class="ts">[TICK] <b id="ts-spd">1000</b>ms</div>
+    </div>
+  </div>
+
+</div>
+
+<div id="statusbar">
+  <span class="sb">[SCRIPTO v5]</span>
+  <span class="sb">SPEED: <b id="sb-spd">1000</b>ms</span>
+  <span class="sb" id="sb-msg">10 bits = 1§ — collect in .dat files before selling</span>
+</div>
+
+</div><!-- /app -->
+
+<!-- SHOP OVERLAY -->
+<div id="overlay">
+  <div id="modal">
+    <div class="modal-hd">
+      <h2>[SHOP] — spend § on upgrades</h2>
+      <button class="mclose" id="modal-close">[x] CLOSE</button>
+    </div>
+    <div class="modal-body">
+      <div class="shop-section">
+        <h3>[SYSTEM UPGRADES]</h3>
+        <div class="shop-row">
+          <span class="slbl">RAM Upgrade <span class="stag">+2MB per level</span></span>
+          <span class="stag">Lvl <b id="up-ramlvl">0</b></span>
+          <button class="shop-btn" id="up-ram">buy</button>
+          <span class="stag" id="up-ramprice">—</span>
+        </div>
+        <div class="shop-row">
+          <span class="slbl">Tick Speed <span class="stag">faster execution</span></span>
+          <span class="stag">Lvl <b id="up-spdlvl">0</b></span>
+          <button class="shop-btn" id="up-spd">buy</button>
+          <span class="stag" id="up-spdprice">—</span>
+        </div>
+        <div class="shop-row">
+          <span class="slbl">Market Rate <span class="stag">+10% sell bonus</span></span>
+          <span class="stag">Lvl <b id="up-mktlvl">0</b></span>
+          <button class="shop-btn" id="up-mkt">buy</button>
+          <span class="stag" id="up-mktprice">—</span>
+        </div>
+        <div class="shop-row">
+          <span class="slbl">Op Slots <span class="stag">+1 concurrent op</span></span>
+          <span class="stag">Lvl <b id="up-opslvl">0</b></span>
+          <button class="shop-btn" id="up-ops">buy</button>
+          <span class="stag" id="up-opsprice">—</span>
+        </div>
+        <div class="shop-row">
+          <span class="slbl">Mine Speed <span class="stag">faster bit mining</span></span>
+          <span class="stag">Lvl <b id="up-minelvl">0</b></span>
+          <button class="shop-btn" id="up-mine">buy</button>
+          <span class="stag" id="up-mineprice">—</span>
+        </div>
+        <div class="shop-row">
+          <span class="slbl">Current sell rate</span>
+          <span class="stag" id="up-currate">—</span>
+        </div>
+      </div>
+      <div class="shop-section" id="shop-dat">
+        <h3>[BUY .DAT FILES]</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TUTORIAL OVERLAY -->
+<div id="tut-overlay">
+  <div id="tut-box">
+    <h2 id="tut-title">Tutorial</h2>
+    <div id="tut-body"></div>
+    <div id="tut-footer">
+      <span id="tut-prog">1 / 1</span>
+      <button class="tut-btn" id="tut-prev">← prev</button>
+      <button class="tut-btn primary" id="tut-next">next →</button>
+      <button class="tut-btn" id="tut-close">[x] close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ── CONSTANTS ──────────────────────────────────────
+const MINE_TICKS  = 3;
+const SELL_TICKS  = 3;
+const RAM_BASE    = 0.2;   // base per file
+const RAM_PER_LINE= 0.05;  // per code line
+const RAM_PER_BIT = 0.05;  // per stored bit
+const BITS_PER_CREDIT = 10; // 10 bits = 1§
+const SPEED_STEPS = [1000,700,450,250,150];
+
+const UP_PRICES={
+  ram:   n=>Math.round(5*(1.6**n)),
+  speed: n=>Math.round(8*(1.8**n)),
+  mkt:   n=>Math.round(4*(1.5**n)),
+  ops:   n=>Math.round(10*(2**n)),
+  mine:  n=>Math.round(6*(1.7**n)),
+};
+
+const DAT_PRICES={
+  'vault.dat':3,'cache.dat':8,'miners/bits.dat':15,'output/sell.dat':20,
+};
+const DAT_TEMPLATES={
+  'vault.dat':'// vault.dat — storage file\n// collect bits into here with: collect vault.dat\n',
+  'cache.dat':'// cache.dat — fast cache\n// use for temporary bit storage\n',
+  'miners/bits.dat':'// miners/bits.dat\n// dedicated miner storage\n',
+  'output/sell.dat':'// output/sell.dat\n// sell from here for bonus\n',
+};
+
+// ── STATE ──────────────────────────────────────────
+let G={
+  money:0, tick:0,
+  ramMax:2,         // START: 2MB only!
+  ups:{ram:0,speed:0,mkt:0,ops:0,mine:0},
+  files:[],         // {id,path,code,bits,status,_ctx}
+  folders:[],       // ['miners','vault',...]
+  active:null,
+  timer:null,
+  nextId:1,
+};
+let tutIdx=0;
+
+// ── HELPERS ────────────────────────────────────────
+const norm=p=>p.trim().toLowerCase().replace(/\\s+/g,'_');
+const folderOf=p=>{const i=p.lastIndexOf('/');return i>0?p.slice(0,i):null;};
+const getF=id=>G.files.find(f=>f.id===id);
+const byPath=p=>G.files.find(f=>f.path===p);
+const fileLines=f=>f.code.split('\n').filter(l=>l.trim()).length;
+const fileRam=f=>RAM_BASE+fileLines(f)*RAM_PER_LINE+(f.bits||0)*RAM_PER_BIT;
+const totalRamUsed=()=>G.files.filter(f=>f.status!=='idle'&&f.status!=='done'&&f.status!=='error').reduce((a,f)=>a+fileRam(f),0);
+const freeRam=()=>Math.max(0,G.ramMax-totalRamUsed());
+const sellRate=()=>Math.round((0.1+G.ups.mkt*0.01)*100)/100;
+
+// ── LOG ────────────────────────────────────────────
+function log(msg,cls=''){
+  const el=document.createElement('div');
+  el.className='tlog-line'+(cls?' '+cls:'');
+  const t=String(G.tick).padStart(4,'0');
+  el.textContent=`[${t}] ${msg}`;
+  $('tlog').appendChild(el);
+  $('tlog').scrollTop=$('tlog').scrollHeight;
+}
+function setMsg(m){$('sb-msg').textContent=m;}
+function ramWarnAnim(){
+  const el=$('s-ram');el.style.color='var(--danger)';
+  setTimeout(()=>{el.style.color='';},800);
+}
+
+// ── FILE SYSTEM ────────────────────────────────────
+function uniquePath(rawPath){
+  const path=norm(rawPath);
+  if(!byPath(path))return path;
+  const dot=path.lastIndexOf('.');
+  const base=dot>-1?path.slice(0,dot):path;
+  const ext=dot>-1?path.slice(dot):'';
+  const baseNoNum=base.replace(/_\\d+$/,'');
+  let n=1,candidate=`${baseNoNum}_${n}${ext}`;
+  while(byPath(candidate)){n++;candidate=`${baseNoNum}_${n}${ext}`;}
+  return candidate;
+}
+function createFile(rawPath,codeOverride){
+  if(!rawPath.trim()){setMsg('[x] enter path');return;}
+  let path=norm(rawPath);
+  if(!path){setMsg('[x] invalid path');return;}
+  if(byPath(path)){
+    const renamed=uniquePath(path);
+    log(`[i] ${path} already exists → created as ${renamed}`,'warn');
+    path=renamed;
+  }
+  const folder=folderOf(path);
+  if(folder&&!G.folders.includes(folder))G.folders.push(folder);
+  const f={
+    id:G.nextId++,path,
+    code:codeOverride!=null?codeOverride:'// '+path+'\nrepeat if (true)\n  mine bit\n  sell\nend\n',
+    bits:0,status:'idle',_ctx:null,
+  };
+  G.files.push(f);
+  selectFile(f.id);
+  renderFiles();
+  log(`[+] created: ${path}`);
+  return f;
+}
+function deleteFile(id){
+  const f=getF(id);if(!f)return;
+  if(f.status==='running'||f.status==='mining'||f.status==='selling'){setMsg('[x] stop first');return;}
+  G.files=G.files.filter(x=>x.id!==id);
+  if(G.active===id){G.active=null;$('editor').value='';$('ed-fname').textContent='—';}
+  renderFiles();updateStats();
+  log(`[-] deleted: ${f.path}`);
+}
+function selectFile(id){
+  const f=getF(id);if(!f)return;
+  if(G.active&&G.active!==id){const old=getF(G.active);if(old)old.code=$('editor').value;}
+  G.active=id;
+  $('editor').value=f.code;
+  $('ed-fname').textContent=f.path;
+  updateLineNums();
+  renderFiles();
+  updateEdInfo(f);
+  const running=f.status==='running'||f.status==='mining'||f.status==='selling';
+  $('btn-run').style.display=running?'none':'';
+  $('btn-stop').style.display=running?'':'none';
+}
+
+// ── RENDER ─────────────────────────────────────────
+function renderFiles(){
+  const ul=$('file-list');ul.innerHTML='';
+  // group by folder
+  const allFolders=[...new Set(G.files.map(f=>folderOf(f.path)).filter(Boolean))];
+  const shown=new Set();
+  // root files first
+  G.files.filter(f=>!folderOf(f.path)).forEach(f=>{
+    shown.add(f.id);ul.appendChild(makeFileRow(f));
+  });
+  allFolders.forEach(folder=>{
+    const fr=document.createElement('div');
+    fr.className='frow-folder';fr.textContent='📁 '+folder+'/';
+    ul.appendChild(fr);
+    G.files.filter(f=>folderOf(f.path)===folder).forEach(f=>{
+      shown.add(f.id);ul.appendChild(makeFileRow(f,true));
+    });
+  });
+}
+function makeFileRow(f,indent=false){
+  const row=document.createElement('div');
+  row.className='frow'+(f.id===G.active?' active':'');
+  if(indent)row.style.paddingLeft='22px';
+  const dot=document.createElement('div');
+  dot.className='fdot '+(f.status==='idle'?'':f.status);
+  const name=document.createElement('span');name.className='fname';
+  name.textContent=(indent?f.path.split('/').pop():f.path);
+  const bits=document.createElement('span');bits.className='fbits';
+  bits.textContent=f.bits?f.bits+'b':'';
+  row.appendChild(dot);row.appendChild(name);row.appendChild(bits);
+  row.onclick=()=>selectFile(f.id);
+  return row;
+}
+function updateLineNums(){
+  const lines=$('editor').value.split('\n').length;
+  $('line-nums').textContent=Array.from({length:lines},(_,i)=>i+1).join('\n');
+}
+function updateEdInfo(f){
+  if(!f)return;
+  $('ei-lines').textContent=fileLines(f);
+  $('ei-bits').textContent=f.bits;
+  $('ei-ram').textContent=fileRam(f).toFixed(2);
+  $('ei-free').textContent=freeRam().toFixed(2);
+}
+function updateStats(){
+  $('s-money').textContent=G.money.toLocaleString();
+  $('s-tick').textContent=G.tick;
+  $('s-ram').textContent=totalRamUsed().toFixed(1);
+  $('s-rammax').textContent=G.ramMax;
+  $('s-rate').textContent=sellRate()+'/'+BITS_PER_CREDIT+'b';
+  $('ts-spd').textContent=SPEED_STEPS[Math.min(G.ups.speed,SPEED_STEPS.length-1)];
+  $('sb-spd').textContent=SPEED_STEPS[Math.min(G.ups.speed,SPEED_STEPS.length-1)];
+  const allFolders=[...new Set(G.files.map(f=>folderOf(f.path)).filter(Boolean))];
+  $('ts-files').textContent=G.files.length;
+  $('ts-run').textContent=G.files.filter(f=>f.status==='running'||f.status==='selling').length;
+  $('ts-mine').textContent=G.files.filter(f=>f.status==='mining').length;
+  $('ts-folders').textContent=allFolders.length;
+  $('ts-mktlvl').textContent=(sellRate()/BITS_PER_CREDIT).toFixed(2);
+  if(G.active){const f=getF(G.active);if(f)updateEdInfo(f);}
+}
+
+// ── SCRIPTO LANG ENGINE ────────────────────────────
+function parseScript(code){
+  const lines=code.split('\n').map(l=>l.trim()).filter(l=>l&&!l.startsWith('//'));
+  return lines;
+}
+function makeCtx(f){
+  return{lines:parseScript(f.code),ip:0,done:false,pending:null,loopStack:[],repeatCount:0};
+}
+function stepCtx(ctx,file){
+  if(ctx.done||ctx.pending)return;
+  if(ctx.ip>=ctx.lines.length){
+    if(ctx.loopStack.length>0){
+      const top=ctx.loopStack[ctx.loopStack.length-1];
+      if(top.type==='infinite'){ctx.ip=top.start;return;}
+      if(top.type==='count'){top.count--;if(top.count>0){ctx.ip=top.start;return;}ctx.loopStack.pop();ctx.ip++;return;}
+      if(top.type==='cond'){if(evalCond(top.cond,file)){ctx.ip=top.start;return;}ctx.loopStack.pop();ctx.ip++;return;}
+    }
+    ctx.done=true;return;
+  }
+  execLine(ctx,file,ctx.lines[ctx.ip]);
+}
+function evalCond(cond,file){
+  if(cond==='true')return true;
+  if(cond==='false')return false;
+  const fbm=cond.match(/^filebits\(([^)]+)\)\s*(>=|<=|>|<|==|!=)\s*(\d+)$/);
+  if(fbm){const tf=byPath(norm(fbm[1]));if(!tf)return false;const v=tf.bits||0;const n=+fbm[3];if(fbm[2]==='>=')return v>=n;if(fbm[2]==='<=')return v<=n;if(fbm[2]==='>') return v>n;if(fbm[2]==='<') return v<n;if(fbm[2]==='==')return v===n;if(fbm[2]==='!=')return v!==n;}
+  if(cond.startsWith('bits')){const m=cond.match(/bits\s*(>=|<=|>|<|==|!=)\s*(\d+)/);if(m){const v=file.bits||0;const n=+m[2];if(m[1]==='>=')return v>=n;if(m[1]==='<=')return v<=n;if(m[1]==='>') return v>n;if(m[1]==='<') return v<n;if(m[1]==='==')return v===n;if(m[1]==='!=')return v!==n;}}
+  return true;
+}
+function execLine(ctx,file,line){
+  const lc=line.toLowerCase();
+  // repeat
+  if(lc==='repeat infinite'||lc==='repeat'){
+    ctx.loopStack.push({type:'infinite',start:ctx.ip+1});ctx.ip++;return;
+  }
+  const rm=lc.match(/^repeat (\d+) times?$/);
+  if(rm){
+    ctx.loopStack.push({type:'count',count:+rm[1],start:ctx.ip+1});ctx.ip++;return;
+  }
+  const rcm=lc.match(/^repeat if \((.+)\)$/);
+  if(rcm){
+    if(!evalCond(rcm[1],file)){skipToEnd(ctx);return;}
+    ctx.loopStack.push({type:'cond',cond:rcm[1],start:ctx.ip+1});ctx.ip++;return;
+  }
+  if(lc==='end'){
+    if(ctx.loopStack.length>0){
+      const top=ctx.loopStack[ctx.loopStack.length-1];
+      if(top.type==='infinite'){ctx.ip=top.start;return;}
+      if(top.type==='count'){top.count--;if(top.count>0){ctx.ip=top.start;return;}ctx.loopStack.pop();ctx.ip++;return;}
+      if(top.type==='cond'){if(evalCond(top.cond,file)){ctx.ip=top.start;return;}ctx.loopStack.pop();ctx.ip++;return;}
+    }
+    ctx.done=true;return;
+  }
+  // if
+  const ifm=lc.match(/^if \((.+)\)\s*:\s*(.+)$/);
+  if(ifm){if(evalCond(ifm[1],file))execAction(ctx,file,ifm[2].trim());else ctx.ip++;return;}
+  // action
+  execAction(ctx,file,lc);
+}
+function skipToEnd(ctx){
+  let depth=1;ctx.ip++;
+  while(ctx.ip<ctx.lines.length&&depth>0){
+    const l=ctx.lines[ctx.ip].toLowerCase();
+    if(l.startsWith('repeat'))depth++;
+    if(l==='end')depth--;
+    ctx.ip++;
+  }
+}
+function execAction(ctx,file,action){
+  const ops=1+G.ups.ops;
+  // mine bit
+  if(action==='mine bit'||action==='mine'){
+    const ticks=Math.max(1,MINE_TICKS-G.ups.mine);
+    file.status='mining';
+    ctx.pending={type:'mine',ticks,maxTicks:ticks};
+    ctx.ip++;
+    return;
+  }
+  // sell
+  if(action==='sell'){
+    ctx.pending={type:'sell',ticks:SELL_TICKS,maxTicks:SELL_TICKS,target:null};
+    file.status='selling';
+    ctx.ip++;return;
+  }
+  // sell from path
+  const selm=action.match(/^sell (.+)$/);
+  if(selm){
+    ctx.pending={type:'sell',ticks:SELL_TICKS,maxTicks:SELL_TICKS,target:norm(selm[1])};
+    file.status='selling';
+    ctx.ip++;return;
+  }
+  // collect
+  const colm=action.match(/^collect (.+)$/);
+  if(colm){
+    const tp=norm(colm[1]);const tf=byPath(tp);
+    if(!tf){log(`collect: ${tp} not found`,'err');ctx.ip++;return;}
+    tf.bits=(tf.bits||0)+(file.bits||0);file.bits=0;
+    log(`→ collect: ${file.bits+tf.bits}b → ${tp}`);
+    ctx.ip++;return;
+  }
+  // store
+  const stm=action.match(/^store (.+)$/);
+  if(stm){
+    const tp=norm(stm[1]);const tf=byPath(tp);
+    if(!tf){log(`store: ${tp} not found`,'err');ctx.ip++;return;}
+    tf.bits=(tf.bits||0)+(file.bits||0);file.bits=0;
+    log(`→ store: moved bits → ${tp}`);
+    ctx.ip++;return;
+  }
+  // check bits
+  if(action==='check bits'){
+    log(`check bits: ${file.path} has ${file.bits}b`,'info');
+    ctx.ip++;return;
+  }
+  // run
+  const runm=action.match(/^run (.+)$/);
+  if(runm){
+    const tp=norm(runm[1]);const tf=byPath(tp);
+    if(!tf){log(`run: ${tp} not found`,'err');ctx.ip++;return;}
+    runFile(tf.id);
+    ctx.ip++;return;
+  }
+  // unknown
+  log(`unknown: ${action}`,'err');
+  ctx.ip++;
+}
+function tickPending(ctx,file){
+  if(!ctx.pending)return;
+  ctx.pending.ticks--;
+  if(ctx.pending.ticks>0)return;
+  const p=ctx.pending;
+  if(p.type==='mine'){
+    const gained=1+G.ups.mine;
+    file.bits=(file.bits||0)+gained;
+    log(`⛏ ${file.path}: mined ${gained}b (total ${file.bits}b)`);
+    file.status='running';
+    ctx.pending=null;
+    return;
+  }
+  if(p.type==='sell'){
+    const tf=p.target?byPath(p.target):file;
+    if(!tf){log(`sell: target not found`,'err');ctx.pending=null;file.status='running';return;}
+    const bits=tf.bits||0;
+    if(bits<BITS_PER_CREDIT){
+      log(`sell: ${tf.path} has ${bits} bits, need ${BITS_PER_CREDIT} for 1§`,'warn');
+      ctx.pending=null;file.status='running';return;
+    }
+    const credits=Math.floor(bits/BITS_PER_CREDIT);
+    const usedBits=credits*BITS_PER_CREDIT;
+    const earned=credits*sellRate();G.money+=earned;tf.bits=bits-usedBits;
+    log(`sold ${usedBits} bits (${credits}×${BITS_PER_CREDIT}) → +${earned}§ (${G.money}§), ${tf.bits} bits left`,'ok');
+    ctx.pending=null;file.status='running';updateStats();
+    return;
+  }
+}
+
+// ── TICK ENGINE ────────────────────────────────────
+function stopAllFiles(reason){
+  G.files.forEach(f=>{
+    if(f.status==='running'||f.status==='mining'||f.status==='selling'){
+      f.status='error';f._ctx=null;
+      log(`[■] ${f.path} force-stopped (${reason})`,'err');
+    }
+  });
+  if(G.active){$('btn-run').style.display='';$('btn-stop').style.display='none';}
+  renderFiles();updateStats();
+}
+function tick(){
+  G.tick++;
+  G.files.forEach(f=>{
+    if(f.status==='running'||f.status==='mining'||f.status==='selling'){
+      const ctx=f._ctx;if(!ctx){f.status='done';return;}
+      tickPending(ctx,f);
+      if(!ctx.pending)stepCtx(ctx,f);
+      if(ctx.done&&!ctx.pending){
+        f.status='done';
+        log(`${f.path}: done`,'ok');
+        if(G.active===f.id){$('btn-run').style.display='';$('btn-stop').style.display='none';}
+      }
+    }
+  });
+  if(totalRamUsed()>G.ramMax){
+    setMsg('[x] RAM overflow — all scripts stopped!');ramWarnAnim();
+    stopAllFiles('RAM overflow during runtime');
+    return;
+  }
+  renderFiles();updateStats();
+}
+function startTimer(){
+  if(G.timer)clearInterval(G.timer);
+  const ms=SPEED_STEPS[Math.min(G.ups.speed,SPEED_STEPS.length-1)];
+  G.timer=setInterval(tick,ms);
+}
+
+// ── RUN / STOP ─────────────────────────────────────
+function runFile(id){
+  const f=getF(id);if(!f)return;
+  if(f.status==='running'||f.status==='mining'||f.status==='selling')return;
+  if(G.active===id)f.code=$('editor').value;
+  const rc=fileRam(f);
+  if(totalRamUsed()+rc>G.ramMax){
+    log(`[x] RAM OVERFLOW: need ${rc.toFixed(2)}MB, free ${freeRam().toFixed(2)}MB — ALL scripts stopped!`,'err');
+    setMsg('[x] RAM overflow — all scripts stopped!');ramWarnAnim();
+    stopAllFiles('RAM overflow');
+    return;
+  }
+  f._ctx=makeCtx(f);
+  f.status='running';
+  if(G.active===id){$('btn-run').style.display='none';$('btn-stop').style.display='';}
+  renderFiles();updateStats();
+  log(`[▶] running: ${f.path}`,'info');
+}
+function stopFile(id){
+  const f=getF(id);if(!f)return;
+  f.status='idle';f._ctx=null;
+  if(G.active===id){$('btn-run').style.display='';$('btn-stop').style.display='none';}
+  renderFiles();updateStats();
+  log(`[■] stopped: ${f.path}`);
+}
+
+// ── SHOP ──────────────────────────────────────────
+function renderShop(){
+  const u=G.ups;
+  $('up-ramlvl').textContent=u.ram;
+  $('up-ramprice').textContent=UP_PRICES.ram(u.ram)+'§';
+  $('up-spdlvl').textContent=u.speed;
+  const nextSpd=SPEED_STEPS[u.speed+1];
+  $('up-spdprice').textContent=nextSpd?UP_PRICES.speed(u.speed)+'§':'MAX';
+  $('up-spd').disabled=!nextSpd||G.money<UP_PRICES.speed(u.speed);
+  $('up-mktlvl').textContent=u.mkt;
+  $('up-mktprice').textContent=UP_PRICES.mkt(u.mkt)+'§';
+  $('up-currate').textContent=(sellRate()/BITS_PER_CREDIT).toFixed(2)+'§/bit ('+sellRate()+'§/10b)';
+  $('up-opslvl').textContent=u.ops;
+  $('up-opsprice').textContent=UP_PRICES.ops(u.ops)+'§';
+  $('up-minelvl').textContent=u.mine;
+  $('up-mineprice').textContent=UP_PRICES.mine(u.mine)+'§';
+  $('up-ram').disabled=G.money<UP_PRICES.ram(u.ram);
+  $('up-mkt').disabled=G.money<UP_PRICES.mkt(u.mkt);
+  $('up-ops').disabled=G.money<UP_PRICES.ops(u.ops);
+  $('up-mine').disabled=G.money<UP_PRICES.mine(u.mine);
+  // dat files
+  const sec=$('shop-dat');sec.innerHTML='<h3>[BUY .DAT FILES]</h3>';
+  Object.entries(DAT_PRICES).forEach(([path,price])=>{
+    const owned=!!byPath(path);
+    const row=document.createElement('div');row.className='shop-row';
+    row.innerHTML=`<span class="slbl">${path}</span><span class="stag">${price}§</span><button class="shop-btn" data-buy="${path}" ${owned||G.money<price?'disabled':''}>${owned?'owned':'buy'}</button>`;
+    sec.appendChild(row);
+  });
+  document.querySelectorAll('[data-buy]').forEach(btn=>{
+    btn.onclick=()=>buyDat(btn.dataset.buy);
+  });
+}
+function upgrade(type){
+  const price=type==='speed'?UP_PRICES.speed(G.ups.speed):UP_PRICES[type](G.ups[type]);
+  if(G.money<price){setMsg('[x] not enough §');return;}
+  if(type==='speed'&&!SPEED_STEPS[G.ups.speed+1]){setMsg('[x] max speed');return;}
+  G.money-=price;G.ups[type]++;
+  if(type==='ram'){G.ramMax+=2;log(`[UP] RAM → ${G.ramMax}MB`,'pur');}
+  else if(type==='speed'){startTimer();log(`[UP] Speed → ${SPEED_STEPS[G.ups.speed]}ms/tick`,'pur');}
+  else log(`[UPGRADE] ${type} → lvl ${G.ups[type]}`,'pur');
+  updateStats();renderShop();renderFiles();
+}
+function buyDat(path){
+  const price=DAT_PRICES[path]||0;
+  if(G.money<price){setMsg('[x] not enough §');return;}
+  if(byPath(path)){setMsg('[x] already owned');return;}
+  G.money-=price;
+  const tpl=DAT_TEMPLATES[path];
+  createFile(path,tpl);
+  log(`[BUY] ${path} purchased`,'ok');
+  updateStats();renderShop();
+}
+
+// ── TUTORIAL ──────────────────────────────────────
+const TUT=[
+  {
+    title:'Welcome to SCRIPTO',
+    body:`<p>SCRIPTO is an incremental programming game. You write small scripts that <b>mine bits</b>, then <b>sell them</b> for <b>§ (credits)</b>.</p>
+    <p>Credits let you buy upgrades: more RAM, faster ticks, better prices, and new files.</p>
+    <div class="tut-tip">💰 <b>10 bits = 1§.</b> Selling fewer than 10 bits at once wastes the leftover — collect and store bits before selling in bulk.</div>
+    <div class="tut-tip">⚠ You start with only <b>2MB RAM</b> — just enough for one file. Every running file costs RAM. If you exceed your RAM limit, <b>ALL running scripts crash immediately</b> — buy upgrades before adding more.</div>
+    <p>Let's start step by step. First: understand the file panel on the left.</p>`
+  },
+  {
+    title:'[FILES] Panel',
+    body:`<p>The <b>[FILES]</b> panel shows all your scripts and data files.</p>
+    <p>Each file has a status dot:</p>
+    <ul style="margin-left:16px;margin-bottom:10px;font-size:12px;line-height:2;">
+      <li>⚫ idle — not running</li>
+      <li>🟣 running / selling — script active</li>
+      <li>🔵 mining — waiting for bits</li>
+      <li>🟢 done — finished execution</li>
+      <li>🔴 error — crashed</li>
+    </ul>
+    <p>Click a file to open it in the editor. Type a name in the input and press <b>[+] FILE</b> to create one. If the name already exists, a <b>_1, _2</b> suffix is added automatically.</p>`
+  },
+  {
+    title:'[EDITOR] — ScriptoLang',
+    body:`<p>The editor uses <b>ScriptoLang</b> — a minimal scripting language.</p>
+    <p>Basic commands:</p>
+    <div class="tut-tip"><code>mine bit</code> — mine 1+ bit (takes a few ticks)</div>
+    <div class="tut-tip"><code>sell</code> — sell 10+ bits for § credits</div>
+    <div class="tut-tip"><code>collect path</code> — move your bits into another file</div>
+    <div class="tut-tip"><code>store path</code> — same as collect</div>
+    <div class="tut-tip"><code>run path</code> — start another script</div>
+    <p>Use <b>TAB</b> for autocomplete. Press <b>[▶] RUN</b> to execute.</p>`
+  },
+  {
+    title:'Loops',
+    body:`<p>Scripts can loop infinitely or conditionally:</p>
+    <div class="tut-tip"><code>repeat infinite</code> / <code>end</code> — loop forever</div>
+    <div class="tut-tip"><code>repeat 5 times</code> / <code>end</code> — loop N times</div>
+    <div class="tut-tip"><code>repeat if (bits &lt; 50)</code> / <code>end</code> — loop while true</div>
+    <div class="tut-tip"><code>if (bits >= 10): sell</code> — conditional action</div>
+    <p>Combine these to build efficient miners that collect bits until a threshold, then sell in bulk for better efficiency.</p>`
+  },
+  {
+    title:'RAM & Upgrades',
+    body:`<p>Every running file uses RAM. You start with <b>2MB</b>.</p>
+    <p>If you exceed your RAM limit at any point — including while scripts are running and bits accumulate — <b>ALL scripts crash immediately.</b></p>
+    <p>Spend § in the <b>[+] SHOP</b> to upgrade:</p>
+    <ul style="margin-left:16px;font-size:12px;line-height:2;">
+      <li><b>RAM</b> — +2MB per level</li>
+      <li><b>Speed</b> — faster tick rate</li>
+      <li><b>Market Rate</b> — more § per sell</li>
+      <li><b>Op Slots</b> — handle more operations</li>
+      <li><b>Mine Speed</b> — mine faster</li>
+    </ul>
+    <p>Buy <b>.dat files</b> in the shop for dedicated storage — store bits there and sell in big batches.</p>`
+  },
+];
+function openTutorial(idx){
+  tutIdx=idx||0;renderTut();
+  $('tut-overlay').classList.add('open');
+}
+function renderTut(){
+  const t=TUT[tutIdx];
+  $('tut-title').textContent=t.title;
+  $('tut-body').innerHTML=t.body;
+  $('tut-prog').textContent=(tutIdx+1)+' / '+TUT.length;
+  $('tut-prev').disabled=tutIdx===0;
+  $('tut-next').textContent=tutIdx===TUT.length-1?'finish':'next →';
+}
+$('btn-tut').onclick=()=>openTutorial(0);
+$('tut-close').onclick=()=>$('tut-overlay').classList.remove('open');
+$('tut-prev').onclick=()=>{if(tutIdx>0){tutIdx--;renderTut();}};
+$('tut-next').onclick=()=>{
+  if(tutIdx<TUT.length-1){tutIdx++;renderTut();}
+  else $('tut-overlay').classList.remove('open');
+};
+
+// ── EVENTS ──────────────────────────────────────────
+$('btn-new').onclick=()=>{const v=$('new-fname').value.trim();if(v){createFile(v);$('new-fname').value='';}else setMsg('[x] enter file name');};
+$('btn-del').onclick=()=>{if(G.active)deleteFile(G.active);};
+$('btn-run').onclick=()=>{if(G.active)runFile(G.active);};
+$('btn-stop').onclick=()=>{if(G.active)stopFile(G.active);};
+$('btn-clr').onclick=()=>{$('tlog').innerHTML='';};
+$('btn-shop').onclick=()=>{renderShop();$('overlay').classList.add('open');};
+$('modal-close').onclick=()=>$('overlay').classList.remove('open');
+$('overlay').onclick=e=>{if(e.target===$('overlay'))$('overlay').classList.remove('open');};
+$('tut-overlay').onclick=e=>{if(e.target===$('tut-overlay'))$('tut-overlay').classList.remove('open');};
+$('up-ram').onclick=()=>upgrade('ram');
+$('up-spd').onclick=()=>upgrade('speed');
+$('up-mkt').onclick=()=>upgrade('mkt');
+$('up-ops').onclick=()=>upgrade('ops');
+$('up-mine').onclick=()=>upgrade('mine');
+
+// editor sync
+$('editor').addEventListener('input',()=>{
+  updateLineNums();
+  if(G.active){const f=getF(G.active);if(f){f.code=$('editor').value;updateEdInfo(f);}}
+  // autocomplete on TAB handled below
+});
+$('editor').addEventListener('keydown',e=>{
+  if(e.key==='Tab'){e.preventDefault();showAutocomplete();return;}
+  if(e.key==='Escape'){$('autocomplete').style.display='none';return;}
+  if($('autocomplete').style.display==='block'){
+    const items=$('autocomplete').querySelectorAll('.ac-item');
+    const sel=[...items].findIndex(i=>i.classList.contains('sel'));
+    if(e.key==='ArrowDown'){e.preventDefault();const n=(sel+1)%items.length;items.forEach((i,x)=>i.classList.toggle('sel',x===n));return;}
+    if(e.key==='ArrowUp'){e.preventDefault();const n=(sel-1+items.length)%items.length;items.forEach((i,x)=>i.classList.toggle('sel',x===n));return;}
+    if(e.key==='Enter'||e.key===' '){
+      const s=[...items].find(i=>i.classList.contains('sel'));
+      if(s){e.preventDefault();applyAC(s.dataset.val);return;}
+    }
+  }
+  $('autocomplete').style.display='none';
+});
+
+const AC_KEYWORDS=['mine bit','sell','collect ','store ','check bits','run ','repeat infinite','repeat if (','repeat ','end','if (bits >= 10): sell','if (bits < 10): mine bit'];
+function showAutocomplete(){
+  const ta=$('editor');const pos=ta.selectionStart;
+  const before=ta.value.slice(0,pos);
+  const lineStart=before.lastIndexOf('\n')+1;
+  const word=before.slice(lineStart).trimStart();
+  const paths=G.files.map(f=>f.path);
+  const all=[...AC_KEYWORDS,...paths];
+  const matches=word?all.filter(k=>k.startsWith(word)&&k!==word):AC_KEYWORDS;
+  if(!matches.length){$('autocomplete').style.display='none';return;}
+  $('autocomplete').innerHTML=matches.map((m,i)=>`<div class="ac-item${i===0?' sel':''}" data-val="${m}">${m}</div>`).join('');
+  $('autocomplete').querySelectorAll('.ac-item').forEach(it=>it.onclick=()=>applyAC(it.dataset.val));
+  const rect=ta.getBoundingClientRect();
+  $('autocomplete').style.display='block';
+  $('autocomplete').style.top=(rect.top+20)+'px';
+  $('autocomplete').style.left=(rect.left+4)+'px';
+}
+function applyAC(val){
+  const ta=$('editor');const pos=ta.selectionStart;
+  const before=ta.value.slice(0,pos);
+  const lineStart=before.lastIndexOf('\n')+1;
+  const after=ta.value.slice(pos);
+  const indent=before.slice(lineStart).match(/^\\s*/)[0];
+  ta.value=before.slice(0,lineStart)+indent+val+after;
+  const np=lineStart+indent.length+val.length;
+  ta.selectionStart=ta.selectionEnd=np;
+  $('autocomplete').style.display='none';
+  if(G.active){const f=getF(G.active);if(f)f.code=ta.value;}
+  updateLineNums();
+}
+
+// ── INIT ──────────────────────────────────────────
+function init(){
+  const starter=createFile('start.code',
+`// start.code — your first script
+// mine bits and sell them for credits (§)
+// 10 bits = 1§ (0.10§/bit base rate)
+repeat if (true)
+  mine bit
+  sell
+end
+`);
+
+  log('[SCRIPTO v5] system ready.','info');
+  log('Economy: 10 bits = 1§  (0.10§/bit at base rate)','info');
+  log('RAM: 2MB start. Overflow = all scripts crash!','warn');
+  log('Tip: sell needs 10+ bits. Collect in vault.dat before selling.','');
+  log('Press [?] TUTORIAL for a full guide.','');
+
+  updateStats();
+  startTimer();
+
+}
+
+init();
+</script>
+</body>
+</html>
