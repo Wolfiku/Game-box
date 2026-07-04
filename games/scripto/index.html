@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root {
+:root{
   --ink:#201d1d;--ink-deep:#0f0000;--charcoal:#302c2c;--body-c:#424245;
   --mute:#646262;--ash:#9a9898;--canvas:#fdfcfc;--surface-soft:#f8f7f7;
   --surface-card:#f1eeee;--surface-dark:#201d1d;--surface-dark-el:#302c2c;
@@ -16,80 +16,72 @@
   --on-dark:#fdfcfc;--on-dark-mute:#9a9898;
   --accent:#007aff;--warning:#ff9f0a;--danger:#ff3b30;--success:#30d158;--purple:#bf5af2;
   --font:'JetBrains Mono','IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
-  --r-sm:4px;
+  --r:4px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;background:var(--canvas);color:var(--ink);font-family:var(--font);font-size:13px;line-height:1.5;overflow:hidden;}
-
-/* ── APP GRID ── */
-#app{display:grid;grid-template-rows:56px 1fr 26px;height:100vh;width:100vw;}
-
-/* ── NAV ── */
-#nav{display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid var(--hairline);background:var(--canvas);height:56px;flex-shrink:0;overflow:hidden;}
-#wordmark{font-size:15px;font-weight:700;letter-spacing:.08em;white-space:nowrap;flex-shrink:0;}
-#nav-sep{flex:1;min-width:4px;}
-.nav-stat{font-size:12px;color:var(--mute);white-space:nowrap;flex-shrink:0;}
-.nav-stat b{color:var(--ink);font-weight:700;}
-#btn-shop{background:var(--ink);color:var(--on-dark);border:none;border-radius:var(--r-sm);padding:4px 14px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;height:30px;white-space:nowrap;flex-shrink:0;}
+#app{display:grid;grid-template-rows:52px 1fr 24px;height:100vh;}
+/* NAV */
+#nav{display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--hairline);background:var(--canvas);height:52px;overflow:hidden;}
+#wordmark{font-size:15px;font-weight:700;letter-spacing:.06em;white-space:nowrap;}
+#nav-gap{flex:1;}
+.nstat{font-size:11px;color:var(--mute);white-space:nowrap;}
+.nstat b{color:var(--ink);font-weight:700;}
+#btn-shop{background:var(--ink);color:var(--on-dark);border:none;border-radius:var(--r);padding:3px 13px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;height:28px;white-space:nowrap;}
 #btn-shop:hover{background:var(--ink-deep);}
-
-/* ── MAIN ── */
-#main{display:grid;grid-template-columns:210px 1fr 270px;overflow:hidden;}
-.panel{display:flex;flex-direction:column;border-right:1px solid var(--hairline);overflow:hidden;}
+/* LAYOUT */
+#main{display:grid;grid-template-columns:220px 1fr 262px;overflow:hidden;}
+.panel{display:flex;flex-direction:column;border-right:1px solid var(--hairline);overflow:hidden;background:var(--canvas);}
 .panel:last-child{border-right:none;}
-.ph{padding:7px 12px 5px;border-bottom:1px solid var(--hairline);font-size:11px;font-weight:700;color:var(--mute);letter-spacing:.06em;flex-shrink:0;display:flex;align-items:center;gap:6px;background:var(--canvas);}
-.ph-btn{margin-left:auto;background:none;border:1px solid var(--hairline);border-radius:var(--r-sm);font-family:var(--font);font-size:10px;color:var(--mute);padding:1px 6px;cursor:pointer;font-weight:500;white-space:nowrap;}
+.ph{padding:6px 11px 5px;border-bottom:1px solid var(--hairline);font-size:11px;font-weight:700;color:var(--mute);letter-spacing:.06em;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.ph b{color:var(--ink);}
+.ph-btn{margin-left:4px;background:none;border:1px solid var(--hairline);border-radius:var(--r);font-family:var(--font);font-size:10px;color:var(--mute);padding:1px 7px;cursor:pointer;}
 .ph-btn:hover{color:var(--ink);border-color:var(--ink);}
-
-/* ── FILE PANEL ── */
-#panel-files{background:var(--canvas);}
-#file-list{flex:1;overflow-y:auto;padding:3px 0;}
-.fi{display:flex;align-items:center;gap:7px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--body-c);border-left:2px solid transparent;user-select:none;}
+.ph-btn.red{color:var(--danger);border-color:var(--danger);}
+.ph-btn.red:hover{background:var(--danger);color:#fff;}
+/* FILE PANEL */
+#file-list{flex:1;overflow-y:auto;padding:2px 0;}
+.fi{display:flex;align-items:flex-start;gap:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--body-c);border-left:2px solid transparent;user-select:none;}
 .fi:hover{background:var(--surface-soft);}
 .fi.active{background:var(--surface-card);color:var(--ink);font-weight:500;border-left-color:var(--ink);}
-.fdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--ash);}
+.fdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--ash);margin-top:5px;}
 .fdot.run{background:var(--purple);}
 .fdot.done{background:var(--success);}
 .fdot.err{background:var(--danger);}
-.fdot.warn-dot{background:var(--warning);}
-.fname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.fbits{font-size:10px;color:var(--mute);white-space:nowrap;flex-shrink:0;}
-.fwarn{font-size:10px;color:var(--warning);white-space:nowrap;flex-shrink:0;}
-.frun-btn{font-size:10px;color:var(--mute);background:none;border:none;cursor:pointer;font-family:var(--font);padding:1px 4px;border-radius:var(--r-sm);flex-shrink:0;opacity:0;transition:opacity .1s;}
-.fi:hover .frun-btn{opacity:1;}
-.frun-btn:hover{background:var(--surface-card);color:var(--ink);}
-
-#file-actions{padding:7px 10px;border-top:1px solid var(--hairline);display:flex;gap:5px;flex-shrink:0;}
-#new-file-name{flex:1;background:var(--surface-soft);border:1px solid var(--hairline);border-radius:var(--r-sm);padding:4px 7px;font-family:var(--font);font-size:11px;color:var(--ink);outline:none;}
-#new-file-name:focus{background:var(--canvas);border-color:var(--ink);}
-#btn-new-file{background:var(--ink);color:var(--on-dark);border:none;border-radius:var(--r-sm);padding:4px 10px;font-family:var(--font);font-size:11px;cursor:pointer;font-weight:500;}
-#btn-new-file:hover{background:var(--ink-deep);}
-
-/* ── FILE INFO BAR ── */
-#file-info{padding:5px 10px;border-top:1px solid var(--hairline);flex-shrink:0;font-size:10px;color:var(--mute);background:var(--surface-soft);display:grid;grid-template-columns:1fr 1fr;gap:2px;}
-.fi-stat b{color:var(--ink);}
-.fi-stat.warn{color:var(--warning);}
-.fi-stat.warn b{color:var(--warning);}
-
-/* ── EDITOR ── */
-#panel-editor{background:var(--canvas);position:relative;}
-#editor-wrap{flex:1;display:flex;overflow:hidden;position:relative;}
-#line-nums{width:36px;padding:7px 0;background:var(--surface-soft);border-right:1px solid var(--hairline);overflow:hidden;font-size:11px;color:var(--ash);line-height:1.65;text-align:right;flex-shrink:0;user-select:none;}
-.ln{padding-right:6px;display:block;height:21.45px;}
-.ln.cur{color:var(--ink);font-weight:700;background:var(--surface-card);}
+.fdot.mine{background:var(--warning);}
+.finfo{flex:1;min-width:0;}
+.fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fmeta{font-size:10px;color:var(--mute);margin-top:1px;display:flex;gap:8px;flex-wrap:wrap;}
+.fmeta .bits{color:var(--warning);font-weight:700;}
+.fmeta .bits.green{color:var(--success);}
+.fbtns{display:flex;gap:3px;flex-shrink:0;margin-top:2px;}
+.fbn{background:none;border:1px solid var(--hairline);border-radius:var(--r);font-family:var(--font);font-size:9px;color:var(--mute);padding:1px 5px;cursor:pointer;}
+.fbn:hover{color:var(--ink);border-color:var(--ink);}
+#file-actions{padding:7px 9px;border-top:1px solid var(--hairline);display:flex;gap:5px;flex-shrink:0;}
+#new-fname{flex:1;background:var(--surface-soft);border:1px solid var(--hairline);border-radius:var(--r);padding:4px 7px;font-family:var(--font);font-size:11px;color:var(--ink);outline:none;}
+#new-fname:focus{background:var(--canvas);border-color:var(--ink);}
+#btn-new{background:var(--ink);color:var(--on-dark);border:none;border-radius:var(--r);padding:4px 10px;font-family:var(--font);font-size:11px;cursor:pointer;font-weight:500;}
+#btn-new:hover{background:var(--ink-deep);}
+/* EDITOR */
+#panel-editor{background:var(--canvas);}
+#hint-bar{padding:5px 10px;border-bottom:1px solid var(--hairline);font-size:10px;color:var(--ash);flex-shrink:0;line-height:1.7;}
+#hint-bar code{background:var(--surface-card);border:1px solid var(--hairline);padding:0 3px;border-radius:2px;color:var(--ink);}
+#editor-wrap{flex:1;display:flex;overflow:hidden;}
+#line-nums{width:34px;padding:7px 0;background:var(--surface-soft);border-right:1px solid var(--hairline);overflow:hidden;font-size:11px;color:var(--ash);line-height:1.65;text-align:right;flex-shrink:0;user-select:none;}
+.ln{padding-right:5px;display:block;height:21.45px;}
+.ln.act{color:var(--ink);font-weight:700;}
 #editor{flex:1;padding:7px 9px;background:transparent;border:none;outline:none;resize:none;font-family:var(--font);font-size:13px;color:var(--ink);line-height:1.65;tab-size:2;white-space:pre;overflow:auto;caret-color:var(--accent);}
-#autocomplete{display:none;position:absolute;bottom:36px;left:44px;background:var(--surface-dark);border:1px solid var(--surface-dark-el);border-radius:var(--r-sm);z-index:100;min-width:150px;overflow:hidden;}
+#autocomplete{display:none;position:absolute;bottom:32px;left:38px;background:var(--surface-dark);border:1px solid var(--surface-dark-el);border-radius:var(--r);z-index:100;min-width:160px;overflow:hidden;}
 .ac-item{padding:4px 11px;color:var(--on-dark);font-size:12px;cursor:pointer;}
 .ac-item:hover,.ac-item.sel{background:var(--surface-dark-el);}
-#editor-info{padding:4px 10px;border-top:1px solid var(--hairline);font-size:10px;color:var(--mute);flex-shrink:0;display:flex;gap:12px;background:var(--surface-soft);align-items:center;}
-#editor-info b{color:var(--ink);}
-
-/* ── TERMINAL ── */
-#panel-terminal{background:var(--surface-dark);border-right:none;}
+#ed-info{padding:4px 10px;border-top:1px solid var(--hairline);font-size:10px;color:var(--mute);flex-shrink:0;display:flex;gap:12px;background:var(--surface-soft);align-items:center;}
+#ed-info b{color:var(--ink);}
+/* TERMINAL */
+#panel-terminal{background:var(--surface-dark);}
 #panel-terminal .ph{background:var(--surface-dark);color:var(--ash);border-bottom-color:var(--charcoal);}
 #panel-terminal .ph-btn{border-color:var(--charcoal);color:var(--ash);}
 #panel-terminal .ph-btn:hover{border-color:var(--on-dark-mute);color:var(--on-dark);}
-#terminal-log{flex:1;overflow-y:auto;padding:7px 11px;font-size:11px;line-height:1.6;}
+#tlog{flex:1;overflow-y:auto;padding:7px 11px;font-size:11px;line-height:1.6;}
 .tl{display:flex;gap:7px;margin-bottom:1px;}
 .tt{color:var(--ash);flex-shrink:0;font-size:10px;padding-top:1px;}
 .tm{color:var(--on-dark-mute);word-break:break-all;}
@@ -99,185 +91,179 @@ html,body{height:100%;background:var(--canvas);color:var(--ink);font-family:var(
 .tm.err{color:var(--danger);}
 .tm.pur{color:var(--purple);}
 .tm.acc{color:var(--accent);}
-.tm.cry{color:#ffd60a;}
-#term-stats{padding:7px 11px;border-top:1px solid var(--charcoal);flex-shrink:0;display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--surface-dark-el);}
+.tm.mine{color:#ffd60a;}
+#tstats{padding:7px 11px;border-top:1px solid var(--charcoal);flex-shrink:0;display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--surface-dark-el);}
 .ts{font-size:10px;color:var(--ash);}
 .ts b{color:var(--on-dark);}
-
-/* ── STATUS BAR ── */
-#statusbar{display:flex;align-items:center;gap:14px;padding:0 14px;border-top:1px solid var(--hairline);font-size:10px;color:var(--mute);background:var(--surface-soft);}
+/* STATUSBAR */
+#statusbar{display:flex;align-items:center;gap:12px;padding:0 12px;border-top:1px solid var(--hairline);font-size:10px;color:var(--mute);background:var(--surface-soft);}
 .sb{white-space:nowrap;}
 .sb b{color:var(--ink);font-weight:500;}
-#sb-msg{margin-left:auto;}
-
-/* ── MODAL ── */
-#modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,0,0,.55);z-index:999;align-items:center;justify-content:center;}
-#modal-overlay.open{display:flex;}
-#modal{background:var(--canvas);border:1px solid var(--hairline-strong);width:500px;max-height:82vh;overflow-y:auto;padding:22px;}
-#modal h2{font-size:15px;font-weight:700;margin-bottom:18px;padding-bottom:7px;border-bottom:1px solid var(--hairline);}
-.ss{margin-bottom:18px;}
-.ss h3{font-size:11px;font-weight:700;color:var(--mute);letter-spacing:.06em;margin-bottom:7px;}
+#sb-msg{margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* MODAL */
+#overlay{display:none;position:fixed;inset:0;background:rgba(15,0,0,.55);z-index:999;align-items:center;justify-content:center;}
+#overlay.open{display:flex;}
+#modal{background:var(--canvas);border:1px solid var(--hairline-strong);width:500px;max-height:84vh;overflow-y:auto;padding:22px;}
+#modal h2{font-size:15px;font-weight:700;margin-bottom:16px;padding-bottom:7px;border-bottom:1px solid var(--hairline);}
+.ss{margin-bottom:16px;}
+.ss h3{font-size:10px;font-weight:700;color:var(--mute);letter-spacing:.07em;margin-bottom:7px;}
 .sr{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--hairline);}
 .sr:last-child{border-bottom:none;}
 .si{flex:1;}
 .sn{font-size:13px;font-weight:500;color:var(--ink);}
 .sd{font-size:11px;color:var(--mute);}
-.sp{font-size:12px;font-weight:700;color:var(--body-c);white-space:nowrap;flex-shrink:0;}
-.sb2{background:var(--ink);color:var(--on-dark);border:none;border-radius:var(--r-sm);padding:4px 12px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;flex-shrink:0;}
-.sb2:hover{background:var(--ink-deep);}
-.sb2:disabled{background:var(--surface-card);color:var(--ash);cursor:default;}
-#modal-close{background:none;border:1px solid var(--hairline-strong);border-radius:var(--r-sm);padding:5px 16px;font-family:var(--font);font-size:13px;color:var(--ink);cursor:pointer;margin-top:14px;}
+.sp{font-size:12px;font-weight:700;color:var(--body-c);white-space:nowrap;}
+.slvl{font-size:11px;color:var(--purple);white-space:nowrap;}
+.sbtn{background:var(--ink);color:var(--on-dark);border:none;border-radius:var(--r);padding:4px 12px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;}
+.sbtn:hover{background:var(--ink-deep);}
+.sbtn:disabled{background:var(--surface-card);color:var(--ash);cursor:default;}
+#modal-close{background:none;border:1px solid var(--hairline-strong);border-radius:var(--r);padding:5px 16px;font-family:var(--font);font-size:13px;color:var(--ink);cursor:pointer;margin-top:12px;}
 #modal-close:hover{background:var(--surface-card);}
-
 ::-webkit-scrollbar{width:4px;height:4px;}
-::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--hairline-strong);border-radius:2px;}
-
-#tutorial{display:none;position:fixed;bottom:36px;left:50%;transform:translateX(-50%);background:var(--surface-dark);color:var(--on-dark);border-radius:var(--r-sm);padding:11px 18px;font-size:12px;z-index:500;text-align:center;border:1px solid var(--surface-dark-el);max-width:480px;line-height:1.7;}
-#tutorial.vis{display:block;}
-#tutorial b{color:var(--accent);}
-
-/* RAM warning flash */
-@keyframes ramwarn{0%,100%{background:var(--canvas)}50%{background:#fff3e0}}
-.ram-warn{animation:ramwarn 0.4s ease;}
+@keyframes rw{0%,100%{background:var(--canvas)}50%{background:#fff3cd}}
+.rw-anim{animation:rw .4s ease;}
 </style>
 </head>
 <body>
 <div id="app">
 
-<!-- NAV -->
 <nav id="nav">
   <div id="wordmark">[SCRIPTO]</div>
-  <div id="nav-sep"></div>
-  <div class="nav-stat">[§] <b id="s-money">0</b></div>
-  <div class="nav-stat">[TICK] <b id="s-tick">0</b></div>
-  <div class="nav-stat">[RAM] <b id="s-ram">0</b>/<b id="s-rammax">16</b>MB</div>
-  <div class="nav-stat">[STORAGE] <b id="s-stor">0.0</b>/<b id="s-stormax">32</b>MB</div>
-  <div class="nav-stat">[CRYPTO] <b id="s-crypto">0.000</b></div>
-  <button id="btn-shop">[+] SHOP</button>
+  <div id="nav-gap"></div>
+  <div class="nstat">[§] <b id="s-money">0</b></div>
+  <div class="nstat">[TICK] <b id="s-tick">0</b></div>
+  <div class="nstat">[RAM] <b id="s-ram">0.0</b>/<b id="s-rammax">128</b>MB</div>
+  <div class="nstat">[RATE] <b id="s-rate">10</b> §/bit</div>
+  <button id="btn-shop">[+] UPGRADE</button>
 </nav>
 
-<!-- MAIN -->
 <div id="main">
 
   <!-- FILES -->
-  <div class="panel" id="panel-files">
+  <div class="panel">
     <div class="ph">[FILES]
-      <button class="ph-btn" id="btn-del">[-] DEL</button>
+      <div style="flex:1"></div>
+      <button class="ph-btn red" id="btn-del">[-] DEL</button>
     </div>
     <div id="file-list"></div>
-    <div id="file-info">
-      <div class="fi-stat"><b id="fi-bits">0</b> bits</div>
-      <div class="fi-stat"><b id="fi-bytes">0.000</b> KB</div>
-      <div class="fi-stat"><b id="fi-ram">0</b> MB RAM/tick</div>
-      <div class="fi-stat"><b id="fi-loops">0</b> loops</div>
-      <div class="fi-stat" id="fi-warn-row" style="grid-column:span 2;display:none;"></div>
-    </div>
     <div id="file-actions">
-      <input id="new-file-name" placeholder="name.spt" maxlength="24"/>
-      <button id="btn-new-file">[+]</button>
+      <input id="new-fname" placeholder="miners/bot.code or vault/store.dat">
+      <button id="btn-new">[+]</button>
     </div>
   </div>
 
   <!-- EDITOR -->
-  <div class="panel" id="panel-editor">
-    <div class="ph">[EDITOR] <b id="ed-fname" style="color:var(--ink);font-weight:700;">&mdash;</b>
+  <div class="panel" id="panel-editor" style="position:relative;">
+    <div class="ph">[EDITOR] <b id="ed-fname" style="font-size:12px;">—</b>
+      <div style="flex:1"></div>
       <button class="ph-btn" id="btn-run">[&gt;] RUN</button>
-      <button class="ph-btn" id="btn-stop" style="display:none;color:var(--danger);border-color:var(--danger);">[x] STOP</button>
+      <button class="ph-btn red" id="btn-stop" style="display:none;">[x] STOP</button>
+    </div>
+    <div id="hint-bar">
+      <code>mine bit</code>&nbsp;<code>collect path/f.code</code>&nbsp;<code>store path/f.dat</code>&nbsp;<code>sell path/f</code>&nbsp;<code>check bits</code>&nbsp;<code>check bits path/f</code>&nbsp;<code>run path/f.code</code>&nbsp;<code>repeat N times</code>&nbsp;<code>repeat if (cond)</code>&nbsp;<code>if (cond)</code>&nbsp;<code>while (cond)</code>
     </div>
     <div id="editor-wrap">
       <div id="line-nums"></div>
       <textarea id="editor" spellcheck="false" placeholder="// select a file to edit"></textarea>
       <div id="autocomplete"></div>
     </div>
-    <div id="editor-info">
+    <div id="ed-info">
       <span>LINES: <b id="ei-lines">0</b></span>
-      <span>SIZE: <b id="ei-bits">0</b> bits / <b id="ei-kb">0.000</b> KB</span>
-      <span>RAM COST: <b id="ei-ramcost">1</b> MB</span>
-      <span style="margin-left:auto;color:var(--ash)">TAB=autocomplete</span>
+      <span>BITS STORED: <b id="ei-bits">0</b></span>
+      <span>RAM COST: <b id="ei-ram">0.1</b>MB</span>
+      <span style="margin-left:auto;color:var(--ash);">TAB=autocomplete</span>
     </div>
   </div>
 
   <!-- TERMINAL -->
   <div class="panel" id="panel-terminal">
     <div class="ph">[TERMINAL]
-      <button class="ph-btn" id="btn-clear">[-] CLR</button>
+      <button class="ph-btn" id="btn-clr">[-] CLR</button>
     </div>
-    <div id="terminal-log"></div>
-    <div id="term-stats">
+    <div id="tlog"></div>
+    <div id="tstats">
       <div class="ts">[FILES] <b id="ts-files">0</b></div>
       <div class="ts">[RUNNING] <b id="ts-run">0</b></div>
-      <div class="ts">[BITS/s] <b id="ts-bps">0</b></div>
+      <div class="ts">[MINING] <b id="ts-mine">0</b></div>
       <div class="ts">[TICK] <b id="ts-spd">1000</b>ms</div>
-      <div class="ts">[WARNINGS] <b id="ts-warn">0</b></div>
-      <div class="ts">[CRYPTO/s] <b id="ts-cps">0.000</b></div>
+      <div class="ts">[RAM LVL] <b id="ts-ramlvl">0</b></div>
+      <div class="ts">[MKT LVL] <b id="ts-mktlvl">0</b></div>
     </div>
   </div>
 
 </div>
 
-<!-- STATUS BAR -->
 <div id="statusbar">
-  <span class="sb">[SCRIPTO] v2.0</span>
-  <span class="sb">SLOTS: <b id="sb-slots">3</b></span>
+  <span class="sb">[SCRIPTO v3]</span>
   <span class="sb">SPEED: <b id="sb-spd">1000</b>ms</span>
-  <span class="sb" id="sb-msg">ready.</span>
+  <span class="sb" id="sb-msg">new bit economy — mine &rarr; collect &rarr; store &rarr; sell</span>
 </div>
 
 </div><!-- /app -->
 
-<!-- SHOP -->
-<div id="modal-overlay">
+<!-- UPGRADE SHOP -->
+<div id="overlay">
   <div id="modal">
-    <h2>[SHOP] &mdash; upgrade your system</h2>
-
-    <div class="ss"><h3>[STORAGE]</h3>
-      <div class="sr">
-        <div class="si"><div class="sn">[+] Storage +32 MB</div><div class="sd">more space for files &amp; save slots</div></div>
-        <div class="sp" id="shop-stor-price">50 §</div>
-        <button class="sb2" data-shop="storage">buy</button>
-      </div>
-    </div>
+    <h2>[UPGRADE] — improve your system</h2>
 
     <div class="ss"><h3>[RAM]</h3>
       <div class="sr">
-        <div class="si"><div class="sn">[+] RAM +16 MB</div><div class="sd">each running script costs RAM; more = run more at once</div></div>
-        <div class="sp" id="shop-ram-price">80 §</div>
-        <button class="sb2" data-shop="ram">buy</button>
+        <div class="si">
+          <div class="sn">[+] RAM Upgrade</div>
+          <div class="sd">+32 MB max RAM per level. Each running file costs RAM.</div>
+        </div>
+        <div class="slvl">LVL <b id="up-ramlvl">0</b></div>
+        <div class="sp" id="up-ramprice">40 §</div>
+        <button class="sbtn" id="up-ram">upgrade</button>
       </div>
     </div>
 
-    <div class="ss"><h3>[TICK SPEED]</h3>
+    <div class="ss"><h3>[SPEED]</h3>
       <div class="sr">
-        <div class="si"><div class="sn">[+] Speed Tier 2 &mdash; 500ms</div><div class="sd">current: <span id="shop-cur-spd">1000</span>ms/tick</div></div>
-        <div class="sp">120 §</div>
-        <button class="sb2" data-shop="speed2">buy</button>
-      </div>
-      <div class="sr">
-        <div class="si"><div class="sn">[+] Speed Tier 3 &mdash; 200ms</div><div class="sd">requires Tier 2</div></div>
-        <div class="sp">350 §</div>
-        <button class="sb2" data-shop="speed3">buy</button>
-      </div>
-    </div>
-
-    <div class="ss"><h3>[SAVE SLOTS]</h3>
-      <div class="sr">
-        <div class="si"><div class="sn">[+] +3 Save Slots</div><div class="sd">.save files hold bits between script restarts</div></div>
-        <div class="sp">60 §</div>
-        <button class="sb2" data-shop="slots">buy</button>
+        <div class="si">
+          <div class="sn">[+] Tick Speed</div>
+          <div class="sd">1000 &rarr; 700 &rarr; 450 &rarr; 250 &rarr; 150ms per level</div>
+        </div>
+        <div class="slvl">LVL <b id="up-spdlvl">0</b></div>
+        <div class="sp" id="up-spdprice">80 §</div>
+        <button class="sbtn" id="up-spd">upgrade</button>
       </div>
     </div>
 
-    <div class="ss"><h3>[CRYPTO MINER]</h3>
+    <div class="ss"><h3>[MARKET]</h3>
       <div class="sr">
-        <div class="si"><div class="sn">[+] Crypto Multiplier x2</div><div class="sd">doubles § gained from convert command</div></div>
-        <div class="sp">200 §</div>
-        <button class="sb2" data-shop="cryptox2">buy</button>
+        <div class="si">
+          <div class="sn">[+] Sell Rate</div>
+          <div class="sd">+5 § per bit per level. Currently <b id="up-currate">10</b> §/bit.</div>
+        </div>
+        <div class="slvl">LVL <b id="up-mktlvl">0</b></div>
+        <div class="sp" id="up-mktprice">60 §</div>
+        <button class="sbtn" id="up-mkt">upgrade</button>
       </div>
+    </div>
+
+    <div class="ss"><h3>[OPS]</h3>
       <div class="sr">
-        <div class="si"><div class="sn">[+] Crypto Multiplier x4</div><div class="sd">requires x2. doubles again</div></div>
-        <div class="sp">600 §</div>
-        <button class="sb2" data-shop="cryptox4">buy</button>
+        <div class="si">
+          <div class="sn">[+] Ops Level</div>
+          <div class="sd">reduces RAM overhead for collect operations by 0.05MB/level</div>
+        </div>
+        <div class="slvl">LVL <b id="up-opslvl">0</b></div>
+        <div class="sp" id="up-opsprice">50 §</div>
+        <button class="sbtn" id="up-ops">upgrade</button>
+      </div>
+    </div>
+
+    <div class="ss"><h3>[MINE BOOST]</h3>
+      <div class="sr">
+        <div class="si">
+          <div class="sn">[+] Mine Yield</div>
+          <div class="sd">+1 bit per mine command per level</div>
+        </div>
+        <div class="slvl">LVL <b id="up-minelvl">0</b></div>
+        <div class="sp" id="up-mineprice">70 §</div>
+        <button class="sbtn" id="up-mine">upgrade</button>
       </div>
     </div>
 
@@ -285,236 +271,232 @@ html,body{height:100%;background:var(--canvas);color:var(--ink);font-family:var(
   </div>
 </div>
 
-<!-- TUTORIAL -->
-<div id="tutorial" class="vis">
-  <b>collect</b> bits &rarr; <b>compress</b> to bytes &rarr; <b>convert</b> to crypto &rarr; sell for §<br>
-  each file has its own bit-buffer, RAM cost &amp; warning thresholds &mdash; click to dismiss
-</div>
-
 <script>
-// ═══════════════════════════════════════════════
-// SCRIPTO v2 — Bit/Byte/Crypto Engine
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// SCRIPTO v3 — New Bit Economy
+// ═══════════════════════════════════════════════════
+//
+// COMMANDS:
+//   mine (currency)        — mines 1 bit into this file, takes 3 ticks
+//   collect path/file      — pulls ALL bits from target file into this file (costs RAM)
+//   store path/file        — pushes ALL bits from this file into target file
+//   sell path/file         — sells ALL bits of a file for §, takes 3 ticks
+//   check bits             — logs this file's stored bits
+//   check bits path/file   — logs another file's stored bits
+//   run path/file.code     — executes another script
+//   repeat N times         — repeat block N times
+//   repeat if (cond)       — repeat while condition true
+//   if (cond)              — single conditional
+//   while (cond)           — loop while condition true
+//   halt                   — stop this script
+//
+// ECONOMICS:
+//   RAM = 0.1 MB base + 0.1 MB per code-line + 0.1 MB per stored bit
+//   Mine takes 3 ticks. Sell takes 3 ticks.
+//   collect also uses temporary RAM (reduced by Ops Level)
 
-const KEYWORDS = [
-  'repeat','infinite','end',
-  'when','collectable','data>0','bits>0','bytes>0','always','overload',
-  'collect','compress','extract','convert','sell','save','load','ping','halt'
-];
-
-// ─── CONSTANTS ───
-const BITS_PER_BYTE   = 8;
-const RAM_BASE        = 1;          // MB per running file
-const RAM_PER_LINE    = 0.05;       // extra MB per code line
-const STORAGE_PER_BIT = 0.000125;   // MB per bit stored
-const WARN_RAM_PCT    = 0.80;       // 80% RAM → warning
-const WARN_STOR_PCT   = 0.85;       // 85% storage → warning
-const BIT_OVERLOAD    = 1024;       // bits threshold for overload warning per file
-
-// ─── STATE ───
-let S = {
-  money: 0, tick: 0,
-  ram: 0, ramMax: 16,
-  storMax: 32, storBought: 0,
-  speed: 1000, speedTier: 1,
-  saveSlots: 3,
-  cryptoMulti: 1,
-  cryptoTotal: 0,
-  files: [],       // {id,name,code,status,pc,loops,bits,bytes,saves,ramCost,warnings}
-  active: null,
-  tickInt: null,
-  warnings: 0,
-  lastBitsEarned: 0,
-  lastCrypto: 0,
+const MINE_TICKS   = 3;
+const SELL_TICKS   = 3;
+const RAM_BASE     = 0.1;
+const RAM_PER_LINE = 0.1;
+const RAM_PER_BIT  = 0.1;
+const SPEED_STEPS  = [1000, 700, 450, 250, 150];
+const UP_PRICES    = {
+  ram:   lvl => 40 + lvl * 30,
+  speed: lvl => 80 + lvl * 60,
+  mkt:   lvl => 60 + lvl * 40,
+  ops:   lvl => 50 + lvl * 35,
+  mine:  lvl => 70 + lvl * 55,
 };
 
-// ─── DOM ───
-const $fl   = document.getElementById('file-list');
-const $ed   = document.getElementById('editor');
-const $ln   = document.getElementById('line-nums');
-const $ac   = document.getElementById('autocomplete');
-const $tlog = document.getElementById('terminal-log');
-const $brun = document.getElementById('btn-run');
-const $bsto = document.getElementById('btn-stop');
-const $nfn  = document.getElementById('new-file-name');
-const $tut  = document.getElementById('tutorial');
+const KEYWORDS = [
+  'mine','collect','store','sell','check','bits','run',
+  'repeat','times','if','while','halt','end',
+  'bit','filebits'
+];
 
-function $id(id){ return document.getElementById(id); }
+// ── STATE ──────────────────────────────────────────
+let G = {
+  money: 0, tick: 0,
+  ramMax: 128,
+  ups: { ram: 0, speed: 0, mkt: 0, ops: 0, mine: 0 },
+  files: [],   // {id, path, code, bits, status, mineTimer, sellTimer, sellFile}
+  active: null,
+  timer: null,
+};
 
-// ─── LOGGING ───
+// ── UTILS ──────────────────────────────────────────
+function eid(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function norm(p){ return String(p||'').trim().replace(/\\/g,'/').replace(/^\.?\//,'').replace(/\/+/g,'/'); }
+function stripQ(s){ s=String(s||'').trim(); return /^["'].*["']$/.test(s)?s.slice(1,-1):s; }
+function setMsg(m){ eid('sb-msg').textContent=m; }
+function sellRate(){ return 10 + G.ups.mkt * 5; }
+function collectRamCost(){ return Math.max(0.05, 0.2 - G.ups.ops * 0.05); }
+
+function fileRam(f){
+  const lines = f.code.split('\n').filter(l=>l.trim()&&!l.trim().startsWith('//')).length;
+  return RAM_BASE + lines * RAM_PER_LINE + (f.bits||0) * RAM_PER_BIT;
+}
+function totalRamUsed(){
+  return G.files.filter(f=>f.status==='running'||f.status==='mining'||f.status==='selling')
+                .reduce((a,f)=>a+fileRam(f),0);
+}
+function getF(id){ return G.files.find(f=>f.id===id); }
+function byPath(p){ return G.files.find(f=>f.path===norm(p)); }
+
+// ── LOGGING ────────────────────────────────────────
+const $tlog = eid('tlog');
 function log(msg, cls=''){
   const ts = new Date().toTimeString().slice(0,8);
   const d = document.createElement('div');
   d.className='tl';
   d.innerHTML=`<span class="tt">${ts}</span><span class="tm ${cls}">${esc(msg)}</span>`;
   $tlog.appendChild(d);
-  if($tlog.children.length>500) $tlog.removeChild($tlog.firstChild);
+  if($tlog.children.length>600) $tlog.firstChild.remove();
   $tlog.scrollTop=$tlog.scrollHeight;
 }
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function setMsg(m){$id('sb-msg').textContent=m;}
-function uid(){return Math.random().toString(36).slice(2,9);}
 
-// ─── FILE COST CALC ───
-function fileLinesCount(code){
-  return code.split('\n').filter(l=>l.trim()&&!l.trim().startsWith('//')).length;
-}
-function fileRamCost(file){
-  return RAM_BASE + fileLinesCount(file.code) * RAM_PER_LINE;
-}
-function fileBitStorage(file){
-  return (file.bits||0) * STORAGE_PER_BIT;
-}
-function fileCodeStorage(file){
-  return fileLinesCount(file.code) * 0.1 + 0.1;
-}
-function fileStorage(file){
-  return fileCodeStorage(file) + fileBitStorage(file);
-}
-function totalStorage(){
-  return S.files.reduce((a,f)=>a+fileStorage(f),0);
-}
-function totalRamUsed(){
-  return S.files.filter(f=>f.status==='running').reduce((a,f)=>a+fileRamCost(f),0);
-}
-
-// ─── FILE WARNINGS ───
-function checkFileWarnings(file){
-  const warns = [];
-  if((file.bits||0) >= BIT_OVERLOAD) warns.push(`OVERLOAD: ${file.bits} bits`);
-  if(fileRamCost(file) > S.ramMax * 0.5) warns.push('RAM HEAVY');
-  file._warns = warns;
-  return warns;
-}
-
-// ─── FILE OPS ───
-function newFile(name){
-  if(!name||!name.trim()){setMsg('[x] enter a filename');return;}
-  if(!name.includes('.')) name+='.spt';
-  if(S.files.find(f=>f.name===name)){setMsg('[x] file exists');return;}
-  const isSave=name.endsWith('.save');
-  if(isSave&&S.files.filter(f=>f.name.endsWith('.save')).length>=S.saveSlots){
-    setMsg(`[x] max save slots (${S.saveSlots})`);return;
-  }
-  if(totalStorage()+0.2>S.storMax){setMsg('[x] storage full');return;}
-  const f={
-    id:uid(),name,
-    code:isSave?'// save file\n':'// new script\nrepeat infinite\n  when collectable: collect\n  when bits>0: compress\n  when bytes>0: convert\nend\n',
-    status:'idle',pc:0,loops:0,bits:0,bytes:0,saves:0,warnings:0,_warns:[]
+// ── FILE OPS ───────────────────────────────────────
+function createFile(rawPath){
+  if(!rawPath.trim()){setMsg('[x] enter path');return;}
+  const path = norm(rawPath);
+  if(!path){setMsg('[x] invalid path');return;}
+  if(byPath(path)){setMsg('[x] file exists');return;}
+  const f = {
+    id: uid(), path, bits: 0, status: 'idle',
+    mineTimer: 0, sellTimer: 0, sellFile: null,
+    code: path.endsWith('.dat')
+      ? '// data file — stores bits\n'
+      : '// new script\nrepeat if (true)\n  mine bit\nend\n'
   };
-  S.files.push(f);
+  G.files.push(f);
   selectFile(f.id);
   renderFiles();
-  log(`[+] ${name} created`,'info');
+  log(`[+] created ${path}`, 'info');
+  setMsg(`created ${path}`);
 }
 
-function delActive(){
-  if(!S.active) return;
-  const f=getF(S.active);
+function deleteActive(){
+  if(!G.active) return;
+  const f = getF(G.active);
   if(!f) return;
-  if(f.status==='running') stopFile(f.id);
-  S.files=S.files.filter(x=>x.id!==S.active);
-  S.active=null;
-  $ed.value='';
-  $id('ed-fname').textContent='\u2014';
-  $brun.style.display='';
-  $bsto.style.display='none';
+  if(f.status==='running'||f.status==='mining'||f.status==='selling') stopFile(f.id);
+  G.files = G.files.filter(x=>x.id!==G.active);
+  G.active = null;
+  eid('editor').value='';
+  eid('ed-fname').textContent='—';
+  eid('btn-run').style.display='';
+  eid('btn-stop').style.display='none';
   renderFiles(); updateEditorInfo();
-  log(`[-] deleted ${f.name}`,'warn');
+  log(`[-] file deleted`, 'warn');
 }
-
-function getF(id){return S.files.find(f=>f.id===id);}
 
 function selectFile(id){
   const f=getF(id);
   if(!f) return;
-  if(S.active&&S.active!==id){const p=getF(S.active);if(p)p.code=$ed.value;}
-  S.active=id;
-  $ed.value=f.code;
-  $id('ed-fname').textContent=f.name;
-  $brun.style.display=f.status==='running'?'none':'';
-  $bsto.style.display=f.status==='running'?'':' none';
-  renderFiles(); updateLineNums(); updateEditorInfo(); updateFileInfo();
+  if(G.active && G.active!==id){ const p=getF(G.active); if(p) p.code=eid('editor').value; }
+  G.active=id;
+  const ed=eid('editor');
+  ed.value=f.code;
+  eid('ed-fname').textContent=f.path;
+  const running=(f.status==='running'||f.status==='mining'||f.status==='selling');
+  eid('btn-run').style.display=running?'none':'';
+  eid('btn-stop').style.display=running?'':'none';
+  renderFiles(); updateLineNums(); updateEditorInfo();
 }
 
 function renderFiles(){
+  const $fl=eid('file-list');
   $fl.innerHTML='';
-  S.files.forEach(f=>{
-    checkFileWarnings(f);
+  G.files.forEach(f=>{
     const div=document.createElement('div');
-    div.className='fi'+(f.id===S.active?' active':'');
-    const sc=f.status==='running'?'run':f.status==='done'?'done':f.status==='error'?'err':f._warns.length?'warn-dot':'';
-    const bits=f.bits||0;
-    const kb=(bits/BITS_PER_BYTE/1024).toFixed(3);
-    const warnTxt=f._warns.length?`⚠ ${f._warns[0]}`:'';
+    div.className='fi'+(f.id===G.active?' active':'');
+    const sc=
+      f.status==='mining'?'mine':
+      f.status==='running'?'run':
+      f.status==='selling'?'run':
+      f.status==='done'?'done':
+      f.status==='error'?'err':'';
+    const bitsClass=(f.bits||0)>0?'bits green':'bits';
+    const statusLabel=
+      f.status==='mining'?` [mine ${f.mineTimer}/${MINE_TICKS}t]`:
+      f.status==='selling'?` [sell ${f.sellTimer}/${SELL_TICKS}t]`:
+      f.status==='running'?` [run]`:
+      f.status==='error'?` [err]`:'';
+    const ramStr=fileRam(f).toFixed(2);
     div.innerHTML=
       `<div class="fdot ${sc}"></div>`+
-      `<span class="fname">${esc(f.name)}</span>`+
-      `<span class="fbits">${bits}b</span>`+
-      (warnTxt?`<span class="fwarn">${esc(warnTxt)}</span>`:'')+
-      `<button class="frun-btn">${f.status==='running'?'[x]':'[>]'}</button>`;
-    div.querySelector('.frun-btn').onclick=(e)=>{e.stopPropagation();f.status==='running'?stopFile(f.id):runFile(f.id);};
-    div.onclick=()=>selectFile(f.id);
+      `<div class="finfo">`+
+        `<div class="fname">${esc(f.path)}</div>`+
+        `<div class="fmeta">`+
+          `<span class="${bitsClass}">${f.bits||0} bits</span>`+
+          `<span>${ramStr}MB</span>`+
+          `<span>${statusLabel}</span>`+
+        `</div>`+
+      `</div>`+
+      `<div class="fbtns">`+
+        (f.status==='running'||f.status==='mining'||f.status==='selling'
+          ?`<button class="fbn" data-stop="${f.id}">[x]</button>`
+          :`<button class="fbn" data-run="${f.id}">[>]</button>`)+
+        `<button class="fbn" data-del="${f.id}">del</button>`+
+      `</div>`;
+    div.querySelector('[data-run]')?.addEventListener('click',e=>{e.stopPropagation();runFile(f.id);});
+    div.querySelector('[data-stop]')?.addEventListener('click',e=>{e.stopPropagation();stopFile(f.id);});
+    div.querySelector('[data-del]')?.addEventListener('click',e=>{e.stopPropagation();
+      if(f.status==='running'||f.status==='mining'||f.status==='selling') stopFile(f.id);
+      G.files=G.files.filter(x=>x.id!==f.id);
+      if(G.active===f.id){G.active=null;eid('editor').value='';eid('ed-fname').textContent='—';}
+      renderFiles(); log(`[-] deleted ${f.path}`,'warn');
+    });
+    div.addEventListener('click',()=>selectFile(f.id));
     $fl.appendChild(div);
   });
-  $id('ts-files').textContent=S.files.length;
-  $id('ts-run').textContent=S.files.filter(f=>f.status==='running').length;
-  $id('ts-warn').textContent=S.warnings;
-  $id('s-stor').textContent=totalStorage().toFixed(1);
-  $id('s-stormax').textContent=S.storMax;
-  $id('sb-slots').textContent=S.saveSlots;
+  // stats
+  eid('ts-files').textContent=G.files.length;
+  eid('ts-run').textContent=G.files.filter(f=>f.status==='running'||f.status==='selling').length;
+  eid('ts-mine').textContent=G.files.filter(f=>f.status==='mining').length;
 }
 
-function updateFileInfo(){
-  const f=S.active?getF(S.active):null;
-  if(!f){$id('fi-bits').textContent=0;$id('fi-bytes').textContent='0.000';$id('fi-ram').textContent=0;$id('fi-loops').textContent=0;$id('fi-warn-row').style.display='none';return;}
-  const bits=f.bits||0;
-  const kb=(bits/BITS_PER_BYTE/1024).toFixed(3);
-  const rc=fileRamCost(f).toFixed(2);
-  $id('fi-bits').textContent=bits;
-  $id('fi-bytes').textContent=kb;
-  $id('fi-ram').textContent=rc;
-  $id('fi-loops').textContent=f.loops||0;
-  const warn=f._warns.join(' | ');
-  const wr=$id('fi-warn-row');
-  if(warn){wr.textContent='⚠ '+warn;wr.style.display='block';wr.className='fi-stat warn';}
-  else wr.style.display='none';
-}
+// ── EDITOR ─────────────────────────────────────────
+const $ed=eid('editor');
+const $ln=eid('line-nums');
+const $ac=eid('autocomplete');
 
-// ─── EDITOR ───
 function updateLineNums(){
   const lines=$ed.value.split('\n');
-  $ln.innerHTML=lines.map((_,i)=>`<span class="ln">${i+1}</span>`).join('');
+  const cur=$ed.value.slice(0,$ed.selectionStart).split('\n').length;
+  $ln.innerHTML=lines.map((_,i)=>`<span class="ln${i+1===cur?' act':''}">${i+1}</span>`).join('');
 }
 function updateEditorInfo(){
+  const f=G.active?getF(G.active):null;
   const code=$ed.value;
-  const lines=code.split('\n').filter(l=>l.trim()).length;
-  const bits=code.length*8;
-  const kb=(bits/BITS_PER_BYTE/1024).toFixed(3);
-  const rc=S.active?fileRamCost(getF(S.active)||{code}).toFixed(2):'1.00';
-  $id('ei-lines').textContent=code.split('\n').length;
-  $id('ei-bits').textContent=bits;
-  $id('ei-kb').textContent=kb;
-  $id('ei-ramcost').textContent=rc;
+  const lines=code.split('\n').filter(l=>l.trim()&&!l.trim().startsWith('//')).length;
+  const ram=(f?fileRam(f):(RAM_BASE+lines*RAM_PER_LINE)).toFixed(2);
+  eid('ei-lines').textContent=code.split('\n').length;
+  eid('ei-bits').textContent=f?f.bits:0;
+  eid('ei-ram').textContent=ram;
 }
 
 $ed.addEventListener('input',()=>{
-  if(S.active){const f=getF(S.active);if(f)f.code=$ed.value;}
-  updateLineNums();updateEditorInfo();
-  $ac.style.display='none';
+  if(G.active){const f=getF(G.active);if(f)f.code=$ed.value;}
+  updateLineNums(); updateEditorInfo(); $ac.style.display='none';
 });
-$ed.addEventListener('scroll',()=>{$ln.scrollTop=$ed.scrollTop;});
-$ed.addEventListener('keydown',(e)=>{
+$ed.addEventListener('scroll',()=>{ $ln.scrollTop=$ed.scrollTop; });
+$ed.addEventListener('keydown',e=>{
   if(e.key==='Tab'){
     e.preventDefault();
     const w=curWord();
-    const all=[...KEYWORDS.filter(k=>k.startsWith(w)&&k!==w),...S.files.map(f=>f.name).filter(n=>n.startsWith(w)&&n!==w)];
+    const all=[
+      ...KEYWORDS.filter(k=>k.startsWith(w)&&k!==w),
+      ...G.files.map(f=>f.path).filter(p=>p.startsWith(w)&&p!==w)
+    ];
     if(all.length===1) completeWord(w,all[0]);
     else if(all.length>1) showAC(all,w);
     else insertAt('  ');
-  } else if(e.key==='Escape'){
-    $ac.style.display='none';
-  } else if((e.key==='ArrowDown'||e.key==='ArrowUp')&&$ac.style.display!=='none'){
+  } else if(e.key==='Escape'){$ac.style.display='none';}
+  else if((e.key==='ArrowDown'||e.key==='ArrowUp')&&$ac.style.display!=='none'){
     e.preventDefault();
     const items=[...$ac.querySelectorAll('.ac-item')];
     let i=items.findIndex(x=>x.classList.contains('sel'));
@@ -525,393 +507,520 @@ $ed.addEventListener('keydown',(e)=>{
     e.preventDefault();
     const sel=$ac.querySelector('.ac-item.sel')||$ac.querySelector('.ac-item');
     if(sel){completeWord(curWord(),sel.dataset.v);$ac.style.display='none';}
-  } else {
-    $ac.style.display='none';
-  }
+  } else { $ac.style.display='none'; }
 });
-function curWord(){const s=$ed.selectionStart,t=$ed.value.slice(0,s),m=t.match(/\S+$/);return m?m[0]:''}
-function completeWord(w,f){const s=$ed.selectionStart,b=$ed.value.slice(0,s-w.length),a=$ed.value.slice(s);$ed.value=b+f+a;$ed.selectionStart=$ed.selectionEnd=b.length+f.length;$ed.dispatchEvent(new Event('input'));}
+function curWord(){const s=$ed.selectionStart,t=$ed.value.slice(0,s),m=t.match(/\S+$/);return m?m[0]:'';}
+function completeWord(w,v){const s=$ed.selectionStart,b=$ed.value.slice(0,s-w.length),a=$ed.value.slice(s);$ed.value=b+v+a;$ed.selectionStart=$ed.selectionEnd=b.length+v.length;$ed.dispatchEvent(new Event('input'));}
 function insertAt(t){const s=$ed.selectionStart,e=$ed.selectionEnd;$ed.value=$ed.value.slice(0,s)+t+$ed.value.slice(e);$ed.selectionStart=$ed.selectionEnd=s+t.length;}
 function showAC(words,prefix){
   $ac.innerHTML='';
   words.slice(0,8).forEach((w,i)=>{
     const d=document.createElement('div');
     d.className='ac-item'+(i===0?' sel':'');
-    d.textContent=w;d.dataset.v=w;
+    d.textContent=w; d.dataset.v=w;
     d.onclick=()=>{completeWord(prefix,w);$ac.style.display='none';};
     $ac.appendChild(d);
   });
   $ac.style.display='block';
 }
 
-// ─── SCRIPTO LANG ───
-// Grammar:
-//   repeat N | repeat infinite ... end
-//   when COND: ACTION
-//   collect [N]
-//   compress [TARGET]        — bits → bytes (÷8)
-//   extract [TARGET]         — pull bits from .save file
-//   convert [TARGET]         — bytes → crypto
-//   sell [N]                 — crypto → §
-//   save TARGET              — push bits to .save file
-//   load TARGET              — load bits from .save into this file
-//   ping TARGET              — check file exists
-//   halt                     — stop this script
+// ── SCRIPT ENGINE ──────────────────────────────────
+// Parses ScriptoLang into an AST and steps through it per tick.
 
-function parseScript(code){
-  const raw=code.split('\n').map(l=>l.trim()).filter(l=>l&&!l.startsWith('//'));
-  const out=[];
+function tokenize(line){
+  // returns array of tokens, handling quoted strings
+  const tokens=[];
+  let cur='', inQ=false, qc='';
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(inQ){if(c===qc){tokens.push(cur);cur='';inQ=false;}else cur+=c;}
+    else if(c==='"'||c==="'"){inQ=true;qc=c;}
+    else if(c===' '||c==='\t'){if(cur){tokens.push(cur);cur='';}}
+    else cur+=c;
+  }
+  if(cur) tokens.push(cur);
+  return tokens;
+}
+
+function parseLines(code){
+  return code.split('\n')
+    .map(l=>l.trim())
+    .filter(l=>l && !l.startsWith('//'));
+}
+
+// evaluates a condition string against file state
+function evalCond(cond, file){
+  const c=cond.trim().replace(/^\(|\)$/g,'').trim();
+  if(c==='true'||c==='always'||c==='1') return true;
+  if(c==='false'||c==='0') return false;
+  // filebits(path) >= N
+  const fbm=c.match(/^filebits\(([^)]+)\)\s*(>=|<=|>|<|==|!=)\s*(\d+)$/);
+  if(fbm){
+    const tf=byPath(norm(fbm[1]));
+    const val=tf?tf.bits:0;
+    return cmp(val,fbm[2],parseInt(fbm[3]));
+  }
+  // bits OP N
+  const bm=c.match(/^bits\s*(>=|<=|>|<|==|!=)\s*(\d+)$/);
+  if(bm) return cmp(file.bits||0, bm[1], parseInt(bm[2]));
+  // money OP N
+  const mm=c.match(/^money\s*(>=|<=|>|<|==|!=)\s*(\d+)$/);
+  if(mm) return cmp(G.money, mm[1], parseInt(mm[2]));
+  return false;
+}
+function cmp(a,op,b){
+  if(op==='>=') return a>=b;
+  if(op==='<=') return a<=b;
+  if(op==='>') return a>b;
+  if(op==='<') return a<b;
+  if(op==='==') return a===b;
+  if(op==='!=') return a!==b;
+  return false;
+}
+
+// Build a block-structured AST from flat lines
+function buildAST(lines){
+  const nodes=[];
   let i=0;
-  while(i<raw.length){
-    const l=raw[i];
-    if(l.startsWith('repeat ')){
-      const arg=l.slice(7).trim();
-      const n=arg==='infinite'?Infinity:(parseInt(arg)||1);
-      const body=[];
-      i++;
-      while(i<raw.length&&raw[i]!=='end'){body.push(raw[i]);i++;}
-      i++;
-      out.push({t:'repeat',n,body});
-    } else {
-      out.push({t:'stmt',l});
+  function consume(){
+    while(i<lines.length){
+      const l=lines[i];
+      const tok=tokenize(l);
+      const cmd=tok[0]?.toLowerCase();
+      if(cmd==='end') { i++; return; }
+      if(cmd==='repeat'){
+        const rest=tok.slice(1).join(' ');
+        let mode,count,cond;
+        const timesM=rest.match(/^(\d+)\s+times$/i);
+        const ifM=rest.match(/^if\s+(.+)$/i);
+        if(timesM){ mode='times'; count=parseInt(timesM[1]); }
+        else if(ifM){ mode='if'; cond=ifM[1]; }
+        else { mode='infinite'; }
+        i++;
+        const body=[];
+        const saved=nodes.splice(nodes.length);
+        const inner=[];
+        let depth=1;
+        while(i<lines.length){
+          const bl=lines[i];
+          const btok=tokenize(bl);
+          const bc=btok[0]?.toLowerCase();
+          if(bc==='repeat') depth++;
+          if(bc==='end') { depth--; if(depth===0){i++;break;} }
+          inner.push(bl);
+          i++;
+        }
+        nodes.push({t:'repeat', mode, count, cond, body: buildAST(inner)});
+        return;
+      }
+      if(cmd==='while'){
+        const cond=tok.slice(1).join(' ').replace(/^\(|\)$/g,'').trim();
+        i++;
+        const inner=[];
+        let depth=1;
+        while(i<lines.length){
+          const bl=lines[i];
+          const btok=tokenize(bl);
+          const bc=btok[0]?.toLowerCase();
+          if(bc==='while') depth++;
+          if(bc==='end') { depth--; if(depth===0){i++;break;} }
+          inner.push(bl);
+          i++;
+        }
+        nodes.push({t:'while', cond, body: buildAST(inner)});
+        return;
+      }
+      if(cmd==='if'){
+        const cond=tok.slice(1).join(' ').replace(/^\(|\)$/g,'').trim();
+        i++;
+        const inner=[];
+        while(i<lines.length){
+          const bl=lines[i];
+          const btok=tokenize(bl);
+          if(btok[0]?.toLowerCase()==='end'){i++;break;}
+          inner.push(bl);
+          i++;
+        }
+        nodes.push({t:'if', cond, body: buildAST(inner)});
+        return;
+      }
+      nodes.push({t:'stmt', line:l});
       i++;
     }
   }
-  return out;
+  while(i<lines.length) consume();
+  return nodes;
 }
 
-function execStmt(line, file, tick){
-  const pts=line.split(/\s+/);
-  const cmd=pts[0];
+// Execute engine: each file gets an execution context
+// context: {ast, stack:[ {node, childIdx, repeatsDone} ], done}
+function makeCtx(ast){
+  return { ast, stack:[], ip:0, done:false, pending:null };
+}
 
-  // ── COLLECT ──
+function stepCtx(ctx, file){
+  // pending async (mine / sell) takes priority
+  if(ctx.pending){
+    const p=ctx.pending;
+    if(p.type==='mine'){
+      p.ticks--;
+      if(p.ticks<=0){
+        const gain=1 + G.ups.mine;
+        file.bits=(file.bits||0)+gain;
+        log(`${file.path}: mined ${gain} bit(s) → ${file.bits} total`,'mine');
+        ctx.pending=null;
+      }
+      return;
+    }
+    if(p.type==='sell'){
+      p.ticks--;
+      file.status='selling';
+      if(p.ticks<=0){
+        const tf=p.target? byPath(p.target): file;
+        if(!tf){ log(`[x] sell: file not found: ${p.target}`,'err'); ctx.pending=null; return; }
+        const bits=tf.bits||0;
+        if(bits<=0){ log(`sell: ${tf.path} has 0 bits`,'warn'); ctx.pending=null; file.status='running'; return; }
+        const earned=bits*sellRate();
+        G.money+=earned;
+        tf.bits=0;
+        log(`sold ${bits} bits from ${tf.path} → +${earned} § (total ${G.money} §)`,'ok');
+        ctx.pending=null;
+        file.status='running';
+        updateStats();
+      }
+      return;
+    }
+  }
+
+  // walk the AST
+  execNode(ctx, file, ctx.ast);
+}
+
+// Execute one step of AST — returns true if something was executed
+function execNode(ctx, file, nodes){
+  if(ctx.ip>=nodes.length){ ctx.done=true; return; }
+  const node=nodes[ctx.ip];
+  if(node.t==='stmt'){
+    execStmt(node.line, file, ctx);
+    ctx.ip++;
+  } else if(node.t==='repeat'){
+    if(!node._state) node._state={done:0, looping:true};
+    const st=node._state;
+    if(node.mode==='times' && st.done>=node.count){ node._state=null; ctx.ip++; return; }
+    if(node.mode==='if' && !evalCond(node.cond,file)){ node._state=null; ctx.ip++; return; }
+    // execute one stmt from body per tick
+    if(!st.bodyCtx) st.bodyCtx={ip:0, done:false, pending:null, ast:node.body};
+    const bc=st.bodyCtx;
+    if(bc.ip>=node.body.length){
+      // finished one iteration
+      st.done++;
+      st.bodyCtx=null;
+      if(node.mode==='times' && st.done>=node.count){ node._state=null; ctx.ip++; }
+      else if(node.mode==='if' && !evalCond(node.cond,file)){ node._state=null; ctx.ip++; }
+      return;
+    }
+    const sub=node.body[bc.ip];
+    if(sub.t==='stmt'){
+      execStmt(sub.line, file, ctx);
+      bc.ip++;
+    } else {
+      bc.ip++;
+    }
+  } else if(node.t==='while'){
+    if(!evalCond(node.cond,file)){ ctx.ip++; return; }
+    if(!node._bctx||node._bctx.done) node._bctx={ip:0,done:false,pending:null};
+    const bc=node._bctx;
+    if(bc.ip>=node.body.length){ node._bctx=null; return; }
+    const sub=node.body[bc.ip];
+    if(sub.t==='stmt'){
+      execStmt(sub.line, file, ctx);
+      bc.ip++;
+    } else { bc.ip++; }
+  } else if(node.t==='if'){
+    if(evalCond(node.cond,file)){
+      node.body.forEach(n=>{if(n.t==='stmt') execStmt(n.line,file,ctx);});
+    }
+    ctx.ip++;
+  }
+}
+
+function execStmt(line, file, ctx){
+  const tok=tokenize(line);
+  const cmd=tok[0]?.toLowerCase();
+  if(!cmd) return;
+
+  // MINE (currency)
+  if(cmd==='mine'){
+    ctx.pending={type:'mine', ticks:MINE_TICKS};
+    file.status='mining';
+    return;
+  }
+
+  // COLLECT path/file — pull all bits from target into this file
   if(cmd==='collect'){
-    const n=parseInt(pts[1])||1;
-    const gain=n*(1+Math.floor(Math.random()*3));
-    file.bits=(file.bits||0)+gain;
-    S.lastBitsEarned+=gain;
-    if(file.bits>=BIT_OVERLOAD){file.warnings++;S.warnings++;return{ok:true,msg:`${file.name}: collected ${gain}b → OVERLOAD (${file.bits}b)`,cls:'warn'};}
-    return{ok:true,msg:`${file.name}: +${gain}b → ${file.bits}b`,cls:'ok'};
+    const tp=norm(stripQ(tok[1]||''));
+    const tf=byPath(tp);
+    if(!tf){log(`[x] collect: not found: ${tp||'(no path)'}`, 'err');file.status='error';return;}
+    if(tp===file.path){log(`collect: can't collect from self`,'warn');return;}
+    const bits=tf.bits||0;
+    if(bits<=0){log(`collect: ${tf.path} has 0 bits`,'warn');return;}
+    const ramCost=collectRamCost();
+    const ramUsed=totalRamUsed();
+    if(ramUsed+ramCost>G.ramMax){
+      log(`[x] collect: not enough RAM (need ${ramCost.toFixed(2)}MB more)`,'err');
+      ramWarnAnim(); return;
+    }
+    file.bits=(file.bits||0)+bits;
+    tf.bits=0;
+    log(`${file.path}: collected ${bits} bits from ${tf.path} → now ${file.bits} bits`,'acc');
+    return;
   }
 
-  // ── COMPRESS ──
-  if(cmd==='compress'){
-    const target=pts[1]?S.files.find(f=>f.name===pts[1]):file;
-    if(!target) return{ok:false,msg:`[x] compress: no file ${pts[1]}`,cls:'err'};
-    const bits=target.bits||0;
-    if(bits<8) return{ok:true,msg:`${target.name}: compress: need ≥8 bits (have ${bits})`,cls:'warn'};
-    const converted=Math.floor(bits/8);
-    target.bits=bits%8;
-    target.bytes=(target.bytes||0)+converted;
-    return{ok:true,msg:`${target.name}: ${bits}b → ${converted} bytes (${target.bytes} total)`,cls:'acc'};
+  // STORE path/file — push all bits from this file into target
+  if(cmd==='store'){
+    const tp=norm(stripQ(tok[1]||''));
+    const tf=byPath(tp);
+    if(!tf){log(`[x] store: not found: ${tp||'(no path)'}`, 'err');file.status='error';return;}
+    const bits=file.bits||0;
+    if(bits<=0){log(`store: ${file.path} has 0 bits`,'warn');return;}
+    tf.bits=(tf.bits||0)+bits;
+    file.bits=0;
+    log(`${file.path}: stored ${bits} bits → ${tf.path} (now ${tf.bits} bits)`,'acc');
+    return;
   }
 
-  // ── CONVERT (bytes → crypto) ──
-  if(cmd==='convert'){
-    const target=pts[1]?S.files.find(f=>f.name===pts[1]):file;
-    if(!target) return{ok:false,msg:`[x] convert: no file ${pts[1]}`,cls:'err'};
-    const bytes=target.bytes||0;
-    if(bytes<1) return{ok:true,msg:`${target.name}: convert: no bytes to convert`,cls:'warn'};
-    const ramFree=S.ramMax-totalRamUsed();
-    if(bytes>=128&&ramFree<4) return{ok:false,msg:`[x] convert: large batch needs ≥4MB free RAM (have ${ramFree.toFixed(1)})`,cls:'err'};
-    const amount=Math.min(bytes,20);
-    target.bytes-=amount;
-    const crypto=amount*0.001*S.cryptoMulti;
-    S.cryptoTotal+=crypto;
-    S.lastCrypto+=crypto;
-    return{ok:true,msg:`${target.name}: ${amount} bytes → +${crypto.toFixed(4)} ⛓ (total ${S.cryptoTotal.toFixed(4)})`,cls:'cry'};
-  }
-
-  // ── SELL (crypto → §) ──
+  // SELL path/file — sell all bits of target file
   if(cmd==='sell'){
-    const amount=parseFloat(pts[1])||S.cryptoTotal;
-    if(S.cryptoTotal<0.001) return{ok:true,msg:`sell: no crypto to sell`,cls:'warn'};
-    const sell=Math.min(S.cryptoTotal,amount);
-    S.cryptoTotal-=sell;
-    const earned=Math.floor(sell*10000);
-    S.money+=earned;
-    return{ok:true,msg:`sold ${sell.toFixed(4)} ⛓ → +${earned} §`,cls:'ok'};
+    const tp=tok[1]?norm(stripQ(tok[1])):null;
+    ctx.pending={type:'sell', ticks:SELL_TICKS, target:tp};
+    file.status='selling';
+    return;
   }
 
-  // ── SAVE ──
-  if(cmd==='save'){
-    const tname=pts[1]||(file.name.replace(/\.spt.*/,'.save'));
-    const tf=S.files.find(f=>f.name===tname);
-    if(!tf) return{ok:false,msg:`[x] save: no file '${tname}'`,cls:'err'};
-    if((file.bits||0)<1) return{ok:true,msg:`save: nothing to save`,cls:'warn'};
-    const n=Math.min(file.bits,64);
-    file.bits-=n;
-    tf.bits=(tf.bits||0)+n;
-    file.saves++;
-    return{ok:true,msg:`saved ${n}b → ${tname}`,cls:'acc'};
+  // CHECK BITS [path]
+  if(cmd==='check'){
+    const what=tok[1]?.toLowerCase();
+    if(what==='bits'){
+      if(tok[2]){
+        const tp=norm(stripQ(tok[2]));
+        const tf=byPath(tp);
+        if(!tf){log(`check bits: not found: ${tp}`,'err');return;}
+        log(`check bits ${tf.path}: ${tf.bits} bits`,'info');
+      } else {
+        log(`check bits ${file.path}: ${file.bits||0} bits`,'info');
+      }
+    }
+    return;
   }
 
-  // ── LOAD ──
-  if(cmd==='load'){
-    const tname=pts[1];
-    const tf=S.files.find(f=>f.name===tname);
-    if(!tf) return{ok:false,msg:`[x] load: no file '${tname}'`,cls:'err'};
-    if((tf.bits||0)<1) return{ok:true,msg:`load: ${tname} empty`,cls:'warn'};
-    const n=Math.min(tf.bits,64);
-    tf.bits-=n;
-    file.bits=(file.bits||0)+n;
-    return{ok:true,msg:`loaded ${n}b from ${tname}`,cls:'acc'};
+  // RUN path/file.code
+  if(cmd==='run'){
+    const tp=norm(stripQ(tok[1]||''));
+    const tf=byPath(tp);
+    if(!tf){log(`[x] run: not found: ${tp}`,'err');return;}
+    runFile(tf.id);
+    log(`run: started ${tf.path}`,'pur');
+    return;
   }
 
-  // ── EXTRACT ──
-  if(cmd==='extract'){
-    const tname=pts[1];
-    const tf=S.files.find(f=>f.name===tname);
-    if(!tf) return{ok:false,msg:`[x] extract: no file '${tname}'`,cls:'err'};
-    const bytes=tf.bytes||0;
-    if(bytes<1) return{ok:true,msg:`extract: ${tname} has no bytes`,cls:'warn'};
-    const n=Math.min(bytes,10);
-    tf.bytes-=n;
-    file.bytes=(file.bytes||0)+n;
-    return{ok:true,msg:`extracted ${n} bytes from ${tname}`,cls:'pur'};
-  }
-
-  // ── PING ──
-  if(cmd==='ping'){
-    const tname=pts[1];
-    const tf=S.files.find(f=>f.name===tname);
-    if(!tf) return{ok:false,msg:`[x] ping: '${tname}' not found`,cls:'err'};
-    return{ok:true,msg:`ping: ${tname} OK (${tf.bits||0}b / ${tf.bytes||0} bytes)`,cls:'info'};
-  }
-
-  // ── HALT ──
+  // HALT
   if(cmd==='halt'){
     stopFile(file.id);
-    return{ok:true,msg:`${file.name}: halted`,cls:'warn'};
+    log(`${file.path}: halted`,'warn');
+    return;
   }
 
-  // ── WHEN ──
-  if(cmd==='when'){
-    const rest=line.slice(5);
-    const ci=rest.indexOf(':');
-    if(ci<0) return{ok:false,msg:`syntax: when COND: ACTION`,cls:'err'};
-    const cond=rest.slice(0,ci).trim();
-    const action=rest.slice(ci+1).trim();
-    let met=false;
-    if(cond==='collectable')   met=(tick%3===0);
-    else if(cond==='data>0')   met=(file.bits||0)>0;
-    else if(cond==='bits>0')   met=(file.bits||0)>0;
-    else if(cond==='bytes>0')  met=(file.bytes||0)>0;
-    else if(cond==='always')   met=true;
-    else if(cond==='overload')  met=(file.bits||0)>=BIT_OVERLOAD;
-    else met=true;
-    if(met) return execStmt(action,file,tick);
-    return{ok:true,msg:'',cls:''};
-  }
-
-  return{ok:false,msg:`[x] unknown: ${cmd}`,cls:'err'};
+  log(`[x] unknown command: ${cmd}`, 'err');
 }
 
-// ─── RUN / STOP ───
+// ── RUN / STOP ──────────────────────────────────────
 function runFile(id){
   const f=getF(id);
   if(!f) return;
-  if(S.active===id) f.code=$ed.value;
-  const rc=fileRamCost(f);
+  if(f.status==='running'||f.status==='mining'||f.status==='selling') return;
+  if(G.active===id) f.code=eid('editor').value;
+
+  const rc=fileRam(f);
   const used=totalRamUsed();
-  if(used+rc>S.ramMax){
-    log(`[x] RAM full: need ${rc.toFixed(2)}MB, free ${(S.ramMax-used).toFixed(2)}MB`,'err');
-    setMsg('[x] out of RAM');
-    animRamWarn();
-    return;
+  if(used+rc>G.ramMax){
+    log(`[x] RAM: need ${rc.toFixed(2)}MB, free ${(G.ramMax-used).toFixed(2)}MB`,'err');
+    setMsg('[x] out of RAM'); ramWarnAnim(); return;
   }
-  if(totalStorage()>S.storMax){
-    log('[x] storage full','err');
-    return;
-  }
-  try{parseScript(f.code);}catch(e){log(`[x] parse error in ${f.name}`,'err');return;}
-  f.status='running';f.pc=0;f.loops=0;f._repeatCount=0;
-  log(`[>] running ${f.name} (RAM: ${rc.toFixed(2)}MB)`,'pur');
+
+  const lines=parseLines(f.code);
+  let ast;
+  try { ast=buildAST(lines); } catch(e){ log(`[x] parse error in ${f.path}: ${e}`,'err'); f.status='error'; renderFiles(); return; }
+
+  f._ctx=makeCtx(ast);
+  f.status='running';
+  log(`[>] ${f.path} running (RAM: ${rc.toFixed(2)}MB)`,'pur');
   renderFiles();
-  if(S.active===id){$brun.style.display='none';$bsto.style.display='';}
+  if(G.active===id){eid('btn-run').style.display='none';eid('btn-stop').style.display='';}
   updateStats();
 }
 
 function stopFile(id){
   const f=getF(id);
-  if(!f||f.status!=='running') return;
-  f.status='done';
-  log(`[x] stopped ${f.name} (loops:${f.loops})`,'warn');
+  if(!f) return;
+  f.status='done'; f._ctx=null;
+  log(`[x] stopped ${f.path}`,'warn');
   renderFiles();
-  if(S.active===id){$brun.style.display='';$bsto.style.display='none';}
+  if(G.active===id){eid('btn-run').style.display='';eid('btn-stop').style.display='none';}
   updateStats();
 }
 
-function animRamWarn(){
-  const nav=document.getElementById('nav');
-  nav.classList.add('ram-warn');
-  setTimeout(()=>nav.classList.remove('ram-warn'),500);
+function ramWarnAnim(){
+  const n=eid('nav');
+  n.classList.add('rw-anim');
+  setTimeout(()=>n.classList.remove('rw-anim'),500);
 }
 
-// ─── TICK ───
-function startTick(){
-  if(S.tickInt) clearInterval(S.tickInt);
-  S.tickInt=setInterval(tick,S.speed);
+// ── TICK ───────────────────────────────────────────
+function startTimer(){
+  if(G.timer) clearInterval(G.timer);
+  G.timer=setInterval(tick, SPEED_STEPS[G.ups.speed]||1000);
 }
 
 function tick(){
-  S.tick++;
-  S.lastBitsEarned=0;
-  S.lastCrypto=0;
-  const ramUsed=totalRamUsed();
-
-  // RAM overuse check
-  if(ramUsed>S.ramMax*WARN_RAM_PCT){
-    S.warnings++;
-    log(`⚠ RAM: ${ramUsed.toFixed(1)}/${S.ramMax}MB`,'warn');
-    animRamWarn();
-  }
-  if(totalStorage()>S.storMax*WARN_STOR_PCT){
-    S.warnings++;
-    if(S.tick%10===0) log(`⚠ storage: ${totalStorage().toFixed(1)}/${S.storMax}MB`,'warn');
-  }
-
-  S.files.filter(f=>f.status==='running').forEach(f=>{
-    const instrs=parseScript(f.code);
-    if(!instrs.length){stopFile(f.id);return;}
-    const idx=f.pc%instrs.length;
-    const instr=instrs[idx];
-
-    if(instr.t==='repeat'){
-      f.loops++;
-      const ok=instr.n===Infinity||(f._repeatCount=((f._repeatCount||0)+1))<=instr.n;
-      if(ok||instr.n===Infinity){
-        instr.body.forEach(line=>{
-          const r=execStmt(line,f,S.tick);
-          if(r.msg&&r.cls&&r.cls!=='') log(r.msg,r.cls);
-          if(!r.ok&&r.cls==='err'&&line.trim()!==''){ f.status='error'; renderFiles(); }
-        });
-      } else {
-        f.pc++;
-        if(f.pc>=instrs.length){f.status='done';renderFiles();}
+  G.tick++;
+  G.files.forEach(f=>{
+    if(f.status==='running'||f.status==='mining'||f.status==='selling'){
+      const ctx=f._ctx;
+      if(!ctx){f.status='done';return;}
+      stepCtx(ctx, f);
+      if(ctx.done){
+        if(!ctx.pending){
+          f.status='done';
+          log(`${f.path}: done`,'ok');
+          if(G.active===f.id){eid('btn-run').style.display='';eid('btn-stop').style.display='none';}
+        }
       }
-    } else {
-      const r=execStmt(instr.l,f,S.tick);
-      if(r.msg&&r.cls) log(r.msg,r.cls);
-      if(!r.ok&&r.cls==='err'){f.status='error';renderFiles();return;}
-      f.pc++;
-      if(f.pc>=instrs.length&&instr.t!=='repeat'){f.status='done';renderFiles();}
     }
   });
-
-  updateStats();
   renderFiles();
-  updateFileInfo();
-}
-
-// ─── STATS ───
-function updateStats(){
-  const ramUsed=totalRamUsed();
-  $id('s-money').textContent=S.money.toLocaleString();
-  $id('s-tick').textContent=S.tick;
-  $id('s-ram').textContent=ramUsed.toFixed(1);
-  $id('s-rammax').textContent=S.ramMax;
-  $id('s-crypto').textContent=S.cryptoTotal.toFixed(4);
-  $id('ts-bps').textContent=S.lastBitsEarned;
-  $id('ts-spd').textContent=S.speed;
-  $id('ts-cps').textContent=S.lastCrypto.toFixed(4);
-  $id('sb-spd').textContent=S.speed;
-  $id('shop-cur-spd').textContent=S.speed;
-}
-
-// ─── BUTTONS ───
-$id('btn-new-file').onclick=()=>{newFile($nfn.value.trim());$nfn.value='';};
-$nfn.addEventListener('keydown',e=>{if(e.key==='Enter') $id('btn-new-file').click();});
-$id('btn-del').onclick=delActive;
-$brun.onclick=()=>{if(S.active) runFile(S.active);};
-$bsto.onclick=()=>{if(S.active) stopFile(S.active);};
-$id('btn-clear').onclick=()=>{$tlog.innerHTML='';};
-$tut.onclick=()=>$tut.classList.remove('vis');
-
-// ─── SHOP ───
-function shopPrices(){
-  $id('shop-stor-price').textContent=(50+S.storBought*30)+' §';
-  $id('shop-ram-price').textContent=(80+Math.floor((S.ramMax-16)/16)*40)+' §';
-}
-function updateShopBtns(){
-  shopPrices();
-  document.querySelectorAll('.sb2').forEach(btn=>{
-    const it=btn.dataset.shop;
-    if(it==='storage') btn.disabled=S.money<(50+S.storBought*30);
-    else if(it==='ram') btn.disabled=S.money<(80+Math.floor((S.ramMax-16)/16)*40);
-    else if(it==='speed2'){btn.disabled=S.speedTier>=2||S.money<120;if(S.speedTier>=2)btn.textContent='[✓] owned';}
-    else if(it==='speed3'){btn.disabled=S.speedTier>=3||S.money<350;if(S.speedTier>=3)btn.textContent='[✓] owned';}
-    else if(it==='slots') btn.disabled=S.money<60;
-    else if(it==='cryptox2'){btn.disabled=S.cryptoMulti>=2||S.money<200;if(S.cryptoMulti>=2)btn.textContent='[✓] owned';}
-    else if(it==='cryptox4'){btn.disabled=S.cryptoMulti>=4||S.money<600;if(S.cryptoMulti>=4)btn.textContent='[✓] owned';}
-  });
-}
-
-$id('btn-shop').onclick=()=>{updateShopBtns();$id('modal-overlay').classList.add('open');};
-$id('modal-close').onclick=()=>$id('modal-overlay').classList.remove('open');
-$id('modal-overlay').onclick=e=>{if(e.target===$id('modal-overlay'))$id('modal-overlay').classList.remove('open');};
-
-document.querySelectorAll('.sb2').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const it=btn.dataset.shop;
-    if(it==='storage'){
-      const p=50+S.storBought*30;
-      if(S.money<p) return;
-      S.money-=p;S.storMax+=32;S.storBought++;
-      log(`[+] storage → ${S.storMax}MB`,'ok');
-    } else if(it==='ram'){
-      const p=80+Math.floor((S.ramMax-16)/16)*40;
-      if(S.money<p) return;
-      S.money-=p;S.ramMax+=16;
-      log(`[+] RAM → ${S.ramMax}MB`,'ok');
-    } else if(it==='speed2'){
-      if(S.speedTier>=2||S.money<120) return;
-      S.money-=120;S.speedTier=2;S.speed=500;startTick();
-      log('[+] speed → 500ms/tick','pur');
-    } else if(it==='speed3'){
-      if(S.speedTier>=3||S.money<350) return;
-      S.money-=350;S.speedTier=3;S.speed=200;startTick();
-      log('[+] speed → 200ms/tick','pur');
-    } else if(it==='slots'){
-      if(S.money<60) return;
-      S.money-=60;S.saveSlots+=3;
-      log(`[+] save slots → ${S.saveSlots}`,'ok');
-    } else if(it==='cryptox2'){
-      if(S.cryptoMulti>=2||S.money<200) return;
-      S.money-=200;S.cryptoMulti=2;
-      log('[+] crypto multiplier → x2','cry');
-    } else if(it==='cryptox4'){
-      if(S.cryptoMulti<2||S.cryptoMulti>=4||S.money<600) return;
-      S.money-=600;S.cryptoMulti=4;
-      log('[+] crypto multiplier → x4','cry');
+  updateStats();
+  if(G.active){
+    const f=getF(G.active);
+    if(f){
+      eid('ei-bits').textContent=f.bits;
+      eid('ei-ram').textContent=fileRam(f).toFixed(2);
     }
-    updateStats();updateShopBtns();renderFiles();
-  });
-});
+  }
+}
 
-// ─── INIT ───
+// ── STATS ───────────────────────────────────────────
+function updateStats(){
+  const ru=totalRamUsed();
+  eid('s-money').textContent=G.money.toLocaleString();
+  eid('s-tick').textContent=G.tick;
+  eid('s-ram').textContent=ru.toFixed(1);
+  eid('s-rammax').textContent=G.ramMax;
+  eid('s-rate').textContent=sellRate();
+  eid('ts-spd').textContent=SPEED_STEPS[G.ups.speed]||1000;
+  eid('ts-ramlvl').textContent=G.ups.ram;
+  eid('ts-mktlvl').textContent=G.ups.mkt;
+  eid('sb-spd').textContent=SPEED_STEPS[G.ups.speed]||1000;
+}
+
+// ── UPGRADE SHOP ───────────────────────────────────
+function renderShop(){
+  const u=G.ups;
+  eid('up-ramlvl').textContent=u.ram;
+  eid('up-ramprice').textContent=UP_PRICES.ram(u.ram)+' §';
+  eid('up-spdlvl').textContent=u.speed;
+  const nextSpd=SPEED_STEPS[u.speed+1];
+  eid('up-spdprice').textContent=nextSpd?UP_PRICES.speed(u.speed)+' §':'MAX';
+  eid('up-spd').disabled=!nextSpd||G.money<UP_PRICES.speed(u.speed);
+  eid('up-mktlvl').textContent=u.mkt;
+  eid('up-mktprice').textContent=UP_PRICES.mkt(u.mkt)+' §';
+  eid('up-currate').textContent=sellRate();
+  eid('up-opslvl').textContent=u.ops;
+  eid('up-opsprice').textContent=UP_PRICES.ops(u.ops)+' §';
+  eid('up-minelvl').textContent=u.mine;
+  eid('up-mineprice').textContent=UP_PRICES.mine(u.mine)+' §';
+  eid('up-ram').disabled=G.money<UP_PRICES.ram(u.ram);
+  eid('up-mkt').disabled=G.money<UP_PRICES.mkt(u.mkt);
+  eid('up-ops').disabled=G.money<UP_PRICES.ops(u.ops);
+  eid('up-mine').disabled=G.money<UP_PRICES.mine(u.mine);
+}
+
+function upgrade(type){
+  const price=type==='speed'?UP_PRICES.speed(G.ups.speed):UP_PRICES[type](G.ups[type]);
+  if(G.money<price){setMsg('[x] not enough §');return;}
+  if(type==='speed'&&!SPEED_STEPS[G.ups.speed+1]){setMsg('[x] max speed');return;}
+  G.money-=price;
+  G.ups[type]++;
+  if(type==='ram') G.ramMax+=32;
+  if(type==='speed') startTimer();
+  log(`[UPGRADE] ${type} → level ${G.ups[type]}`,'pur');
+  updateStats(); renderShop(); renderFiles();
+}
+
+// ── EVENTS ─────────────────────────────────────────
+eid('btn-new').onclick=()=>{
+  const v=eid('new-fname').value.trim();
+  if(v){createFile(v);eid('new-fname').value='';}
+};
+eid('new-fname').addEventListener('keydown',e=>{if(e.key==='Enter')eid('btn-new').click();});
+eid('btn-del').onclick=deleteActive;
+eid('btn-run').onclick=()=>{if(G.active)runFile(G.active);};
+eid('btn-stop').onclick=()=>{if(G.active)stopFile(G.active);};
+eid('btn-clr').onclick=()=>{eid('tlog').innerHTML='';};
+eid('btn-shop').onclick=()=>{renderShop();eid('overlay').classList.add('open');};
+eid('modal-close').onclick=()=>eid('overlay').classList.remove('open');
+eid('overlay').onclick=e=>{if(e.target===eid('overlay'))eid('overlay').classList.remove('open');};
+eid('up-ram').onclick=()=>upgrade('ram');
+eid('up-spd').onclick=()=>upgrade('speed');
+eid('up-mkt').onclick=()=>upgrade('mkt');
+eid('up-ops').onclick=()=>upgrade('ops');
+eid('up-mine').onclick=()=>upgrade('mine');
+
+// ── INIT ───────────────────────────────────────────
 function init(){
-  // starter files
-  newFile('main.spt');
-  const f=S.files[0];
-  if(f){
-    f.code=`// SCRIPTO v2 starter
-// collect bits → compress to bytes → convert to crypto → sell for §
-repeat infinite
-  when collectable: collect
-  when bits>0: compress
-  when bytes>0: convert
-  sell
+  // create starter files
+  createFile('miners/bot.code');
+  const miner=G.files[0];
+  if(miner){
+    miner.code=`// Bot: mines bits continuously
+repeat if (true)
+  mine bit
 end
 `;
-    selectFile(f.id);
+    selectFile(miner.id);
   }
-  newFile('buffer.save');
-  log('[SCRIPTO v2] ready. bit/byte/crypto engine loaded.','info');
-  log('collect bits → compress(÷8) → convert(→⛓) → sell(⛓→§)','info');
-  log('each file has own bit-buffer + RAM cost + overload warning','');
+
+  createFile('collectors/gather.code');
+  const gather=G.files[1];
+  if(gather){
+    gather.code=`// Collector: pulls bits from miner into vault
+repeat if (true)
+  collect miners/bot.code
+  store vault/main.dat
+end
+`;
+  }
+
+  createFile('vault/main.dat');
+
+  createFile('sellers/sell.code');
+  const seller=G.files[3];
+  if(seller){
+    seller.code=`// Seller: sells all bits from vault when enough
+repeat if (true)
+  if (filebits(vault/main.dat) >= 10)
+    sell vault/main.dat
+  end
+end
+`;
+  }
+
+  log('[SCRIPTO v3] bit economy loaded.','info');
+  log('mine bit (3 ticks) → collect → store → sell (3 ticks)','info');
+  log('[TIP] miners/bot.code mines. collectors/gather.code collects. sellers/sell.code sells.','');
+  log('[TIP] each file costs 0.1MB base + 0.1MB/line + 0.1MB/stored bit','');
+  log('Run miners/bot.code first, then collectors/gather.code, then sellers/sell.code','acc');
   updateStats();
-  startTick();
+  startTimer();
 }
 
 init();
