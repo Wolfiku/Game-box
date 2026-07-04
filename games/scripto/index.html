@@ -16,14 +16,14 @@
   --r:4px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;background:#fdfcfc;background:var(--canvas);color:#201d1d;color:var(--ink);font-family:var(--font);font-size:13px;line-height:1.5;overflow:hidden;}
+html,body{height:100%;background:var(--canvas);color:var(--ink);font-family:var(--font);font-size:13px;line-height:1.5;overflow:hidden;}
 #app{display:grid;grid-template-rows:52px 1fr 24px;height:100vh;width:100%;min-height:0;}
-#nav{display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--hairline);background:var(--canvas);height:52px;}
-#wordmark{font-weight:700;font-size:15px;letter-spacing:.06em;margin-right:8px;}
+#nav{display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--hairline);background:var(--canvas);height:52px;flex-wrap:nowrap;overflow:hidden;}
+#wordmark{font-weight:700;font-size:15px;letter-spacing:.06em;margin-right:4px;white-space:nowrap;}
 .nstat{font-size:11px;color:var(--mute);white-space:nowrap;}
 .nstat b{color:var(--ink);}
 #nav-gap{flex:1;}
-nav button{font-family:var(--font);font-size:11px;padding:3px 8px;border:1px solid var(--hairline-strong);border-radius:var(--r);background:var(--canvas);color:var(--ink);cursor:pointer;}
+nav button{font-family:var(--font);font-size:11px;padding:3px 8px;border:1px solid var(--hairline-strong);border-radius:var(--r);background:var(--canvas);color:var(--ink);cursor:pointer;white-space:nowrap;}
 nav button:hover{background:var(--surface-card);}
 #main{display:grid;grid-template-columns:220px 1fr 260px;overflow:hidden;min-height:0;height:100%;}
 .panel{display:flex;flex-direction:column;border-right:1px solid var(--hairline);overflow:hidden;background:var(--canvas);min-height:0;}
@@ -47,7 +47,7 @@ nav button:hover{background:var(--surface-card);}
 .fbits{font-size:10px;color:var(--mute);}
 .frow-folder{font-size:11px;color:var(--mute);padding:2px 10px;display:flex;align-items:center;gap:4px;}
 #file-actions{padding:6px 8px;border-top:1px solid var(--hairline);display:flex;gap:4px;flex-shrink:0;}
-#file-actions input{flex:1;font-family:var(--font);font-size:11px;padding:3px 6px;border:1px solid var(--hairline-strong);border-radius:var(--r);background:var(--canvas);color:var(--ink);outline:none;}
+#file-actions input{flex:1;font-family:var(--font);font-size:11px;padding:3px 6px;border:1px solid var(--hairline-strong);border-radius:var(--r);background:var(--canvas);color:var(--ink);outline:none;min-width:0;}
 #file-actions input:focus{border-color:var(--accent);}
 #file-actions button{font-family:var(--font);font-size:10px;padding:3px 7px;border:1px solid var(--accent);border-radius:var(--r);background:transparent;color:var(--accent);cursor:pointer;white-space:nowrap;}
 #file-actions button:hover{background:var(--accent);color:#fff;}
@@ -57,10 +57,20 @@ nav button:hover{background:var(--surface-card);}
 #editor-wrap{display:flex;flex:1;overflow:hidden;position:relative;}
 #line-nums{padding:8px 6px;font-size:13px;line-height:1.6;color:var(--ash);text-align:right;background:var(--surface-soft);border-right:1px solid var(--hairline);min-width:32px;user-select:none;overflow:hidden;flex-shrink:0;white-space:pre;}
 #editor{flex:1;padding:8px 10px;font-family:var(--font);font-size:13px;line-height:1.6;border:none;outline:none;resize:none;background:var(--canvas);color:var(--ink);tab-size:2;}
-#autocomplete{position:absolute;background:var(--surface-card);border:1px solid var(--hairline-strong);border-radius:var(--r);box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:100;min-width:140px;display:none;max-height:180px;overflow-y:auto;}
-.ac-item{padding:4px 10px;font-size:12px;cursor:pointer;}
+#autocomplete{position:absolute;background:var(--surface-card);border:1px solid var(--hairline-strong);border-radius:var(--r);box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:100;min-width:180px;display:none;max-height:200px;overflow-y:auto;}
+.ac-item{padding:5px 10px;font-size:12px;cursor:pointer;display:flex;flex-direction:column;gap:1px;}
 .ac-item:hover,.ac-item.sel{background:var(--accent);color:#fff;}
+.ac-item .ac-hint{font-size:10px;opacity:.7;}
 #ed-info{padding:4px 10px;font-size:10px;color:var(--mute);border-top:1px solid var(--hairline);display:flex;gap:10px;flex-shrink:0;background:var(--surface-soft);}
+/* CHEATSHEET PANEL */
+#cheatsheet{position:absolute;right:0;top:0;bottom:0;width:220px;background:var(--surface-soft);border-left:1px solid var(--hairline);overflow-y:auto;z-index:90;display:none;padding:8px 10px;}
+#cheatsheet.open{display:block;}
+#cheatsheet h3{font-size:10px;font-weight:700;color:var(--mute);letter-spacing:.06em;margin:8px 0 4px;}
+#cheatsheet h3:first-child{margin-top:0;}
+.cs-row{padding:3px 0;border-bottom:1px solid var(--hairline);font-size:11px;}
+.cs-row code{display:block;color:var(--accent);font-size:11px;margin-bottom:1px;}
+.cs-row .cs-desc{color:var(--mute);font-size:10px;}
+.cs-row .cs-ex{color:var(--success);font-size:10px;font-style:italic;}
 /* TERMINAL */
 #panel-terminal{background:var(--surface-dark);}
 #panel-terminal .ph{background:var(--surface-dark);color:var(--ash);border-bottom-color:var(--charcoal);}
@@ -99,11 +109,14 @@ nav button:hover{background:var(--surface-card);}
 /* TUTORIAL */
 #tut-overlay{display:none;position:fixed;inset:0;background:rgba(15,0,0,.6);z-index:1000;align-items:center;justify-content:center;}
 #tut-overlay.open{display:flex;}
-#tut-box{background:var(--canvas);border:1px solid var(--hairline-strong);width:480px;max-height:80vh;overflow-y:auto;padding:24px;}
+#tut-box{background:var(--canvas);border:1px solid var(--hairline-strong);width:520px;max-height:82vh;overflow-y:auto;padding:24px;}
 #tut-box h2{font-size:14px;font-weight:700;margin-bottom:12px;}
 #tut-body p{font-size:12px;margin-bottom:10px;line-height:1.7;}
 #tut-body code{background:var(--surface-card);padding:1px 4px;border-radius:2px;}
 .tut-tip{background:var(--surface-soft);border:1px solid var(--hairline);border-radius:var(--r);padding:8px 12px;font-size:11px;margin-bottom:10px;line-height:1.6;}
+.tut-tip code{background:var(--surface-card);padding:1px 4px;border-radius:2px;color:var(--accent);}
+.tut-tip .tut-bad{color:var(--danger);}
+.tut-tip .tut-good{color:var(--success);}
 #tut-footer{display:flex;align-items:center;gap:8px;margin-top:16px;border-top:1px solid var(--hairline);padding-top:12px;}
 #tut-prog{flex:1;font-size:11px;color:var(--mute);}
 .tut-btn{font-family:var(--font);font-size:11px;padding:4px 12px;border:1px solid var(--hairline-strong);border-radius:var(--r);background:transparent;color:var(--ink);cursor:pointer;}
@@ -111,10 +124,48 @@ nav button:hover{background:var(--surface-card);}
 .tut-btn.primary{border-color:var(--accent);color:var(--accent);}
 .tut-btn.primary:hover{background:var(--accent);color:#fff;}
 .tut-btn:disabled{opacity:.4;cursor:not-allowed;}
-/* HIGHLIGHT */
-.line-highlight{position:absolute;left:0;right:0;pointer-events:none;opacity:.18;}
-.line-highlight.active{background:var(--purple);}
-.line-highlight.error{background:var(--danger);}
+
+/* ── MOBILE NEW-FILE BOTTOM SHEET ── */
+#mobile-newfile{display:none;position:fixed;inset:0;z-index:500;background:rgba(15,0,0,.5);align-items:flex-end;justify-content:center;}
+#mobile-newfile.open{display:flex;}
+#mnf-sheet{background:var(--canvas);width:100%;max-width:600px;border-top:2px solid var(--hairline-strong);border-radius:12px 12px 0 0;padding:0 0 env(safe-area-inset-bottom,12px);}
+#mnf-drag{width:40px;height:4px;background:var(--ash);border-radius:2px;margin:10px auto 14px;}
+#mnf-title{font-size:12px;font-weight:700;color:var(--mute);letter-spacing:.06em;padding:0 16px 10px;border-bottom:1px solid var(--hairline);}
+#mnf-body{padding:14px 16px 8px;}
+#mnf-input{width:100%;font-family:var(--font);font-size:15px;padding:10px 12px;border:1px solid var(--hairline-strong);border-radius:var(--r);background:var(--surface-soft);color:var(--ink);outline:none;margin-bottom:10px;}
+#mnf-input:focus{border-color:var(--accent);}
+.mnf-quickrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.mnf-qtag{font-family:var(--font);font-size:12px;padding:6px 12px;border:1px solid var(--hairline-strong);border-radius:20px;background:var(--surface-card);color:var(--mute);cursor:pointer;min-height:36px;display:flex;align-items:center;}
+.mnf-qtag:active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.mnf-presets{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.mnf-preset{font-family:var(--font);font-size:11px;padding:10px 8px;border:1px solid var(--hairline-strong);border-radius:var(--r);background:var(--surface-card);color:var(--ink);cursor:pointer;text-align:left;line-height:1.4;}
+.mnf-preset b{display:block;font-size:12px;color:var(--accent);}
+.mnf-preset:active{background:var(--accent);color:#fff;}
+.mnf-preset:active b{color:#fff;}
+#mnf-create{width:100%;font-family:var(--font);font-size:14px;padding:13px;border:none;border-radius:var(--r);background:var(--accent);color:#fff;cursor:pointer;margin-bottom:4px;}
+#mnf-create:active{background:#0062cc;}
+#mnf-cancel{width:100%;font-family:var(--font);font-size:13px;padding:10px;border:1px solid var(--hairline-strong);border-radius:var(--r);background:transparent;color:var(--mute);cursor:pointer;}
+
+/* RESPONSIVE — mobile layout */
+@media(max-width:700px){
+  #main{grid-template-columns:1fr;}
+  #panel-files{display:none;}
+  #panel-terminal{display:none;}
+  #panel-editor{display:flex;}
+  #panel-files.mob-show,#panel-terminal.mob-show{display:flex;}
+  #panel-editor.mob-hide{display:none;}
+  #mob-tabs{display:flex!important;}
+  .nstat{display:none;}
+  #btn-tut{display:none;}
+}
+#mob-tabs{display:none;position:fixed;bottom:env(safe-area-inset-bottom,0);left:0;right:0;z-index:300;background:var(--canvas);border-top:1px solid var(--hairline);height:52px;}
+.mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font);font-size:9px;color:var(--mute);cursor:pointer;gap:2px;border:none;background:none;}
+.mob-tab.active{color:var(--accent);}
+.mob-tab svg{width:20px;height:20px;}
+@media(max-width:700px){
+  #app{grid-template-rows:52px 1fr 52px;}
+  #statusbar{display:none;}
+}
 </style>
 </head>
 <body>
@@ -127,38 +178,96 @@ nav button:hover{background:var(--surface-card);}
   <div class="nstat">[TICK] <b id="s-tick">0</b></div>
   <div class="nstat">[RAM] <b id="s-ram">0.0</b>/<b id="s-rammax">2</b>MB</div>
   <div class="nstat">[RATE] <b id="s-rate">0.10§/bit</b></div>
-  <button id="btn-tut">[?] TUTORIAL</button>
+  <button id="btn-tut">[?] TUT</button>
   <button id="btn-shop">[+] SHOP</button>
 </nav>
 
 <div id="main">
 
-  <div class="panel">
+  <!-- FILES PANEL -->
+  <div class="panel" id="panel-files">
     <div class="ph">[FILES] <div style="flex:1"></div>
+      <button class="ph-btn" id="btn-newfile-mob" title="New file (mobile)">＋</button>
       <button class="ph-btn red" id="btn-del">[-] DEL</button>
     </div>
     <div id="file-list"></div>
     <div id="file-actions">
-      <input id="new-fname" placeholder="name.code or folder/f.dat">
-      <button id="btn-new">[+] FILE</button>
+      <input id="new-fname" placeholder="name.code  or  folder/f.dat">
+      <button id="btn-new">[+]</button>
     </div>
   </div>
 
+  <!-- EDITOR PANEL -->
   <div class="panel" id="panel-editor" style="position:relative;">
     <div class="ph">[EDITOR] <b id="ed-fname" style="font-size:12px;">—</b>
       <div style="flex:1"></div>
-      <button class="ph-btn" id="btn-run">[&gt;] RUN</button>
+      <button class="ph-btn" id="btn-cheat" title="IF-Cheatsheet">[?] IF</button>
+      <button class="ph-btn" id="btn-run">[&#62;] RUN</button>
       <button class="ph-btn red" id="btn-stop" style="display:none;">[■] STOP</button>
     </div>
     <div id="hint-bar">
       <code>mine bit</code> <code>sell</code> <code>collect path</code> <code>store path</code>
-      <code>repeat N times</code> <code>repeat if (cond)</code> <code>if (cond)</code>
-      <code>check bits</code> <code>run path</code> &nbsp;<span style="color:var(--warning)">10 bits = 1§</span> &nbsp;<span style="color:var(--accent)">TAB=autocomplete</span>
+      <code>repeat N times</code> <code>repeat if (cond)</code>
+      <code>if (bits(file) &gt;= N): sell file</code>
+      &nbsp;<span style="color:var(--warning)">10 bits = 1§</span>
+      &nbsp;<span style="color:var(--accent)">TAB=autocomplete</span>
     </div>
     <div id="editor-wrap">
       <div id="line-nums">1</div>
       <textarea id="editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
       <div id="autocomplete"></div>
+      <!-- CHEATSHEET SIDEBAR -->
+      <div id="cheatsheet">
+        <h3>[IF] BEDINGUNGEN</h3>
+        <div class="cs-row">
+          <code>if (bits &gt;= 10): sell</code>
+          <div class="cs-desc">Bits <b>dieser</b> Datei prüfen</div>
+          <div class="cs-ex">→ wenn diese Datei ≥10 bits hat, verkaufe</div>
+        </div>
+        <div class="cs-row">
+          <code>if (bits(vault.dat) &gt;= 10): sell vault.dat</code>
+          <div class="cs-desc">Bits einer <b>anderen</b> Datei prüfen</div>
+          <div class="cs-ex">→ wenn vault.dat ≥10 bits hat, verkaufe vault.dat</div>
+        </div>
+        <div class="cs-row">
+          <code>if (filebits(vault.dat) &gt;= 10): sell vault.dat</code>
+          <div class="cs-desc">Alternative Schreibweise (identisch)</div>
+        </div>
+        <h3>[REPEAT IF] SCHLEIFEN</h3>
+        <div class="cs-row">
+          <code>repeat if (bits &lt; 50)</code>
+          <code>  mine bit</code>
+          <code>end</code>
+          <div class="cs-desc">Solange Bedingung wahr → wiederholen</div>
+        </div>
+        <div class="cs-row">
+          <code>repeat if (bits(vault.dat) &lt; 100)</code>
+          <code>  mine bit</code>
+          <code>  collect vault.dat</code>
+          <code>end</code>
+          <div class="cs-desc">vault.dat füllen bis 100 bits</div>
+        </div>
+        <h3>[OPERATOREN]</h3>
+        <div class="cs-row">
+          <code>&gt;=  &lt;=  &gt;  &lt;  ==  !=</code>
+          <div class="cs-desc">größer-gleich, kleiner-gleich, größer, kleiner, gleich, ungleich</div>
+        </div>
+        <h3>[VOLLSTÄNDIGES BEISPIEL]</h3>
+        <div class="cs-row">
+          <code>repeat infinite</code>
+          <code>  mine bit</code>
+          <code>  collect vault.dat</code>
+          <code>  if (bits(vault.dat) &gt;= 50): sell vault.dat</code>
+          <code>end</code>
+          <div class="cs-desc">Mine → speichere in vault.dat → verkaufe wenn 50 bits da sind</div>
+        </div>
+        <h3>[HÄUFIGE FEHLER]</h3>
+        <div class="cs-row">
+          <div class="cs-desc" style="color:var(--danger)">✗ if bits(vault.dat >=10) — Klammer falsch</div>
+          <div class="cs-desc" style="color:var(--danger)">✗ if (bits(vault.dat >=10)): — ≥ innerhalb der Klammer</div>
+          <div class="cs-desc" style="color:var(--success)">✓ if (bits(vault.dat) >= 10): sell vault.dat</div>
+        </div>
+      </div>
     </div>
     <div id="ed-info">
       <span>[LINES] <b id="ei-lines">0</b></span>
@@ -168,6 +277,7 @@ nav button:hover{background:var(--surface-card);}
     </div>
   </div>
 
+  <!-- TERMINAL PANEL -->
   <div class="panel" id="panel-terminal">
     <div class="ph">[TERMINAL]
       <div style="flex:1"></div>
@@ -175,10 +285,10 @@ nav button:hover{background:var(--surface-card);}
     </div>
     <div id="tlog"></div>
     <div id="term-stats">
+      <div class="ts">[§] <b id="ts-money2">0</b></div>
       <div class="ts">[FILES] <b id="ts-files">0</b></div>
       <div class="ts">[RUN] <b id="ts-run">0</b></div>
       <div class="ts">[MINE] <b id="ts-mine">0</b></div>
-      <div class="ts">[FOLDERS] <b id="ts-folders">0</b></div>
       <div class="ts">[RATE] <b id="ts-mktlvl">0.10</b>§/b</div>
       <div class="ts">[TICK] <b id="ts-spd">1000</b>ms</div>
     </div>
@@ -187,12 +297,61 @@ nav button:hover{background:var(--surface-card);}
 </div>
 
 <div id="statusbar">
-  <span class="sb">[SCRIPTO v5]</span>
+  <span class="sb">[SCRIPTO v6]</span>
   <span class="sb">SPEED: <b id="sb-spd">1000</b>ms</span>
   <span class="sb" id="sb-msg">10 bits = 1§ — collect in .dat files before selling</span>
 </div>
 
+<!-- MOBILE TAB BAR -->
+<div id="mob-tabs">
+  <button class="mob-tab active" id="mtab-files" onclick="mobTab('files')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    FILES
+  </button>
+  <button class="mob-tab" id="mtab-editor" onclick="mobTab('editor')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    EDITOR
+  </button>
+  <button class="mob-tab" id="mtab-terminal" onclick="mobTab('terminal')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+    TERMINAL
+  </button>
+  <button class="mob-tab" id="mtab-shop" onclick="()=>{}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    SHOP
+  </button>
+</div>
+
 </div><!-- /app -->
+
+<!-- MOBILE NEW FILE BOTTOM SHEET -->
+<div id="mobile-newfile">
+  <div id="mnf-sheet">
+    <div id="mnf-drag"></div>
+    <div id="mnf-title">[+] NEUE DATEI ERSTELLEN</div>
+    <div id="mnf-body">
+      <input id="mnf-input" type="text" placeholder="dateiname" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <div style="font-size:10px;color:var(--mute);margin-bottom:6px;">Endung hinzufügen:</div>
+      <div class="mnf-quickrow">
+        <button class="mnf-qtag" onclick="mnfAppend('.code')">.code</button>
+        <button class="mnf-qtag" onclick="mnfAppend('.dat')">.dat</button>
+        <button class="mnf-qtag" onclick="mnfAppend('.script')">.script</button>
+        <button class="mnf-qtag" onclick="mnfPrefix('miners/')">miners/</button>
+        <button class="mnf-qtag" onclick="mnfPrefix('output/')">output/</button>
+        <button class="mnf-qtag" onclick="mnfPrefix('vault/')">vault/</button>
+      </div>
+      <div style="font-size:10px;color:var(--mute);margin-bottom:6px;">Schnell erstellen:</div>
+      <div class="mnf-presets">
+        <button class="mnf-preset" onclick="mnfPreset('miner.code')"><b>miner.code</b>Miner-Skript</button>
+        <button class="mnf-preset" onclick="mnfPreset('vault.dat')"><b>vault.dat</b>Bit-Speicher</button>
+        <button class="mnf-preset" onclick="mnfPreset('seller.code')"><b>seller.code</b>Verkaufs-Skript</button>
+        <button class="mnf-preset" onclick="mnfPreset('miners/bits.dat')"><b>miners/bits.dat</b>Miner-Speicher</button>
+      </div>
+      <button id="mnf-create" onclick="mnfCreate()">[+] ERSTELLEN</button>
+      <button id="mnf-cancel" onclick="closeMnf()">abbrechen</button>
+    </div>
+  </div>
+</div>
 
 <!-- SHOP OVERLAY -->
 <div id="overlay">
@@ -267,10 +426,10 @@ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'
 // ── CONSTANTS ──────────────────────────────────────
 const MINE_TICKS  = 3;
 const SELL_TICKS  = 3;
-const RAM_BASE    = 0.2;   // base per file
-const RAM_PER_LINE= 0.05;  // per code line
-const RAM_PER_BIT = 0.05;  // per stored bit
-const BITS_PER_CREDIT = 10; // 10 bits = 1§
+const RAM_BASE    = 0.2;
+const RAM_PER_LINE= 0.05;
+const RAM_PER_BIT = 0.05;
+const BITS_PER_CREDIT = 10;
 const SPEED_STEPS = [1000,700,450,250,150];
 
 const UP_PRICES={
@@ -285,19 +444,19 @@ const DAT_PRICES={
   'vault.dat':3,'cache.dat':8,'miners/bits.dat':15,'output/sell.dat':20,
 };
 const DAT_TEMPLATES={
-  'vault.dat':'// vault.dat — storage file\n// collect bits into here with: collect vault.dat\n',
-  'cache.dat':'// cache.dat — fast cache\n// use for temporary bit storage\n',
-  'miners/bits.dat':'// miners/bits.dat\n// dedicated miner storage\n',
-  'output/sell.dat':'// output/sell.dat\n// sell from here for bonus\n',
+  'vault.dat':'// vault.dat — Bit-Speicher\n// Bits hier sammeln mit: collect vault.dat\n// Dann verkaufen mit:    sell vault.dat\n',
+  'cache.dat':'// cache.dat — Schnell-Cache\n// Bits zwischenspeichern\n',
+  'miners/bits.dat':'// miners/bits.dat\n// Dedizierter Miner-Speicher\n',
+  'output/sell.dat':'// output/sell.dat\n// Verkaufs-Datei\n',
 };
 
 // ── STATE ──────────────────────────────────────────
 let G={
   money:0, tick:0,
-  ramMax:2,         // START: 2MB only!
+  ramMax:2,
   ups:{ram:0,speed:0,mkt:0,ops:0,mine:0},
-  files:[],         // {id,path,code,bits,status,_ctx}
-  folders:[],       // ['miners','vault',...]
+  files:[],
+  folders:[],
   active:null,
   timer:null,
   nextId:1,
@@ -305,7 +464,7 @@ let G={
 let tutIdx=0;
 
 // ── HELPERS ────────────────────────────────────────
-const norm=p=>p.trim().toLowerCase().replace(/\\s+/g,'_');
+const norm=p=>p.trim().toLowerCase().replace(/\s+/g,'_');
 const folderOf=p=>{const i=p.lastIndexOf('/');return i>0?p.slice(0,i):null;};
 const getF=id=>G.files.find(f=>f.id===id);
 const byPath=p=>G.files.find(f=>f.path===p);
@@ -330,6 +489,84 @@ function ramWarnAnim(){
   setTimeout(()=>{el.style.color='';},800);
 }
 
+// ── MOBILE TAB NAVIGATION ─────────────────────────
+function mobTab(tab){
+  ['files','editor','terminal'].forEach(t=>{
+    const p=document.getElementById('panel-'+t);
+    if(!p)return;
+    p.classList.remove('mob-show','mob-hide');
+    if(t===tab){p.classList.add('mob-show');p.style.display='flex';}
+    else p.style.display='none';
+  });
+  document.querySelectorAll('.mob-tab').forEach(b=>b.classList.remove('active'));
+  const tabMap={files:'mtab-files',editor:'mtab-editor',terminal:'mtab-terminal'};
+  if(tabMap[tab])document.getElementById(tabMap[tab]).classList.add('active');
+  if(tab==='editor'&&G.active)selectFile(G.active);
+}
+
+// detect mobile on resize
+function applyMobileLayout(){
+  const mob=window.innerWidth<=700;
+  if(mob){
+    // show only editor by default unless already set
+    const anyVisible=['files','editor','terminal'].some(t=>{
+      const p=document.getElementById('panel-'+t);
+      return p&&p.style.display!=='none'&&p.style.display!=='';
+    });
+    if(!anyVisible)mobTab('editor');
+  } else {
+    ['files','editor','terminal'].forEach(t=>{
+      const p=document.getElementById('panel-'+t);
+      if(p)p.style.display='';
+    });
+  }
+}
+window.addEventListener('resize',applyMobileLayout);
+
+// ── MOBILE NEW FILE SHEET ─────────────────────────
+function openMnf(){
+  $('mnf-input').value='';
+  $('mobile-newfile').classList.add('open');
+  setTimeout(()=>$('mnf-input').focus(),200);
+}
+function closeMnf(){$('mobile-newfile').classList.remove('open');}
+function mnfAppend(suffix){
+  const inp=$('mnf-input');
+  let v=inp.value.trim();
+  // strip existing same suffix
+  if(v.endsWith(suffix))return;
+  // strip other extensions
+  v=v.replace(/\.(code|dat|script)$/,'');
+  inp.value=v+suffix;
+  inp.focus();
+}
+function mnfPrefix(prefix){
+  const inp=$('mnf-input');
+  let v=inp.value.trim();
+  if(v.startsWith(prefix))return;
+  v=v.replace(/^(miners\/|output\/|vault\/)/,'');
+  inp.value=prefix+v;
+  inp.focus();
+}
+function mnfPreset(path){
+  $('mnf-input').value=path;
+}
+function mnfCreate(){
+  const v=$('mnf-input').value.trim();
+  if(!v){$('mnf-input').focus();return;}
+  createFile(v);
+  closeMnf();
+  mobTab('editor');
+}
+$('mobile-newfile').addEventListener('click',e=>{
+  if(e.target===$('mobile-newfile'))closeMnf();
+});
+$('btn-newfile-mob').onclick=()=>{
+  if(window.innerWidth<=700)openMnf();
+};
+// also wire the shop tab button on mobile
+document.getElementById('mtab-shop').onclick=()=>{renderShop();$('overlay').classList.add('open');};
+
 // ── FILE SYSTEM ────────────────────────────────────
 function uniquePath(rawPath){
   const path=norm(rawPath);
@@ -337,7 +574,7 @@ function uniquePath(rawPath){
   const dot=path.lastIndexOf('.');
   const base=dot>-1?path.slice(0,dot):path;
   const ext=dot>-1?path.slice(dot):'';
-  const baseNoNum=base.replace(/_\\d+$/,'');
+  const baseNoNum=base.replace(/_\d+$/,'');
   let n=1,candidate=`${baseNoNum}_${n}${ext}`;
   while(byPath(candidate)){n++;candidate=`${baseNoNum}_${n}${ext}`;}
   return candidate;
@@ -389,20 +626,13 @@ function selectFile(id){
 // ── RENDER ─────────────────────────────────────────
 function renderFiles(){
   const ul=$('file-list');ul.innerHTML='';
-  // group by folder
   const allFolders=[...new Set(G.files.map(f=>folderOf(f.path)).filter(Boolean))];
-  const shown=new Set();
-  // root files first
-  G.files.filter(f=>!folderOf(f.path)).forEach(f=>{
-    shown.add(f.id);ul.appendChild(makeFileRow(f));
-  });
+  G.files.filter(f=>!folderOf(f.path)).forEach(f=>{ul.appendChild(makeFileRow(f));});
   allFolders.forEach(folder=>{
     const fr=document.createElement('div');
     fr.className='frow-folder';fr.textContent='📁 '+folder+'/';
     ul.appendChild(fr);
-    G.files.filter(f=>folderOf(f.path)===folder).forEach(f=>{
-      shown.add(f.id);ul.appendChild(makeFileRow(f,true));
-    });
+    G.files.filter(f=>folderOf(f.path)===folder).forEach(f=>{ul.appendChild(makeFileRow(f,true));});
   });
 }
 function makeFileRow(f,indent=false){
@@ -416,7 +646,7 @@ function makeFileRow(f,indent=false){
   const bits=document.createElement('span');bits.className='fbits';
   bits.textContent=f.bits?f.bits+'b':'';
   row.appendChild(dot);row.appendChild(name);row.appendChild(bits);
-  row.onclick=()=>selectFile(f.id);
+  row.onclick=()=>{selectFile(f.id);if(window.innerWidth<=700)mobTab('editor');};
   return row;
 }
 function updateLineNums(){
@@ -442,8 +672,8 @@ function updateStats(){
   $('ts-files').textContent=G.files.length;
   $('ts-run').textContent=G.files.filter(f=>f.status==='running'||f.status==='selling').length;
   $('ts-mine').textContent=G.files.filter(f=>f.status==='mining').length;
-  $('ts-folders').textContent=allFolders.length;
   $('ts-mktlvl').textContent=(sellRate()/BITS_PER_CREDIT).toFixed(2);
+  if($('ts-money2'))$('ts-money2').textContent=G.money.toLocaleString();
   if(G.active){const f=getF(G.active);if(f)updateEdInfo(f);}
 }
 
@@ -468,14 +698,54 @@ function stepCtx(ctx,file){
   }
   execLine(ctx,file,ctx.lines[ctx.ip]);
 }
+
+// ── CONDITION EVALUATOR ────────────────────────────
+// Unterstützte Syntax:
+//   bits >= 10                     → bits dieser Datei
+//   bits(vault.dat) >= 10          → bits von vault.dat  [NEU]
+//   filebits(vault.dat) >= 10      → identisch           [ALT]
+//   true / false
 function evalCond(cond,file){
-  if(cond==='true')return true;
-  if(cond==='false')return false;
-  const fbm=cond.match(/^filebits\(([^)]+)\)\s*(>=|<=|>|<|==|!=)\s*(\d+)$/);
-  if(fbm){const tf=byPath(norm(fbm[1]));if(!tf)return false;const v=tf.bits||0;const n=+fbm[3];if(fbm[2]==='>=')return v>=n;if(fbm[2]==='<=')return v<=n;if(fbm[2]==='>') return v>n;if(fbm[2]==='<') return v<n;if(fbm[2]==='==')return v===n;if(fbm[2]==='!=')return v!==n;}
-  if(cond.startsWith('bits')){const m=cond.match(/bits\s*(>=|<=|>|<|==|!=)\s*(\d+)/);if(m){const v=file.bits||0;const n=+m[2];if(m[1]==='>=')return v>=n;if(m[1]==='<=')return v<=n;if(m[1]==='>') return v>n;if(m[1]==='<') return v<n;if(m[1]==='==')return v===n;if(m[1]==='!=')return v!==n;}}
+  const c=cond.trim().toLowerCase();
+  if(c==='true')return true;
+  if(c==='false')return false;
+
+  // Normalisierte Erkennung: bits(filename) >= N  ODER  filebits(filename) >= N
+  // Regex: (bits|filebits)\(([^)]+)\)\s*(>=|<=|>|<|==|!=)\s*(\d+)
+  const fbm=c.match(/^(?:bits|filebits)\(([^)]+)\)\s*(>=|<=|>|<|==|!=)\s*(\d+)$/);
+  if(fbm){
+    const tf=byPath(norm(fbm[1]));
+    if(!tf){log(`if: Datei "${fbm[1]}" nicht gefunden`,'warn');return false;}
+    const v=tf.bits||0;const n=+fbm[3];
+    if(fbm[2]==='>=')return v>=n;
+    if(fbm[2]==='<=')return v<=n;
+    if(fbm[2]==='>') return v>n;
+    if(fbm[2]==='<') return v<n;
+    if(fbm[2]==='==')return v===n;
+    if(fbm[2]==='!=')return v!==n;
+  }
+
+  // bits >= N  (bits dieser Datei)
+  const bm=c.match(/^bits\s*(>=|<=|>|<|==|!=)\s*(\d+)$/);
+  if(bm){
+    const v=file.bits||0;const n=+bm[2];
+    if(bm[1]==='>=')return v>=n;
+    if(bm[1]==='<=')return v<=n;
+    if(bm[1]==='>') return v>n;
+    if(bm[1]==='<') return v<n;
+    if(bm[1]==='==')return v===n;
+    if(bm[1]==='!=')return v!==n;
+  }
+
+  // Fehlermeldung bei häufig falsch geschriebenen Bedingungen
+  if(c.includes('bits(')&&c.includes('>=')&&c.includes('):')){
+    log(`if: Syntaxfehler — schreibe: if (bits(datei) >= N): aktion`,'err');
+    return false;
+  }
+
   return true;
 }
+
 function execLine(ctx,file,line){
   const lc=line.toLowerCase();
   // repeat
@@ -500,7 +770,7 @@ function execLine(ctx,file,line){
     }
     ctx.done=true;return;
   }
-  // if
+  // if (cond): action
   const ifm=lc.match(/^if \((.+)\)\s*:\s*(.+)$/);
   if(ifm){if(evalCond(ifm[1],file))execAction(ctx,file,ifm[2].trim());else ctx.ip++;return;}
   // action
@@ -516,61 +786,51 @@ function skipToEnd(ctx){
   }
 }
 function execAction(ctx,file,action){
-  const ops=1+G.ups.ops;
-  // mine bit
   if(action==='mine bit'||action==='mine'){
     const ticks=Math.max(1,MINE_TICKS-G.ups.mine);
     file.status='mining';
     ctx.pending={type:'mine',ticks,maxTicks:ticks};
-    ctx.ip++;
-    return;
+    ctx.ip++;return;
   }
-  // sell
   if(action==='sell'){
     ctx.pending={type:'sell',ticks:SELL_TICKS,maxTicks:SELL_TICKS,target:null};
     file.status='selling';
     ctx.ip++;return;
   }
-  // sell from path
   const selm=action.match(/^sell (.+)$/);
   if(selm){
     ctx.pending={type:'sell',ticks:SELL_TICKS,maxTicks:SELL_TICKS,target:norm(selm[1])};
     file.status='selling';
     ctx.ip++;return;
   }
-  // collect
   const colm=action.match(/^collect (.+)$/);
   if(colm){
     const tp=norm(colm[1]);const tf=byPath(tp);
-    if(!tf){log(`collect: ${tp} not found`,'err');ctx.ip++;return;}
+    if(!tf){log(`collect: "${tp}" nicht gefunden`,'err');ctx.ip++;return;}
     tf.bits=(tf.bits||0)+(file.bits||0);file.bits=0;
-    log(`→ collect: ${file.bits+tf.bits}b → ${tp}`);
+    log(`→ collect → ${tp}: ${tf.bits}b`);
     ctx.ip++;return;
   }
-  // store
   const stm=action.match(/^store (.+)$/);
   if(stm){
     const tp=norm(stm[1]);const tf=byPath(tp);
-    if(!tf){log(`store: ${tp} not found`,'err');ctx.ip++;return;}
+    if(!tf){log(`store: "${tp}" nicht gefunden`,'err');ctx.ip++;return;}
     tf.bits=(tf.bits||0)+(file.bits||0);file.bits=0;
-    log(`→ store: moved bits → ${tp}`);
+    log(`→ store → ${tp}: ${tf.bits}b`);
     ctx.ip++;return;
   }
-  // check bits
   if(action==='check bits'){
-    log(`check bits: ${file.path} has ${file.bits}b`,'info');
+    log(`check bits: ${file.path} hat ${file.bits}b`,'info');
     ctx.ip++;return;
   }
-  // run
   const runm=action.match(/^run (.+)$/);
   if(runm){
     const tp=norm(runm[1]);const tf=byPath(tp);
-    if(!tf){log(`run: ${tp} not found`,'err');ctx.ip++;return;}
+    if(!tf){log(`run: "${tp}" nicht gefunden`,'err');ctx.ip++;return;}
     runFile(tf.id);
     ctx.ip++;return;
   }
-  // unknown
-  log(`unknown: ${action}`,'err');
+  log(`unbekannt: "${action}" — [?] IF für Syntax-Hilfe drücken`,'err');
   ctx.ip++;
 }
 function tickPending(ctx,file){
@@ -581,25 +841,23 @@ function tickPending(ctx,file){
   if(p.type==='mine'){
     const gained=1+G.ups.mine;
     file.bits=(file.bits||0)+gained;
-    log(`⛏ ${file.path}: mined ${gained}b (total ${file.bits}b)`);
+    log(`⛏ ${file.path}: +${gained}b (${file.bits}b total)`);
     file.status='running';
-    ctx.pending=null;
-    return;
+    ctx.pending=null;return;
   }
   if(p.type==='sell'){
     const tf=p.target?byPath(p.target):file;
-    if(!tf){log(`sell: target not found`,'err');ctx.pending=null;file.status='running';return;}
+    if(!tf){log(`sell: Ziel nicht gefunden`,'err');ctx.pending=null;file.status='running';return;}
     const bits=tf.bits||0;
     if(bits<BITS_PER_CREDIT){
-      log(`sell: ${tf.path} has ${bits} bits, need ${BITS_PER_CREDIT} for 1§`,'warn');
+      log(`sell: ${tf.path} hat ${bits} bits, brauche ${BITS_PER_CREDIT} für 1§`,'warn');
       ctx.pending=null;file.status='running';return;
     }
     const credits=Math.floor(bits/BITS_PER_CREDIT);
     const usedBits=credits*BITS_PER_CREDIT;
     const earned=credits*sellRate();G.money+=earned;tf.bits=bits-usedBits;
-    log(`sold ${usedBits} bits (${credits}×${BITS_PER_CREDIT}) → +${earned}§ (${G.money}§), ${tf.bits} bits left`,'ok');
-    ctx.pending=null;file.status='running';updateStats();
-    return;
+    log(`sold ${usedBits}b (${credits}×${BITS_PER_CREDIT}) → +${earned}§ (${G.money}§), ${tf.bits}b übrig`,'ok');
+    ctx.pending=null;file.status='running';updateStats();return;
   }
 }
 
@@ -608,7 +866,7 @@ function stopAllFiles(reason){
   G.files.forEach(f=>{
     if(f.status==='running'||f.status==='mining'||f.status==='selling'){
       f.status='error';f._ctx=null;
-      log(`[■] ${f.path} force-stopped (${reason})`,'err');
+      log(`[■] ${f.path} gestoppt (${reason})`,'err');
     }
   });
   if(G.active){$('btn-run').style.display='';$('btn-stop').style.display='none';}
@@ -629,9 +887,8 @@ function tick(){
     }
   });
   if(totalRamUsed()>G.ramMax){
-    setMsg('[x] RAM overflow — all scripts stopped!');ramWarnAnim();
-    stopAllFiles('RAM overflow during runtime');
-    return;
+    setMsg('[x] RAM overflow — alle Skripte gestoppt!');ramWarnAnim();
+    stopAllFiles('RAM overflow');return;
   }
   renderFiles();updateStats();
 }
@@ -648,10 +905,9 @@ function runFile(id){
   if(G.active===id)f.code=$('editor').value;
   const rc=fileRam(f);
   if(totalRamUsed()+rc>G.ramMax){
-    log(`[x] RAM OVERFLOW: need ${rc.toFixed(2)}MB, free ${freeRam().toFixed(2)}MB — ALL scripts stopped!`,'err');
-    setMsg('[x] RAM overflow — all scripts stopped!');ramWarnAnim();
-    stopAllFiles('RAM overflow');
-    return;
+    log(`[x] RAM OVERFLOW: brauche ${rc.toFixed(2)}MB, frei ${freeRam().toFixed(2)}MB`,'err');
+    setMsg('[x] RAM overflow!');ramWarnAnim();
+    stopAllFiles('RAM overflow');return;
   }
   f._ctx=makeCtx(f);
   f.status='running';
@@ -664,7 +920,7 @@ function stopFile(id){
   f.status='idle';f._ctx=null;
   if(G.active===id){$('btn-run').style.display='';$('btn-stop').style.display='none';}
   renderFiles();updateStats();
-  log(`[■] stopped: ${f.path}`);
+  log(`[■] gestoppt: ${f.path}`);
 }
 
 // ── SHOP ──────────────────────────────────────────
@@ -687,7 +943,6 @@ function renderShop(){
   $('up-mkt').disabled=G.money<UP_PRICES.mkt(u.mkt);
   $('up-ops').disabled=G.money<UP_PRICES.ops(u.ops);
   $('up-mine').disabled=G.money<UP_PRICES.mine(u.mine);
-  // dat files
   const sec=$('shop-dat');sec.innerHTML='<h3>[BUY .DAT FILES]</h3>';
   Object.entries(DAT_PRICES).forEach(([path,price])=>{
     const owned=!!byPath(path);
@@ -695,13 +950,11 @@ function renderShop(){
     row.innerHTML=`<span class="slbl">${path}</span><span class="stag">${price}§</span><button class="shop-btn" data-buy="${path}" ${owned||G.money<price?'disabled':''}>${owned?'owned':'buy'}</button>`;
     sec.appendChild(row);
   });
-  document.querySelectorAll('[data-buy]').forEach(btn=>{
-    btn.onclick=()=>buyDat(btn.dataset.buy);
-  });
+  document.querySelectorAll('[data-buy]').forEach(btn=>{btn.onclick=()=>buyDat(btn.dataset.buy);});
 }
 function upgrade(type){
   const price=type==='speed'?UP_PRICES.speed(G.ups.speed):UP_PRICES[type](G.ups[type]);
-  if(G.money<price){setMsg('[x] not enough §');return;}
+  if(G.money<price){setMsg('[x] zu wenig §');return;}
   if(type==='speed'&&!SPEED_STEPS[G.ups.speed+1]){setMsg('[x] max speed');return;}
   G.money-=price;G.ups[type]++;
   if(type==='ram'){G.ramMax+=2;log(`[UP] RAM → ${G.ramMax}MB`,'pur');}
@@ -711,77 +964,92 @@ function upgrade(type){
 }
 function buyDat(path){
   const price=DAT_PRICES[path]||0;
-  if(G.money<price){setMsg('[x] not enough §');return;}
-  if(byPath(path)){setMsg('[x] already owned');return;}
+  if(G.money<price){setMsg('[x] zu wenig §');return;}
+  if(byPath(path)){setMsg('[x] bereits vorhanden');return;}
   G.money-=price;
-  const tpl=DAT_TEMPLATES[path];
-  createFile(path,tpl);
-  log(`[BUY] ${path} purchased`,'ok');
+  createFile(path,DAT_TEMPLATES[path]);
+  log(`[BUY] ${path} gekauft`,'ok');
   updateStats();renderShop();
 }
+
+// ── CHEATSHEET ─────────────────────────────────────
+let cheatOpen=false;
+$('btn-cheat').onclick=()=>{
+  cheatOpen=!cheatOpen;
+  $('cheatsheet').classList.toggle('open',cheatOpen);
+  $('btn-cheat').style.color=cheatOpen?'var(--accent)':'';
+  $('btn-cheat').style.borderColor=cheatOpen?'var(--accent)':'';
+};
 
 // ── TUTORIAL ──────────────────────────────────────
 const TUT=[
   {
-    title:'Welcome to SCRIPTO',
-    body:`<p>SCRIPTO is an incremental programming game. You write small scripts that <b>mine bits</b>, then <b>sell them</b> for <b>§ (credits)</b>.</p>
-    <p>Credits let you buy upgrades: more RAM, faster ticks, better prices, and new files.</p>
-    <div class="tut-tip">💰 <b>10 bits = 1§.</b> Selling fewer than 10 bits at once wastes the leftover — collect and store bits before selling in bulk.</div>
-    <div class="tut-tip">⚠ You start with only <b>2MB RAM</b> — just enough for one file. Every running file costs RAM. If you exceed your RAM limit, <b>ALL running scripts crash immediately</b> — buy upgrades before adding more.</div>
-    <p>Let's start step by step. First: understand the file panel on the left.</p>`
+    title:'Willkommen bei SCRIPTO',
+    body:`<p>SCRIPTO ist ein inkrementelles Programmierspiel. Du schreibst kleine Skripte, die <b>Bits minen</b> und <b>verkaufen</b> für <b>§ (Credits)</b>.</p>
+    <p>Credits → Upgrades: mehr RAM, schnellere Ticks, bessere Preise.</p>
+    <div class="tut-tip">💰 <b>10 bits = 1§.</b> Weniger als 10 bits zu verkaufen verschwendet den Rest — sammle erst in einer .dat-Datei.</div>
+    <div class="tut-tip">⚠ Du startest mit <b>2MB RAM</b>. Jede laufende Datei kostet RAM. Bei Overflow <b>crashen ALLE Skripte sofort</b>.</div>`
   },
   {
     title:'[FILES] Panel',
-    body:`<p>The <b>[FILES]</b> panel shows all your scripts and data files.</p>
-    <p>Each file has a status dot:</p>
-    <ul style="margin-left:16px;margin-bottom:10px;font-size:12px;line-height:2;">
-      <li>⚫ idle — not running</li>
-      <li>🟣 running / selling — script active</li>
-      <li>🔵 mining — waiting for bits</li>
-      <li>🟢 done — finished execution</li>
-      <li>🔴 error — crashed</li>
-    </ul>
-    <p>Click a file to open it in the editor. Type a name in the input and press <b>[+] FILE</b> to create one. If the name already exists, a <b>_1, _2</b> suffix is added automatically.</p>`
+    body:`<p>Das <b>[FILES]</b>-Panel zeigt alle Skripte und Datendateien.</p>
+    <p>Status-Punkte: ⚫ idle &nbsp;🟣 running &nbsp;🔵 mining &nbsp;🟢 done &nbsp;🔴 error</p>
+    <p>Auf <b>Mobile</b>: Tippe den <b>＋</b>-Button im FILES-Panel für das Erstellen-Sheet mit Quick-Buttons für Endungen (.code, .dat) und Ordner-Prefixe (miners/, output/).</p>`
   },
   {
-    title:'[EDITOR] — ScriptoLang',
-    body:`<p>The editor uses <b>ScriptoLang</b> — a minimal scripting language.</p>
-    <p>Basic commands:</p>
-    <div class="tut-tip"><code>mine bit</code> — mine 1+ bit (takes a few ticks)</div>
-    <div class="tut-tip"><code>sell</code> — sell 10+ bits for § credits</div>
-    <div class="tut-tip"><code>collect path</code> — move your bits into another file</div>
-    <div class="tut-tip"><code>store path</code> — same as collect</div>
-    <div class="tut-tip"><code>run path</code> — start another script</div>
-    <p>Use <b>TAB</b> for autocomplete. Press <b>[▶] RUN</b> to execute.</p>`
+    title:'[EDITOR] — ScriptoLang Basics',
+    body:`<p>Grundbefehle:</p>
+    <div class="tut-tip"><code>mine bit</code> — 1+ bit minen (dauert einige Ticks)</div>
+    <div class="tut-tip"><code>sell</code> — Bits dieser Datei verkaufen (mind. 10)</div>
+    <div class="tut-tip"><code>sell vault.dat</code> — Bits einer anderen Datei verkaufen</div>
+    <div class="tut-tip"><code>collect vault.dat</code> — Bits in vault.dat verschieben</div>
+    <div class="tut-tip"><code>run skript.code</code> — anderes Skript starten</div>
+    <p><b>TAB</b> = Autocomplete. <b>[?] IF</b> = Syntax-Cheatsheet im Editor.</p>`
   },
   {
-    title:'Loops',
-    body:`<p>Scripts can loop infinitely or conditionally:</p>
-    <div class="tut-tip"><code>repeat infinite</code> / <code>end</code> — loop forever</div>
-    <div class="tut-tip"><code>repeat 5 times</code> / <code>end</code> — loop N times</div>
-    <div class="tut-tip"><code>repeat if (bits &lt; 50)</code> / <code>end</code> — loop while true</div>
-    <div class="tut-tip"><code>if (bits >= 10): sell</code> — conditional action</div>
-    <p>Combine these to build efficient miners that collect bits until a threshold, then sell in bulk for better efficiency.</p>`
+    title:'IF-Bedingungen — Syntax',
+    body:`<p>Das ist der häufigste Fehlerbereich. Lerne die Syntax genau:</p>
+    <div class="tut-tip">
+      <b>Bits dieser Datei prüfen:</b><br>
+      <code>if (bits >= 10): sell</code><br>
+      <span class="tut-good">✓ prüft die Datei, in der das if steht</span>
+    </div>
+    <div class="tut-tip">
+      <b>Bits einer anderen Datei prüfen:</b><br>
+      <code>if (bits(vault.dat) >= 10): sell vault.dat</code><br>
+      <span class="tut-good">✓ prüft vault.dat — BEIDE Klammern wichtig!</span>
+    </div>
+    <div class="tut-tip">
+      <b>Häufige Fehler:</b><br>
+      <span class="tut-bad">✗ if bits(vault.dat >=10): — Vergleich innerhalb der Datei-Klammer</span><br>
+      <span class="tut-bad">✗ if (bits(vault.dat >=10)): — gleicher Fehler</span><br>
+      <span class="tut-good">✓ if (bits(vault.dat) >= 10): sell vault.dat</span>
+    </div>
+    <p>Drücke <b>[?] IF</b> im Editor für das vollständige Cheatsheet jederzeit.</p>`
+  },
+  {
+    title:'Schleifen',
+    body:`<p>Schleifen wiederholen Aktionen:</p>
+    <div class="tut-tip"><code>repeat infinite</code> / <code>end</code> — für immer</div>
+    <div class="tut-tip"><code>repeat 5 times</code> / <code>end</code> — N mal</div>
+    <div class="tut-tip"><code>repeat if (bits &lt; 50)</code> / <code>end</code> — solange wahr</div>
+    <div class="tut-tip"><code>repeat if (bits(vault.dat) &lt; 100)</code> / <code>end</code> — vault.dat füllen</div>
+    <p>Kombiniere: Mine bis 50 bits in vault.dat, dann verkaufe batch → effizienter als einzeln verkaufen.</p>`
   },
   {
     title:'RAM & Upgrades',
-    body:`<p>Every running file uses RAM. You start with <b>2MB</b>.</p>
-    <p>If you exceed your RAM limit at any point — including while scripts are running and bits accumulate — <b>ALL scripts crash immediately.</b></p>
-    <p>Spend § in the <b>[+] SHOP</b> to upgrade:</p>
+    body:`<p>Jede laufende Datei braucht RAM. Start: <b>2MB</b>.</p>
+    <p>Upgrades im <b>[+] SHOP</b>:</p>
     <ul style="margin-left:16px;font-size:12px;line-height:2;">
-      <li><b>RAM</b> — +2MB per level</li>
-      <li><b>Speed</b> — faster tick rate</li>
-      <li><b>Market Rate</b> — more § per sell</li>
-      <li><b>Op Slots</b> — handle more operations</li>
-      <li><b>Mine Speed</b> — mine faster</li>
+      <li><b>RAM</b> — +2MB pro Level</li>
+      <li><b>Speed</b> — schnellere Tick-Rate</li>
+      <li><b>Market Rate</b> — mehr § pro Verkauf</li>
+      <li><b>Mine Speed</b> — schneller minen</li>
     </ul>
-    <p>Buy <b>.dat files</b> in the shop for dedicated storage — store bits there and sell in big batches.</p>`
+    <p>Kaufe <b>.dat-Dateien</b> im Shop für dedizierten Bit-Speicher — sammle dort Bits und verkaufe in großen Batches für maximalen Gewinn.</p>`
   },
 ];
-function openTutorial(idx){
-  tutIdx=idx||0;renderTut();
-  $('tut-overlay').classList.add('open');
-}
+function openTutorial(idx){tutIdx=idx||0;renderTut();$('tut-overlay').classList.add('open');}
 function renderTut(){
   const t=TUT[tutIdx];
   $('tut-title').textContent=t.title;
@@ -799,7 +1067,13 @@ $('tut-next').onclick=()=>{
 };
 
 // ── EVENTS ──────────────────────────────────────────
-$('btn-new').onclick=()=>{const v=$('new-fname').value.trim();if(v){createFile(v);$('new-fname').value='';}else setMsg('[x] enter file name');};
+$('btn-new').onclick=()=>{
+  const v=$('new-fname').value.trim();
+  if(v){createFile(v);$('new-fname').value='';}
+  else if(window.innerWidth<=700)openMnf();
+  else setMsg('[x] Dateinamen eingeben');
+};
+$('new-fname').addEventListener('keydown',e=>{if(e.key==='Enter'){$('btn-new').click();}});
 $('btn-del').onclick=()=>{if(G.active)deleteFile(G.active);};
 $('btn-run').onclick=()=>{if(G.active)runFile(G.active);};
 $('btn-stop').onclick=()=>{if(G.active)stopFile(G.active);};
@@ -818,7 +1092,6 @@ $('up-mine').onclick=()=>upgrade('mine');
 $('editor').addEventListener('input',()=>{
   updateLineNums();
   if(G.active){const f=getF(G.active);if(f){f.code=$('editor').value;updateEdInfo(f);}}
-  // autocomplete on TAB handled below
 });
 $('editor').addEventListener('keydown',e=>{
   if(e.key==='Tab'){e.preventDefault();showAutocomplete();return;}
@@ -836,17 +1109,34 @@ $('editor').addEventListener('keydown',e=>{
   $('autocomplete').style.display='none';
 });
 
-const AC_KEYWORDS=['mine bit','sell','collect ','store ','check bits','run ','repeat infinite','repeat if (','repeat ','end','if (bits >= 10): sell','if (bits < 10): mine bit'];
+// autocomplete with hints
+const AC_ITEMS=[
+  {val:'mine bit',            hint:'Bit minen (dauert Ticks)'},
+  {val:'sell',                hint:'Bits dieser Datei verkaufen'},
+  {val:'sell ',               hint:'sell <datei.dat>'},
+  {val:'collect ',            hint:'collect <datei.dat> — Bits verschieben'},
+  {val:'store ',              hint:'store <datei.dat> — Alias für collect'},
+  {val:'check bits',          hint:'Bit-Anzahl ins Terminal loggen'},
+  {val:'run ',                hint:'run <skript.code> — starten'},
+  {val:'repeat infinite',     hint:'Endlos-Schleife (braucht end)'},
+  {val:'repeat if (',         hint:'repeat if (bedingung) … end'},
+  {val:'repeat ',             hint:'repeat N times … end'},
+  {val:'end',                 hint:'Schleife beenden'},
+  {val:'if (bits >= 10): sell',         hint:'Wenn diese Datei ≥10b → sell'},
+  {val:'if (bits(vault.dat) >= 10): sell vault.dat', hint:'Wenn vault.dat ≥10b → sell'},
+  {val:'if (bits < 10): mine bit',      hint:'Wenn <10b → mine'},
+];
 function showAutocomplete(){
   const ta=$('editor');const pos=ta.selectionStart;
   const before=ta.value.slice(0,pos);
   const lineStart=before.lastIndexOf('\n')+1;
   const word=before.slice(lineStart).trimStart();
   const paths=G.files.map(f=>f.path);
-  const all=[...AC_KEYWORDS,...paths];
-  const matches=word?all.filter(k=>k.startsWith(word)&&k!==word):AC_KEYWORDS;
+  const pathItems=paths.map(p=>({val:p,hint:'Datei: '+p}));
+  const all=[...AC_ITEMS,...pathItems];
+  const matches=word?all.filter(k=>k.val.startsWith(word)&&k.val!==word):AC_ITEMS;
   if(!matches.length){$('autocomplete').style.display='none';return;}
-  $('autocomplete').innerHTML=matches.map((m,i)=>`<div class="ac-item${i===0?' sel':''}" data-val="${m}">${m}</div>`).join('');
+  $('autocomplete').innerHTML=matches.map((m,i)=>`<div class="ac-item${i===0?' sel':''}" data-val="${m.val}">${m.val}<span class="ac-hint">${m.hint}</span></div>`).join('');
   $('autocomplete').querySelectorAll('.ac-item').forEach(it=>it.onclick=()=>applyAC(it.dataset.val));
   const rect=ta.getBoundingClientRect();
   $('autocomplete').style.display='block';
@@ -858,7 +1148,7 @@ function applyAC(val){
   const before=ta.value.slice(0,pos);
   const lineStart=before.lastIndexOf('\n')+1;
   const after=ta.value.slice(pos);
-  const indent=before.slice(lineStart).match(/^\\s*/)[0];
+  const indent=before.slice(lineStart).match(/^\s*/)[0];
   ta.value=before.slice(0,lineStart)+indent+val+after;
   const np=lineStart+indent.length+val.length;
   ta.selectionStart=ta.selectionEnd=np;
@@ -869,25 +1159,25 @@ function applyAC(val){
 
 // ── INIT ──────────────────────────────────────────
 function init(){
-  const starter=createFile('start.code',
-`// start.code — your first script
-// mine bits and sell them for credits (§)
-// 10 bits = 1§ (0.10§/bit base rate)
-repeat if (true)
+  createFile('start.code',
+`// start.code — dein erstes Skript
+// Drücke [?] IF für Bedingungshilfe
+// 10 bits = 1§  |  sell braucht mind. 10 bits
+repeat infinite
   mine bit
-  sell
+  if (bits >= 10): sell
 end
 `);
 
-  log('[SCRIPTO v5] system ready.','info');
-  log('Economy: 10 bits = 1§  (0.10§/bit at base rate)','info');
-  log('RAM: 2MB start. Overflow = all scripts crash!','warn');
-  log('Tip: sell needs 10+ bits. Collect in vault.dat before selling.','');
-  log('Press [?] TUTORIAL for a full guide.','');
+  log('[SCRIPTO v6] bereit.','info');
+  log('Economy: 10 bits = 1§  (0.10§/bit Basisrate)','info');
+  log('RAM: 2MB Start. Overflow = alle Skripte crashen!','warn');
+  log('Tipp: Drücke [?] IF im Editor für Syntax-Cheatsheet.','');
+  log('Tipp: if (bits(vault.dat) >= 10): sell vault.dat  ← so geht\'s!','');
 
   updateStats();
   startTimer();
-
+  applyMobileLayout();
 }
 
 init();
