@@ -24,11 +24,5 @@
       "icon": "games/Crossyroad/icon.png",
       "path": "games/Crossyroad/index.html"
     },
-    {
-      "index": 9,
-      "name": "Scripto",
-      "icon": "games/scripto/icon.png",
-      "path": "games/scripto/index.html"
-    }
   ]
 }
