@@ -1,25 +1,25 @@
 {
   "games": [
     {
-      "index": 8,
+      "index": 1,
       "name": "Lonely Tower",
       "icon": "games/lonely-tower/icon.png",
       "path": "games/lonely-tower/index.html"
     },
     {
-      "index": 1,
+      "index": 5,
       "name": "Breakout 404",
       "icon": "games/breakout-404/icon.png",
       "path": "games/breakout-404/index.html"
     },
     {
-      "index": 2,
+      "index": 7,
       "name": "Tic Tac Toe",
       "icon": "games/tto/icon.png",
       "path": "games/tto/index.html"
     },
     {
-      "index": 3,
+      "index": 6,
       "name": "Crossy Road",
       "icon": "games/Crossyroad/icon.png",
       "path": "games/Crossyroad/index.html"
