@@ -82,4 +82,6 @@ Generate icons at [favicon.io](https://favicon.io/favicon-generator/) and save a
 
 ## 📖 Credits
 
-See [CREDITS.md](CREDITS.md).
+See [CREDITS.md](CREDITS.md). 
+
+Made by @wolfiku
