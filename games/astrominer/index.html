@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AstroMiner: Cosmic Idle</title>
+<style>
+:root{
+  --bg:#03040a;
+  --panel:#0d1224;
+  --panel2:#121933;
+  --accent:#5ad1ff;
+  --accent2:#c58cff;
+  --gold:#ffd25a;
+  --text:#e6ecff;
+  --text-dim:#7f8bb3;
+  --danger:#ff5a7a;
+  --success:#5affaf;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Segoe UI',system-ui,sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+  position:relative;
+}
+body::before{
+  content:'';
+  position:fixed;inset:0;z-index:-2;
+  background:
+    radial-gradient(1px 1px at 10% 20%, #fff 100%, transparent),
+    radial-gradient(1px 1px at 80% 10%, #fff 100%, transparent),
+    radial-gradient(1.5px 1.5px at 30% 60%, #fff 100%, transparent),
+    radial-gradient(1px 1px at 60% 80%, #fff 100%, transparent),
+    radial-gradient(1px 1px at 90% 50%, #fff 100%, transparent),
+    radial-gradient(1.5px 1.5px at 45% 35%, #fff 100%, transparent),
+    radial-gradient(1px 1px at 15% 85%, #fff 100%, transparent),
+    radial-gradient(1px 1px at 70% 65%, #fff 100%, transparent),
+    radial-gradient(1.5px 1.5px at 25% 40%, #fff 100%, transparent),
+    radial-gradient(1px 1px at 55% 15%, #fff 100%, transparent);
+  background-repeat:repeat;
+  background-size:600px 600px;
+  opacity:.5;
+  animation:twinkle 6s ease-in-out infinite alternate;
+}
+body::after{
+  content:'';
+  position:fixed;inset:0;z-index:-1;
+  background:radial-gradient(circle at 50% -10%,#131c3d,transparent 60%),
+              radial-gradient(circle at 90% 90%,#1a1040,transparent 50%);
+}
+@keyframes twinkle{0%{opacity:.3;}100%{opacity:.7;}}
+
+svg.icon{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;}
+
+#topBar{
+  position:fixed;top:14px;right:16px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  z-index:200;
+}
+.iconBtn{
+  width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,var(--panel),var(--panel2));
+  border:1px solid #26346a;
+  border-radius:12px;
+  color:var(--text-dim);
+  cursor:pointer;
+  transition:.15s;
+}
+.iconBtn:hover{color:var(--accent);border-color:var(--accent);transform:translateY(-1px);}
+.iconBtn.optionsIcon{margin-bottom:4px;color:var(--accent2);}
+.navGroup{display:flex;flex-direction:column;gap:10px;padding-top:6px;border-top:1px solid #26346a;}
+
+#app{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  padding:16px 76px 16px 16px;
+  max-width:1300px;
+  margin:0 auto;
+  min-height:100vh;
+}
+@media (max-width:850px){#app{grid-template-columns:1fr;padding-right:70px;}}
+
+.panel{
+  background:linear-gradient(160deg,rgba(13,18,36,.9),rgba(18,25,51,.9));
+  border:1px solid #22305c;
+  border-radius:var(--radius);
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  backdrop-filter:blur(2px);
+}
+
+#stats{display:flex;flex-direction:column;align-items:center;gap:2px;}
+#oreCount{font-size:2.2rem;font-weight:700;color:var(--accent);text-shadow:0 0 12px rgba(90,209,255,.5);}
+#cpsCount{font-size:1rem;color:var(--text-dim);}
+#clickerZone{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  min-height:280px;
+  perspective:800px;
+}
+#planetWrap{position:relative;width:190px;height:190px;}
+#asteroid{
+  width:190px;height:190px;
+  border-radius:50%;
+  position:relative;
+  cursor:pointer;
+  user-select:none;
+  background:
+    radial-gradient(circle at 30% 65%, rgba(0,0,0,.55) 0%, transparent 12%),
+    radial-gradient(circle at 60% 40%, rgba(0,0,0,.4) 0%, transparent 9%),
+    radial-gradient(circle at 70% 70%, rgba(0,0,0,.5) 0%, transparent 7%),
+    radial-gradient(circle at 40% 25%, rgba(255,255,255,.15) 0%, transparent 20%),
+    radial-gradient(circle at 35% 30%, #9d8fff 0%, #4c3fa8 45%, #241a5e 80%, #120c33 100%);
+  box-shadow:
+    0 0 60px 10px rgba(138,123,255,.45),
+    0 0 120px 40px rgba(90,140,255,.15),
+    inset -25px -25px 50px rgba(0,0,0,.55),
+    inset 15px 15px 40px rgba(255,255,255,.08);
+  animation:pulse 3s ease-in-out infinite;
+  transition:transform .08s ease;
+}
+#asteroid.active{transform:scale(0.9);}
+#planetWrap::before{
+  content:'';
+  position:absolute;
+  top:50%;left:50%;
+  width:260px;height:70px;
+  border:2px solid rgba(90,209,255,.35);
+  border-radius:50%;
+  transform:translate(-50%,-50%) rotate(-15deg);
+  box-shadow:0 0 15px rgba(90,209,255,.25);
+  pointer-events:none;
+}
+@keyframes pulse{
+  0%,100%{filter:brightness(1);}
+  50%{filter:brightness(1.12);}
+}
+.particle{
+  position:fixed;
+  pointer-events:none;
+  font-weight:700;
+  color:var(--gold);
+  text-shadow:0 0 6px rgba(255,210,90,.8);
+  animation:floatUp 1s ease-out forwards;
+  z-index:999;
+}
+@keyframes floatUp{
+  0%{opacity:1;transform:translateY(0) scale(1);}
+  100%{opacity:0;transform:translateY(-70px) scale(1.2);}
+}
+#hyperBanner{
+  text-align:center;
+  color:var(--gold);
+  font-weight:700;
+  min-height:20px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+#homeShortcuts{display:flex;gap:10px;}
+#homeShortcuts button{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:#101736;border:1px solid #22305c;color:var(--text);
+  padding:10px;border-radius:10px;cursor:pointer;font-size:.85rem;font-weight:600;
+  transition:.15s;
+}
+#homeShortcuts button:hover{border-color:var(--accent);color:var(--accent);}
+
+#logHeader{font-weight:700;color:var(--text-dim);font-size:.85rem;letter-spacing:.05em;text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+#logList{
+  display:flex;flex-direction:column-reverse;gap:6px;
+  overflow-y:auto;max-height:60vh;font-size:.82rem;
+}
+#logList div{color:var(--text-dim);border-left:2px solid var(--accent);padding-left:8px;display:flex;gap:6px;align-items:flex-start;}
+#logList div span.time{color:var(--text-dim);opacity:.6;font-size:.72rem;margin-right:4px;}
+
+.page{
+  position:fixed;inset:0;
+  background:rgba(3,4,10,.92);
+  backdrop-filter:blur(6px);
+  z-index:300;
+  display:none;
+  flex-direction:column;
+  padding:20px;
+}
+.page.active{display:flex;}
+.pageHeader{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:16px;
+}
+.pageHeader h2{font-size:1.3rem;font-weight:700;flex:1;}
+.backBtn{
+  width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  background:#101736;border:1px solid #26346a;border-radius:10px;color:var(--text);cursor:pointer;
+}
+.backBtn:hover{color:var(--accent);border-color:var(--accent);}
+.pageBody{
+  flex:1;overflow-y:auto;
+  max-width:900px;width:100%;margin:0 auto;
+  display:flex;flex-direction:column;gap:10px;
+}
+
+.itemRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  background:#101736;
+  border:1px solid #22305c;
+  border-radius:10px;
+  padding:12px 14px;
+  cursor:pointer;
+  transition:.15s;
+}
+.itemRow:hover{border-color:var(--accent);}
+.itemRow.disabled{opacity:.4;pointer-events:none;}
+.itemIcon{width:38px;height:38px;flex:0 0 38px;display:flex;align-items:center;justify-content:center;background:#0c1330;border-radius:8px;color:var(--accent);}
+.itemInfo{flex:1;}
+.itemName{font-weight:600;font-size:.95rem;}
+.itemDesc{font-size:.75rem;color:var(--text-dim);}
+.itemPrice{color:var(--gold);font-weight:700;font-size:.85rem;white-space:nowrap;}
+.itemCount{color:var(--accent);font-weight:700;font-size:1rem;min-width:28px;text-align:center;}
+
+.achRow{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  background:#101736;border:1px solid #22305c;border-radius:10px;
+  padding:12px 14px;
+}
+.achRow.unlocked{border-color:var(--success);}
+.achRow.locked{opacity:.5;}
+.achIcon{width:34px;height:34px;flex:0 0 34px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#0c1330;color:var(--text-dim);}
+.achRow.unlocked .achIcon{color:var(--success);}
+#achGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
+
+.sectionTitle{font-size:1rem;font-weight:700;color:var(--accent);margin-top:6px;}
+
+#prestigeBox{
+  background:#101736;border:1px solid #22305c;border-radius:12px;padding:16px;
+  display:flex;flex-direction:column;gap:8px;text-align:center;
+}
+#prestigeBox b{color:var(--gold);}
+
+#optionsList{display:flex;flex-direction:column;gap:10px;max-width:400px;margin:0 auto;}
+button.actionBtn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;color:#04101f;font-weight:700;padding:12px 14px;
+  border-radius:10px;cursor:pointer;font-size:.9rem;transition:.15s;
+}
+button.actionBtn:hover{filter:brightness(1.15);}
+button.actionBtn.danger{background:linear-gradient(135deg,var(--danger),#c53a58);}
+button.actionBtn:disabled{opacity:.35;cursor:not-allowed;filter:none;}
+
+#comet{
+  position:fixed;
+  width:44px;height:44px;
+  border-radius:50%;
+  background:radial-gradient(circle,var(--gold),#ff9f4a 70%);
+  box-shadow:0 0 25px var(--gold),0 0 50px rgba(255,210,90,.6);
+  cursor:pointer;
+  z-index:500;
+  display:none;
+}
+
+#toastWrap{position:fixed;top:20px;left:20px;display:flex;flex-direction:column;gap:8px;z-index:1000;}
+.toast{
+  display:flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,#1a2550,#0d1330);
+  border:1px solid var(--success);
+  color:var(--text);
+  padding:12px 16px;border-radius:10px;
+  font-size:.85rem;min-width:220px;
+  animation:toastIn .3s ease,toastOut .4s ease 3.6s forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(-40px);}to{opacity:1;transform:translateX(0);}}
+@keyframes toastOut{to{opacity:0;transform:translateX(-40px);}}
+</style>
+</head>
+<body>
+
+<div id="topBar">
+  <div class="iconBtn optionsIcon" id="btnOptions" title="Optionen"></div>
+  <div class="navGroup">
+    <div class="iconBtn" id="btnShop" title="Shop"></div>
+    <div class="iconBtn" id="btnResearch" title="Forschung"></div>
+    <div class="iconBtn" id="btnAchievements" title="Erfolge"></div>
+  </div>
+</div>
+
+<div id="app">
+  <section class="panel" id="clickerPanel">
+    <div id="stats">
+      <div id="oreCount">0</div>
+      <div id="cpsCount">0 CPS</div>
+    </div>
+    <div id="clickerZone">
+      <div id="planetWrap"><div id="asteroid"></div></div>
+    </div>
+    <div id="hyperBanner"></div>
+    <div id="homeShortcuts">
+      <button id="shortcutAch"></button>
+      <button id="shortcutOpt"></button>
+    </div>
+  </section>
+
+  <section class="panel" id="logPanel">
+    <div id="logHeader"></div>
+    <div id="logList"></div>
+  </section>
+</div>
+
+<div class="page" id="page-shop">
+  <div class="pageHeader"><div class="backBtn" data-close></div><h2>Shop &ndash; Geb&auml;ude</h2></div>
+  <div class="pageBody" id="shopBody"></div>
+</div>
+
+<div class="page" id="page-research">
+  <div class="pageHeader"><div class="backBtn" data-close></div><h2>Forschung &amp; Prestige</h2></div>
+  <div class="pageBody">
+    <div class="sectionTitle">Forschung</div>
+    <div id="researchBody"></div>
+    <div class="sectionTitle">Quantum Reset</div>
+    <div id="prestigeBox"></div>
+  </div>
+</div>
+
+<div class="page" id="page-achievements">
+  <div class="pageHeader"><div class="backBtn" data-close></div><h2>Erfolge</h2></div>
+  <div class="pageBody"><div id="achGrid"></div></div>
+</div>
+
+<div class="page" id="page-options">
+  <div class="pageHeader"><div class="backBtn" data-close></div><h2>Optionen</h2></div>
+  <div class="pageBody">
+    <div id="optionsList">
+      <button class="actionBtn" id="saveBtn"></button>
+      <button class="actionBtn" id="loadBtn"></button>
+      <button class="actionBtn danger" id="resetBtn"></button>
+    </div>
+  </div>
+</div>
+
+<div id="comet"></div>
+<div id="toastWrap"></div>
+
+<script>
+const ICON={
+gear:`<svg class="icon" viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 13a7.6 7.6 0 000-2l2-1.5-2-3.4-2.3.9a7.7 7.7 0 00-1.7-1L15 3h-4l-.4 2.5a7.7 7.7 0 00-1.7 1l-2.3-.9-2 3.4L6.6 11a7.6 7.6 0 000 2l-2 1.5 2 3.4 2.3-.9c.5.4 1.1.8 1.7 1L11 21h4l.4-2.5c.6-.2 1.2-.6 1.7-1l2.3.9 2-3.4-2-1.5z"/></svg>`,
+shop:`<svg class="icon" viewBox="0 0 24 24"><path d="M3 9l1-5h16l1 5"/><path d="M3 9a2 2 0 004 0 2 2 0 004 0 2 2 0 004 0 2 2 0 004 0"/><path d="M5 9v10h14V9"/><path d="M9 19v-6h6v6"/></svg>`,
+flask:`<svg class="icon" viewBox="0 0 24 24"><path d="M9 2h6"/><path d="M10 2v6L4.5 18a2 2 0 001.8 3h11.4a2 2 0 001.8-3L14 8V2"/><path d="M7 15h10"/></svg>`,
+trophy:`<svg class="icon" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 01-8 0V4z"/><path d="M8 5H5a1 1 0 00-1 1v1a4 4 0 004 4"/><path d="M16 5h3a1 1 0 011 1v1a4 4 0 01-4 4"/><path d="M9 19h6"/><path d="M12 13v6"/></svg>`,
+close:`<svg class="icon" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
+save:`<svg class="icon" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h8V4"/><path d="M8 14h8v6H8z"/></svg>`,
+load:`<svg class="icon" viewBox="0 0 24 24"><path d="M4 7a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2z"/></svg>`,
+reset:`<svg class="icon" viewBox="0 0 24 24"><path d="M4 4v6h6"/><path d="M20 20v-6h-6"/><path d="M20 10a8 8 0 00-14.9-3.4M4 14a8 8 0 0014.9 3.4"/></svg>`,
+pickaxe:`<svg class="icon" viewBox="0 0 24 24"><path d="M4 20l6-6"/><path d="M8 4c3 1 6 4 8 8-2-1-5-1-8 2-2-3-2-6-2-10z"/><path d="M12 4c-1 3-4 6-8 8 1-2 4-5 8-8z"/></svg>`,
+drone:`<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><path d="M4 6l4 4M20 6l-4 4M4 18l4-4M20 18l-4-4"/><circle cx="4" cy="6" r="1.5"/><circle cx="20" cy="6" r="1.5"/><circle cx="4" cy="18" r="1.5"/><circle cx="20" cy="18" r="1.5"/></svg>`,
+drill:`<svg class="icon" viewBox="0 0 24 24"><path d="M12 2l3 3H9z"/><path d="M9 5h6v6H9z"/><path d="M11 11h2v9l-1 3-1-3z"/></svg>`,
+extractor:`<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5L19 19M19 5l-2.5 2.5M7.5 16.5L5 19"/></svg>`,
+dyson:`<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="9" ry="3.5"/><ellipse cx="12" cy="12" rx="3.5" ry="9"/></svg>`,
+star:`<svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.3L22 9l-5 5 1.2 7L12 17.8 5.8 21 7 14 2 9l7.1-.7z"/></svg>`,
+bolt:`<svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>`,
+comet:`<svg class="icon" viewBox="0 0 24 24"><circle cx="16" cy="8" r="3"/><path d="M13 11L4 20"/></svg>`,
+info:`<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>`,
+};
+
+const BUILDINGS=[
+  {id:'pickaxe',name:'Plasma-Spitzhacke',basePrice:15,baseCps:0.1,icon:ICON.pickaxe},
+  {id:'drone',name:'Bergbau-Drohne',basePrice:100,baseCps:1.0,icon:ICON.drone},
+  {id:'drill',name:'Mond-Bohrer',basePrice:1100,baseCps:8.0,icon:ICON.drill},
+  {id:'extractor',name:'Quanten-Extraktor',basePrice:12000,baseCps:47.0,icon:ICON.extractor},
+  {id:'dyson',name:'Dyson-Schwarm',basePrice:130000,baseCps:260.0,icon:ICON.dyson},
+];
+
+const UPGRADES=[
+  {id:'laser',name:'Verst&auml;rkter Laser',desc:'Klick-Kraft x2',price:100},
+  {id:'ion',name:'Ionen-Triebwerke',desc:'Drohnen-CPS x2',price:500},
+  {id:'aipattern',name:'KI-Bohrmuster',desc:'Globales CPS +10%',price:3000},
+  {id:'antimatter',name:'Antimaterie',desc:'Klick-Kraft += 1% der Globalen CPS',price:50000},
+];
+
+const ACHIEVEMENTS=[
+  {id:'a1',name:'Erster Kontakt',desc:'1 Lifetime-Ore',check:s=>s.lifetimeOre>=1},
+  {id:'a2',name:'Sammler',desc:'1.000 Lifetime-Ore',check:s=>s.lifetimeOre>=1000},
+  {id:'a3',name:'H&auml;ndler',desc:'100.000 Lifetime-Ore',check:s=>s.lifetimeOre>=100000},
+  {id:'a4',name:'Steinreich',desc:'1.000.000 Ore gleichzeitig',check:s=>s.ore>=1000000},
+  {id:'a5',name:'Gro&szlig;industrie',desc:'10.000.000 Lifetime-Ore',check:s=>s.lifetimeOre>=10000000},
+  {id:'a6',name:'Imperium',desc:'1 Milliarde Lifetime-Ore',check:s=>s.lifetimeOre>=1e9},
+  {id:'a7',name:'Galaktisch',desc:'1 Billion Lifetime-Ore',check:s=>s.lifetimeOre>=1e12},
+  {id:'a8',name:'Erste Hacke',desc:'1 Plasma-Spitzhacke',check:s=>s.buildings.pickaxe.count>=1},
+  {id:'a9',name:'Flotten-Kommandant',desc:'10 Bergbau-Drohnen',check:s=>s.buildings.drone.count>=10},
+  {id:'a10',name:'Bohrmeister',desc:'10 Mond-Bohrer',check:s=>s.buildings.drill.count>=10},
+  {id:'a11',name:'Quantensammler',desc:'10 Quanten-Extraktoren',check:s=>s.buildings.extractor.count>=10},
+  {id:'a12',name:'Sonnenherrscher',desc:'10 Dyson-Schw&auml;rme',check:s=>s.buildings.dyson.count>=10},
+  {id:'a13',name:'Vollausbau',desc:'Jedes Geb&auml;ude min. 25x',check:s=>BUILDINGS.every(b=>s.buildings[b.id].count>=25)},
+  {id:'a14',name:'Dauer-Klicker',desc:'250 manuelle Klicks',check:s=>s.totalClicks>=250},
+  {id:'a15',name:'Klickmaster',desc:'5.000 manuelle Klicks',check:s=>s.totalClicks>=5000},
+  {id:'a16',name:'Erste Forschung',desc:'1 Upgrade erworben',check:s=>Object.keys(s.upgrades).length>=1},
+  {id:'a17',name:'Vollforscher',desc:'Alle Upgrades erworben',check:s=>Object.keys(s.upgrades).length>=UPGRADES.length},
+  {id:'a18',name:'Erster Reset',desc:'1x Quantum Reset',check:s=>s.prestigeCount>=1},
+  {id:'a19',name:'Dunkle Materie',desc:'10 Dark Matter gesammelt',check:s=>s.darkMatter>=10},
+  {id:'a20',name:'Kometenj&auml;ger',desc:'5 Komets eingesammelt',check:s=>s.cometsClicked>=5},
+];
+
+const SAVE_KEY='astrominer_save_v2';
+
+function defaultState(){
+  const buildings={};
+  BUILDINGS.forEach(b=>buildings[b.id]={count:0});
+  return{ore:0,lifetimeOre:0,totalClicks:0,baseClickPower:1,buildings,upgrades:{},achievements:{},darkMatter:0,prestigeCount:0,cometsClicked:0,hyperDriveUntil:0,lastComet:Date.now()+rand(60000,120000)};
+}
+
+let state=defaultState();
+
+function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+
+function formatNumber(n){
+  if(n<1000)return Math.floor(n).toString();
+  const units=['K','M','B','T','Qa','Qi'];
+  let u=-1;
+  while(n>=1000&&u<units.length-1){n/=1000;u++;}
+  return n.toFixed(2)+units[u];
+}
+
+function buildingCost(b){return Math.ceil(b.basePrice*Math.pow(1.15,state.buildings[b.id].count));}
+
+function globalCpsMultiplier(){
+  let m=1;
+  if(state.upgrades.aipattern)m*=1.10;
+  m*=(1+Object.keys(state.achievements).length*0.01);
+  m*=(1+state.darkMatter*0.02);
+  if(Date.now()<state.hyperDriveUntil)m*=7;
+  return m;
+}
+
+function baseCps(){
+  let t=0;
+  BUILDINGS.forEach(b=>{
+    let c=b.baseCps*state.buildings[b.id].count;
+    if(b.id==='drone'&&state.upgrades.ion)c*=2;
+    t+=c;
+  });
+  return t;
+}
+
+function currentCps(){return baseCps()*globalCpsMultiplier();}
+
+function currentClickPower(){
+  let p=state.baseClickPower;
+  if(state.upgrades.laser)p*=2;
+  p*=(1+state.darkMatter*0.02);
+  if(state.upgrades.antimatter)p+=currentCps()*0.01;
+  return p;
+}
+
+function addOre(a){state.ore+=a;state.lifetimeOre+=a;}
+
+function log(icon,msg){
+  const list=document.getElementById('logList');
+  const d=document.createElement('div');
+  const t=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  d.innerHTML=`${icon}<span><span class="time">${t}</span>${msg}</span>`;
+  list.appendChild(d);
+  while(list.children.length>40)list.removeChild(list.firstChild);
+}
+
+function toast(icon,msg){
+  const w=document.getElementById('toastWrap');
+  const t=document.createElement('div');
+  t.className='toast';
+  t.innerHTML=`${icon}<span>${msg}</span>`;
+  w.appendChild(t);
+  setTimeout(()=>t.remove(),4000);
+}
+
+function renderShop(){
+  const c=document.getElementById('shopBody');
+  c.innerHTML='';
+  BUILDINGS.forEach(b=>{
+    const cost=buildingCost(b);
+    const row=document.createElement('div');
+    row.className='itemRow'+(state.ore>=cost?'':' disabled');
+    row.dataset.building=b.id;
+    row.innerHTML=`<div class="itemIcon">${b.icon}</div><div class="itemInfo"><div class="itemName">${b.name}</div><div class="itemDesc">${b.baseCps} Ore/s pro Einheit</div></div><div class="itemCount">${state.buildings[b.id].count}</div><div class="itemPrice">${formatNumber(cost)} Ore</div>`;
+    c.appendChild(row);
+  });
+}
+
+function renderResearch(){
+  const c=document.getElementById('researchBody');
+  c.innerHTML='';
+  const avail=UPGRADES.filter(u=>!state.upgrades[u.id]);
+  if(!avail.length){c.innerHTML='<div class="itemDesc">Alle Forschungen abgeschlossen.</div>';}
+  else avail.forEach(u=>{
+    const row=document.createElement('div');
+    row.className='itemRow'+(state.ore>=u.price?'':' disabled');
+    row.dataset.upgrade=u.id;
+    row.innerHTML=`<div class="itemIcon">${ICON.flask}</div><div class="itemInfo"><div class="itemName">${u.name}</div><div class="itemDesc">${u.desc}</div></div><div class="itemPrice">${formatNumber(u.price)} Ore</div>`;
+    c.appendChild(row);
+  });
+  const box=document.getElementById('prestigeBox');
+  const gain=Math.floor(Math.sqrt(state.lifetimeOre/1000000));
+  const ok=state.lifetimeOre>=1000000;
+  box.innerHTML=`<div>Lifetime Ore: <b>${formatNumber(state.lifetimeOre)}</b></div><div>Dark Matter: <b>${state.darkMatter}</b></div><div>Bonus pro Dark Matter: +2% Klick &amp; CPS</div><div>Beim Reset erh&auml;ltst du: <b>${gain}</b> Dark Matter</div><button class="actionBtn" id="prestigeBtn" ${ok?'':'disabled'}>${ICON.reset} Quantum Reset</button>${ok?'':'<div class="itemDesc">Freischaltung bei 1.000.000 Lifetime-Ore</div>'}`;
+  document.getElementById('prestigeBtn')?.addEventListener('click',doPrestige);
+}
+
+function renderAchievements(){
+  const c=document.getElementById('achGrid');
+  c.innerHTML='';
+  ACHIEVEMENTS.forEach(a=>{
+    const u=!!state.achievements[a.id];
+    const row=document.createElement('div');
+    row.className='achRow '+(u?'unlocked':'locked');
+    row.innerHTML=`<div class="achIcon">${ICON.trophy}</div><div class="itemInfo"><div class="itemName">${a.name}</div><div class="itemDesc">${a.desc}</div></div><div class="itemDesc">+1% CPS</div>`;
+    c.appendChild(row);
+  });
+}
+
+function updateUI(){
+  document.getElementById('oreCount').textContent=formatNumber(state.ore);
+  document.getElementById('cpsCount').textContent=formatNumber(currentCps())+' CPS';
+  const b=document.getElementById('hyperBanner');
+  if(Date.now()<state.hyperDriveUntil){const s=Math.ceil((state.hyperDriveUntil-Date.now())/1000);b.innerHTML=`${ICON.bolt} HYPER-DRIVE: x7 CPS (${s}s)`;}
+  else b.innerHTML='';
+  renderShop();renderResearch();renderAchievements();
+}
+
+function buyBuilding(id){
+  const b=BUILDINGS.find(x=>x.id===id);
+  const cost=buildingCost(b);
+  if(state.ore>=cost){state.ore-=cost;state.buildings[id].count++;log(ICON.shop,`${b.name} erworben (${state.buildings[id].count})`);updateUI();}
+}
+
+function buyUpgrade(id){
+  const u=UPGRADES.find(x=>x.id===id);
+  if(!state.upgrades[id]&&state.ore>=u.price){state.ore-=u.price;state.upgrades[id]=true;log(ICON.flask,`Forschung: ${u.name}`);updateUI();}
+}
+
+function doPrestige(){
+  const gain=Math.floor(Math.sqrt(state.lifetimeOre/1000000));
+  if(gain<=0)return;
+  if(!confirm(`Quantum Reset: +${gain} Dark Matter, aber alle Geb&auml;ude/Ore/Forschungen werden zur&uuml;ckgesetzt. Fortfahren?`))return;
+  const a=state.achievements,dm=state.darkMatter+gain,pc=state.prestigeCount+1,cc=state.cometsClicked;
+  state=defaultState();state.achievements=a;state.darkMatter=dm;state.prestigeCount=pc;state.cometsClicked=cc;
+  log(ICON.reset,`Quantum Reset! +${gain} Dark Matter`);toast(ICON.reset,`+${gain} Dark Matter`);updateUI();
+}
+
+function checkAchievements(){
+  ACHIEVEMENTS.forEach(a=>{
+    if(!state.achievements[a.id]&&a.check(state)){
+      state.achievements[a.id]=true;
+      toast(ICON.trophy,`Erfolg: ${a.name}`);
+      log(ICON.trophy,`Erfolg freigeschaltet: ${a.name}`);
+    }
+  });
+}
+
+const asteroid=document.getElementById('asteroid');
+asteroid.addEventListener('click',(e)=>{
+  const p=currentClickPower();addOre(p);state.totalClicks++;
+  asteroid.classList.add('active');setTimeout(()=>asteroid.classList.remove('active'),90);
+  spawnParticle(e.clientX,e.clientY,p);checkAchievements();updateUI();
+});
+
+function spawnParticle(x,y,a){
+  const p=document.createElement('div');
+  p.className='particle';p.textContent='+'+formatNumber(a);
+  p.style.left=(x+rand(-10,10))+'px';p.style.top=(y-10)+'px';
+  document.body.appendChild(p);setTimeout(()=>p.remove(),1000);
+}
+
+const cometEl=document.getElementById('comet');
+function maybeSpawnComet(){if(Date.now()>=state.lastComet){spawnComet();state.lastComet=Date.now()+rand(60000,120000);}}
+function spawnComet(){
+  const sy=rand(80,window.innerHeight*0.6);
+  cometEl.style.top=sy+'px';cometEl.style.left='-60px';cometEl.style.display='block';
+  let x=-60;const dur=8000,st=Date.now();
+  function move(){
+    x=-60+(window.innerWidth+120)*((Date.now()-st)/dur);
+    cometEl.style.left=x+'px';
+    if(x<window.innerWidth+60&&cometEl.style.display==='block')requestAnimationFrame(move);
+    else cometEl.style.display='none';
+  }
+  requestAnimationFrame(move);log(ICON.comet,'Komet gesichtet!');
+}
+cometEl.addEventListener('click',()=>{
+  cometEl.style.display='none';state.cometsClicked++;
+  if(Math.random()<0.5){state.hyperDriveUntil=Date.now()+15000;log(ICON.bolt,'Hyper-Drive aktiv (x7, 15s)!');toast(ICON.bolt,'Hyper-Drive: x7 CPS f&uuml;r 15s!');}
+  else{const b=currentCps()*120;addOre(b);log(ICON.comet,`+${formatNumber(b)} Ore (120s)`);toast(ICON.comet,`+${formatNumber(b)} Ore!`);}
+  checkAchievements();updateUI();
+});
+
+function openPage(id){document.getElementById(id).classList.add('active');}
+function closeAllPages(){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));}
+
+document.getElementById('btnShop').innerHTML=ICON.shop;
+document.getElementById('btnResearch').innerHTML=ICON.flask;
+document.getElementById('btnAchievements').innerHTML=ICON.trophy;
+document.getElementById('btnOptions').innerHTML=ICON.gear;
+document.getElementById('logHeader').innerHTML=ICON.info+' Event Log';
+document.getElementById('shortcutAch').innerHTML=ICON.trophy+' Erfolge';
+document.getElementById('shortcutOpt').innerHTML=ICON.gear+' Optionen';
+document.getElementById('saveBtn').innerHTML=ICON.save+' Speichern';
+document.getElementById('loadBtn').innerHTML=ICON.load+' Laden';
+document.getElementById('resetBtn').innerHTML=ICON.close+' Hard Reset';
+document.querySelectorAll('.backBtn').forEach(b=>b.innerHTML=ICON.close);
+
+document.getElementById('btnShop').addEventListener('click',()=>{updateUI();openPage('page-shop');});
+document.getElementById('btnResearch').addEventListener('click',()=>{updateUI();openPage('page-research');});
+document.getElementById('btnAchievements').addEventListener('click',()=>{updateUI();openPage('page-achievements');});
+document.getElementById('btnOptions').addEventListener('click',()=>openPage('page-options'));
+document.getElementById('shortcutAch').addEventListener('click',()=>{updateUI();openPage('page-achievements');});
+document.getElementById('shortcutOpt').addEventListener('click',()=>openPage('page-options'));
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeAllPages));
+
+document.getElementById('shopBody').addEventListener('click',(e)=>{const r=e.target.closest('.itemRow');if(r&&r.dataset.building)buyBuilding(r.dataset.building);});
+document.getElementById('researchBody').addEventListener('click',(e)=>{const r=e.target.closest('.itemRow');if(r&&r.dataset.upgrade)buyUpgrade(r.dataset.upgrade);});
+
+function saveGame(m){localStorage.setItem(SAVE_KEY,JSON.stringify(state));if(m){log(ICON.save,'Spielstand gespeichert');toast(ICON.save,'Gespeichert!');}}
+function loadGame(){
+  const raw=localStorage.getItem(SAVE_KEY);
+  if(!raw){toast(ICON.info,'Kein Spielstand gefunden');return;}
+  state=Object.assign(defaultState(),JSON.parse(raw));
+  BUILDINGS.forEach(b=>{if(!state.buildings[b.id])state.buildings[b.id]={count:0};});
+  log(ICON.load,'Spielstand geladen');toast(ICON.load,'Geladen!');updateUI();
+}
+function hardReset(){
+  if(confirm('Wirklich alles l&ouml;schen?')){localStorage.removeItem(SAVE_KEY);state=defaultState();log(ICON.reset,'Hard Reset');toast(ICON.reset,'Hard Reset');updateUI();}
+}
+document.getElementById('saveBtn').addEventListener('click',()=>saveGame(true));
+document.getElementById('loadBtn').addEventListener('click',loadGame);
+document.getElementById('resetBtn').addEventListener('click',hardReset);
+
+setInterval(()=>{addOre(currentCps()*0.1);checkAchievements();maybeSpawnComet();updateUI();},100);
+setInterval(()=>saveGame(false),10000);
+
+(function init(){
+  const raw=localStorage.getItem(SAVE_KEY);
+  if(raw){try{state=Object.assign(defaultState(),JSON.parse(raw));BUILDINGS.forEach(b=>{if(!state.buildings[b.id])state.buildings[b.id]={count:0};});log(ICON.load,'Spielstand geladen');}catch(e){log(ICON.info,'Fehler beim Laden');}}
+  else log(ICON.star,'Spiel gestartet');
+  updateUI();
+})();
+</script>
+</body>
+</html>

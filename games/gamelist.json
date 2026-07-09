@@ -23,6 +23,12 @@
       "name": "Crossy Road",
       "icon": "games/Crossyroad/icon.png",
       "path": "games/Crossyroad/index.html"
+    },
+    {
+      "index": 8,
+      "name": "AstroMiner: Cosmic Idle",
+      "icon": "games/astrominer/icon.png",
+      "path": "games/astrominer/index.html"
     }
   ]
 }
