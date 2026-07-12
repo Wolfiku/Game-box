@@ -5,7 +5,8 @@ const BASE = (() => {
   return window.location.href.replace(/[^/]*$/, '');
 })();
 
-const DB_NAME = 'gamebox-db', DB_VER = 1;
+const GAMEBOX_API = 'https://gameboxsaves.db.scoodol.de';
+const DB_NAME = 'gamebox-db', DB_VER = 2;
 let db;
 
 function openDB() {
@@ -34,43 +35,76 @@ function dbSet(key, val) {
   });
 }
 
+// ── GameBox API Helpers ───────────────────────────────────────────────────────
+async function apiPost(path, body) {
+  const r = await fetch(GAMEBOX_API + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const json = await r.json();
+  if (!r.ok) throw new Error(json.error || json.message || r.statusText);
+  return json;
+}
+
+async function registerConsole(label) {
+  const data = await apiPost('/api/console/register', { label });
+  await dbSet('console_id', data.console_id);
+  await dbSet('console_key', data.console_key);
+  return data;
+}
+
+async function registerAccount(username, password) {
+  const data = await apiPost('/api/account/register', { username, password });
+  await dbSet('account_id', data.account_id);
+  await dbSet('account_key', data.account_key);
+  await dbSet('account_username', data.username);
+  return data;
+}
+
+async function loginAccount(username, password) {
+  const data = await apiPost('/api/account/login', { username, password });
+  await dbSet('account_id', data.account_id);
+  await dbSet('account_key', data.account_key);
+  await dbSet('account_username', data.username);
+  return data;
+}
+
+// Get current auth object for API calls
+async function getAuth() {
+  const [account_id, account_key, console_key] = await Promise.all([
+    dbGet('account_id'), dbGet('account_key'), dbGet('console_key')
+  ]);
+  if (account_id && account_key) return { type: 'account', account_id, account_key };
+  if (console_key) return { type: 'console', console_key };
+  return null;
+}
+
 // ── PWA Update Dialog ─────────────────────────────────────────────────────────
-// Shows a proper in-UI dialog instead of a small toast.
-// "Jetzt installieren" reloads immediately.
-// "Später installieren" stores a pendingUpdate flag → reload happens on next boot.
 let _dialogShown = false;
 function showUpdateDialog() {
   if (_dialogShown) return;
   _dialogShown = true;
   document.getElementById('update-overlay').classList.add('show');
 }
-
-document.getElementById('upd-now').addEventListener('click', () => {
-  location.reload();
-});
+document.getElementById('upd-now').addEventListener('click', () => { location.reload(); });
 document.getElementById('upd-later').addEventListener('click', async () => {
   await dbSet('pendingUpdate', true);
   document.getElementById('update-overlay').classList.remove('show');
   _dialogShown = false;
 });
-
 if ('serviceWorker' in navigator) {
-  // Route 1: activated SW posts SW_UPDATED message
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data?.type === 'SW_UPDATED') showUpdateDialog();
   });
-
-  // Route 2: new SW found while page is open (updatefound)
   navigator.serviceWorker.ready.then(reg => {
     reg.addEventListener('updatefound', () => {
       const nw = reg.installing;
       if (!nw) return;
       nw.addEventListener('statechange', () => {
-        if (nw.state === 'installed' && navigator.serviceWorker.controller)
-          showUpdateDialog();
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateDialog();
       });
     });
-    // Poll every 5 minutes so long-open sessions also catch updates
     setInterval(() => reg.update(), 5 * 60 * 1000);
   });
 }
@@ -95,6 +129,179 @@ function runLoader(then) {
     pct < 100 ? requestAnimationFrame(tick) : setTimeout(then, 120);
   })(t0);
 }
+
+// ── Setup Error Helper ────────────────────────────────────────────────────────
+function setSetupError(msg) {
+  const el = document.getElementById('setup-error');
+  if (!msg) { el.textContent = ''; el.style.display = 'none'; return; }
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function setSetupLoading(loading) {
+  document.getElementById('btn-setup-finish').disabled = loading;
+  document.getElementById('btn-setup-finish').textContent = loading ? 'Bitte warten…' : 'Start';
+}
+
+// ── Setup Steps ───────────────────────────────────────────────────────────────
+let setupAuthMode = null; // 'register' | 'login' | 'skip'
+
+function setupGoStep(step) {
+  document.querySelectorAll('.setup-step').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.setup-dot').forEach((d, i) => d.classList.toggle('active', i === step));
+  document.getElementById('setup-step-' + step).style.display = '';
+  setSetupError(null);
+}
+
+// Step 0 → Console name
+document.getElementById('btn-setup-0').addEventListener('click', () => {
+  const val = document.getElementById('input-console').value.trim();
+  if (!val) { document.getElementById('input-console').focus(); return; }
+  setupGoStep(1);
+});
+
+// Step 1 → Auth choice
+document.getElementById('btn-auth-register').addEventListener('click', () => {
+  setupAuthMode = 'register';
+  document.getElementById('setup-auth-form-title').textContent = 'Account erstellen';
+  document.getElementById('setup-auth-password-hint').style.display = '';
+  setupGoStep(2);
+});
+document.getElementById('btn-auth-login').addEventListener('click', () => {
+  setupAuthMode = 'login';
+  document.getElementById('setup-auth-form-title').textContent = 'Anmelden';
+  document.getElementById('setup-auth-password-hint').style.display = 'none';
+  setupGoStep(2);
+});
+document.getElementById('btn-auth-skip').addEventListener('click', async () => {
+  setupAuthMode = 'skip';
+  await finishSetup();
+});
+
+// Step 2 → Account form
+document.getElementById('btn-setup-back').addEventListener('click', () => setupGoStep(1));
+document.getElementById('btn-setup-finish').addEventListener('click', async () => {
+  const username = document.getElementById('input-account-username').value.trim();
+  const password = document.getElementById('input-account-password').value;
+  if (!username) { document.getElementById('input-account-username').focus(); return; }
+  if (!password) { document.getElementById('input-account-password').focus(); return; }
+  await finishSetup(username, password);
+});
+
+async function finishSetup(username, password) {
+  const consoleName = document.getElementById('input-console').value.trim();
+  const dark = document.getElementById('setup-theme-checkbox').checked;
+  setSetupError(null);
+  setSetupLoading && setSetupLoading(true);
+
+  try {
+    // Always register console
+    await registerConsole(consoleName);
+
+    if (setupAuthMode === 'register') {
+      await registerAccount(username, password);
+    } else if (setupAuthMode === 'login') {
+      await loginAccount(username, password);
+    }
+    // 'skip' → only console_key
+
+    await dbSet('consoleName', consoleName);
+    await dbSet('theme', dark ? 'dark' : 'light');
+    await dbSet('setupDone', true);
+    applyTheme(dark);
+
+    const displayName = setupAuthMode !== 'skip'
+      ? (await dbGet('account_username') || username)
+      : 'Gast';
+    await goHome(displayName, consoleName);
+  } catch (err) {
+    setSetupError(err.message || 'Unbekannter Fehler');
+  } finally {
+    const btn = document.getElementById('btn-setup-finish');
+    if (btn) { btn.disabled = false; btn.textContent = 'Start'; }
+  }
+}
+
+// ── Settings Account Panel ────────────────────────────────────────────────────
+function setSettingsAccountError(msg) {
+  const el = document.getElementById('settings-account-error');
+  if (!msg) { el.textContent = ''; el.style.display = 'none'; return; }
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function updateSettingsAccountUI() {
+  const [account_id, account_username, console_key] = await Promise.all([
+    dbGet('account_id'), dbGet('account_username'), dbGet('console_key')
+  ]);
+  const authSection = document.getElementById('settings-account-section');
+  const loggedInSection = document.getElementById('settings-account-loggedin');
+  const loginSection = document.getElementById('settings-account-login');
+
+  if (account_id && account_username) {
+    loggedInSection.style.display = '';
+    loginSection.style.display = 'none';
+    document.getElementById('settings-account-label').textContent = account_username;
+  } else {
+    loggedInSection.style.display = 'none';
+    loginSection.style.display = '';
+  }
+}
+
+document.getElementById('btn-settings-account-login').addEventListener('click', async () => {
+  const username = document.getElementById('settings-account-username').value.trim();
+  const password = document.getElementById('settings-account-password').value;
+  if (!username || !password) { setSettingsAccountError('Benutzername und Passwort eingeben'); return; }
+  document.getElementById('btn-settings-account-login').disabled = true;
+  setSettingsAccountError(null);
+  try {
+    const data = await loginAccount(username, password);
+    await updateSettingsAccountUI();
+    // Update header
+    const consoleName = await dbGet('consoleName');
+    document.getElementById('home-meta-label').textContent = data.username + '  \u00b7  ' + consoleName;
+    document.getElementById('settings-profile-label').textContent = data.username;
+    document.getElementById('settings-account-username').value = '';
+    document.getElementById('settings-account-password').value = '';
+    setSettingsAccountError(null);
+  } catch (err) {
+    setSettingsAccountError(err.message || 'Login fehlgeschlagen');
+  } finally {
+    document.getElementById('btn-settings-account-login').disabled = false;
+  }
+});
+
+document.getElementById('btn-settings-account-register').addEventListener('click', async () => {
+  const username = document.getElementById('settings-account-username').value.trim();
+  const password = document.getElementById('settings-account-password').value;
+  if (!username || !password) { setSettingsAccountError('Benutzername und Passwort eingeben'); return; }
+  if (password.length < 6) { setSettingsAccountError('Passwort muss mindestens 6 Zeichen haben'); return; }
+  document.getElementById('btn-settings-account-register').disabled = true;
+  setSettingsAccountError(null);
+  try {
+    const data = await registerAccount(username, password);
+    await updateSettingsAccountUI();
+    const consoleName = await dbGet('consoleName');
+    document.getElementById('home-meta-label').textContent = data.username + '  \u00b7  ' + consoleName;
+    document.getElementById('settings-profile-label').textContent = data.username;
+    document.getElementById('settings-account-username').value = '';
+    document.getElementById('settings-account-password').value = '';
+    setSettingsAccountError(null);
+  } catch (err) {
+    setSettingsAccountError(err.message || 'Registrierung fehlgeschlagen');
+  } finally {
+    document.getElementById('btn-settings-account-register').disabled = false;
+  }
+});
+
+document.getElementById('btn-settings-account-logout').addEventListener('click', async () => {
+  await dbSet('account_id', undefined);
+  await dbSet('account_key', undefined);
+  await dbSet('account_username', undefined);
+  await updateSettingsAccountUI();
+  const consoleName = await dbGet('consoleName');
+  document.getElementById('home-meta-label').textContent = 'Gast  \u00b7  ' + consoleName;
+  document.getElementById('settings-profile-label').textContent = 'Gast';
+});
 
 // ── Games ─────────────────────────────────────────────────────────────────────
 async function loadGames() {
@@ -183,8 +390,12 @@ document.getElementById('confirm-close').addEventListener('click', () => {
   document.getElementById('game-frame').src = 'about:blank';
   show('screen-home');
 });
-document.getElementById('open-settings-btn').addEventListener('click', () =>
-  document.getElementById('settings-overlay').classList.add('show'));
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+document.getElementById('open-settings-btn').addEventListener('click', async () => {
+  await updateSettingsAccountUI();
+  document.getElementById('settings-overlay').classList.add('show');
+});
 document.getElementById('close-settings-btn').addEventListener('click', () =>
   document.getElementById('settings-overlay').classList.remove('show'));
 document.getElementById('settings-overlay').addEventListener('click', e => {
@@ -206,34 +417,18 @@ document.querySelectorAll('.os-tab').forEach(btn => {
     });
   });
 });
-document.getElementById('btn-setup-0').addEventListener('click', () => {
-  const val = document.getElementById('input-username').value.trim();
-  if (!val) { document.getElementById('input-username').focus(); return; }
-  document.getElementById('setup-step-0').style.display = 'none';
-  document.getElementById('setup-step-1').style.display = '';
-  document.getElementById('dot-0').classList.remove('active');
-  document.getElementById('dot-1').classList.add('active');
-});
-document.getElementById('btn-setup-1').addEventListener('click', async () => {
-  const consoleName = document.getElementById('input-console').value.trim();
-  const username    = document.getElementById('input-username').value.trim();
-  if (!consoleName) { document.getElementById('input-console').focus(); return; }
-  const dark = document.getElementById('setup-theme-checkbox').checked;
-  await dbSet('username', username);
-  await dbSet('consoleName', consoleName);
-  await dbSet('theme', dark ? 'dark' : 'light');
-  await dbSet('setupDone', true);
-  applyTheme(dark);
-  await goHome(username, consoleName);
-});
-async function goHome(username, consoleName) {
-  document.getElementById('home-meta-label').textContent = username + '  \u00b7  ' + consoleName;
-  document.getElementById('settings-profile-label').textContent = username;
+
+// ── Home ──────────────────────────────────────────────────────────────────────
+async function goHome(displayName, consoleName) {
+  document.getElementById('home-meta-label').textContent = displayName + '  \u00b7  ' + consoleName;
+  document.getElementById('settings-profile-label').textContent = displayName;
   document.getElementById('settings-console-label').textContent = consoleName;
   const games = await loadGames();
   renderGames(games);
   show('screen-home');
 }
+
+// ── Storage Screen ────────────────────────────────────────────────────────────
 document.getElementById('btn-allow-storage').addEventListener('click', async () => {
   if (navigator.storage?.persist) await navigator.storage.persist();
   await dbSet('storageAsked', true);
@@ -243,19 +438,25 @@ document.getElementById('btn-skip-storage').addEventListener('click', async () =
   await dbSet('storageAsked', true);
   runLoader(afterLoad);
 });
+
 async function afterLoad() {
-  const [done, username, consoleName, theme, pendingUpdate] =
-    await Promise.all([dbGet('setupDone'), dbGet('username'), dbGet('consoleName'), dbGet('theme'), dbGet('pendingUpdate')]);
-  // If the user chose "Später installieren" in a previous session, reload now
+  const [done, consoleName, account_username, theme, pendingUpdate] =
+    await Promise.all([dbGet('setupDone'), dbGet('consoleName'), dbGet('account_username'), dbGet('theme'), dbGet('pendingUpdate')]);
   if (pendingUpdate) {
     await dbSet('pendingUpdate', false);
     location.reload();
     return;
   }
   if (theme) applyTheme(theme === 'dark');
-  if (done) await goHome(username || 'Player', consoleName || 'My Game-Box');
-  else show('screen-setup');
+  if (done) {
+    const displayName = account_username || 'Gast';
+    await goHome(displayName, consoleName || 'My Game-Box');
+  } else {
+    setupGoStep(0);
+    show('screen-setup');
+  }
 }
+
 async function boot() {
   db = await openDB();
   const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
