@@ -80,6 +80,18 @@ async function getAuth() {
   return null;
 }
 
+// ── iframe postMessage Bridge ─────────────────────────────────────────────────
+// Allows games running inside the iframe to read keys from the parent IndexedDB.
+// Game sends: { __gbGet: 'key', __gbReqId: 'unique-id' }
+// Parent replies to the iframe: { __gbRes: 'unique-id', value: ... }
+window.addEventListener('message', async e => {
+  const frame = document.getElementById('game-frame');
+  if (!frame || e.source !== frame.contentWindow) return;
+  if (!e.data || !e.data.__gbGet || !e.data.__gbReqId) return;
+  const value = await dbGet(e.data.__gbGet).catch(() => null);
+  frame.contentWindow.postMessage({ __gbRes: e.data.__gbReqId, value }, '*');
+});
+
 // ── PWA Update Dialog ─────────────────────────────────────────────────────────
 let _dialogShown = false;
 function showUpdateDialog() {
@@ -256,7 +268,6 @@ document.getElementById('btn-settings-account-login').addEventListener('click', 
   try {
     const data = await loginAccount(username, password);
     await updateSettingsAccountUI();
-    // Update header
     const consoleName = await dbGet('consoleName');
     document.getElementById('home-meta-label').textContent = data.username + '  \u00b7  ' + consoleName;
     document.getElementById('settings-profile-label').textContent = data.username;
