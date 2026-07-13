@@ -78,7 +78,8 @@ async function lbSubmit(score){
 async function lbFetch(limit=15){
   const r=await fetch(`${GAMEBOX_API}/api/leaderboard/${GAME_ID}/${BOARD_KEY}/top?limit=${limit}`);
   if(!r.ok)throw new Error('fetch failed');
-  return (await r.json()).entries||[];
+  const data=await r.json();
+  return Array.isArray(data?.entries) ? data.entries : [];
 }
 
 // ── submit whenever lifetime-ore grows ──
@@ -120,34 +121,50 @@ function prestigeGain(){
 function prestigeReady(){return G.lo>=1e6&&prestigeGain()>0;}
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
 
-// ── Leaderboard Screen ──
+// ── Leaderboard Screen (gefixt: robust gegen abweichende Feldnamen/Werte) ──
 async function renderLb(){
   const el=document.getElementById('lbScreen');
   el.innerHTML=`<div class="center"><div class="card lbWrap"><div class="pageHead"><div class="pageTitle">${IC.lb} Leaderboard – Lifetime Ore</div><button class="iconBtn" id="lbBack">${IC.x}</button></div><div id="lbList"><div class="lbLoading">Wird geladen…</div></div></div></div>`;
   document.getElementById('lbBack').onclick=()=>{renderHome();showScreen('homeScreen')};
+
   try{
     const auth=await gbAuth();
     const entries=await lbFetch(15);
-    const myName=auth.username;
-    if(!entries.length){document.getElementById('lbList').innerHTML='<div class="lbEmpty">Noch keine Einträge. Spiele AstroMiner, um der Erste zu sein!</div>';return;}
+    const myName=(auth?.username || '').trim();
+
+    if(!entries.length){
+      document.getElementById('lbList').innerHTML='<div class="lbEmpty">Noch keine Einträge. Spiele AstroMiner, um der Erste zu sein!</div>';
+      return;
+    }
+
     const medals=['🥇','🥈','🥉'];
-    document.getElementById('lbList').innerHTML=entries.map((e,i)=>{
-      const isMe=e.username===myName;
+
+    document.getElementById('lbList').innerHTML=entries.map((raw,i)=>{
+      const username=String(raw?.username ?? 'Unbekannt');
+      const scoreNum=Number(raw?.score ?? 0);
+      const safeScore=Number.isFinite(scoreNum) ? scoreNum : 0;
+      const sourceType=raw?.source_type || raw?.sourcetype || raw?.sourceType || 'console';
+
+      const isMe=myName && username===myName;
       const rankClass=i===0?'top1':i===1?'top2':i===2?'top3':'';
       const medal=medals[i]||`#${i+1}`;
-      const typeLabel=e.source_type==='account'?'<span class="lbType">☁️</span>':'<span class="lbType">🖥️</span>';
+      const typeLabel=sourceType==='account'
+        ? '<span class="lbType">☁️</span>'
+        : '<span class="lbType">🖥️</span>';
+
       return `<div class="lbEntry ${isMe?'lbMe':''}">
         <div class="lbRank ${rankClass}">${medal}</div>
-        <div class="lbName">${e.username}${typeLabel}</div>
-        <div class="lbScore">${fmt(e.score)} Ore</div>
+        <div class="lbName">${username}${typeLabel}</div>
+        <div class="lbScore">${fmt(safeScore)} Ore</div>
       </div>`;
     }).join('');
   }catch(err){
+    console.error('Leaderboard render failed:', err);
     document.getElementById('lbList').innerHTML='<div class="lbEmpty" style="color:var(--danger)">Fehler beim Laden des Leaderboards.</div>';
   }
 }
 
-function renderHome(){const el=document.getElementById('homeScreen'); el.innerHTML=`<div class="center"><div class="card homeWrap"><div class="heroLeft"><div class="bigTitle">AstroMiner:<br>Cosmic Idle</div><div class="heroSub">Baue ein galaktisches Bergbau-Imperium. Prestige ab 1 Mio. Ore – für maximale 20 DM musst du alles maxen.</div><div class="homeActions"><button class="btn" id="hStart">${IC.star} Spielen</button><button class="btn sec" id="hLb">${IC.lb} Leaderboard</button><button class="btn sec" id="hAch">${IC.trophy} Achievements</button><button class="btn sec" id="hSet">${IC.gear} Settings</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px"><span class="chip">10 Gebäude</span><span class="chip">10 Upgrades</span><span class="chip">v1.2.0</span></div></div><div class="heroRight card"><div class="menuCard" id="hmLb"><div><div class="mTitle">Leaderboard</div><div class="mDesc">Top Lifetime Ore weltweit</div></div><div class="menuIco">${IC.lb}</div></div><div class="menuCard" id="hmAch"><div><div class="mTitle">Achievements</div><div class="mDesc">${Object.keys(G.ach).length}/${ACHS.length} freigeschaltet</div></div><div class="menuIco">${IC.trophy}</div></div><div class="menuCard" id="hmSet"><div><div class="mTitle">Settings</div><div class="mDesc">Speichern · Laden · Reset</div></div><div class="menuIco">${IC.gear}</div></div><div class="menuCard" id="hmPlay"><div><div class="mTitle">Weiterspielen</div><div class="mDesc">${fmt(G.ore)} Ore · ${fmt(cps())} CPS</div></div><div class="menuIco">${IC.star}</div></div></div></div></div>`;
+function renderHome(){const el=document.getElementById('homeScreen'); el.innerHTML=`<div class="center"><div class="card homeWrap"><div class="heroLeft"><div class="bigTitle">AstroMiner:<br>Cosmic Idle</div><div class="heroSub">Baue ein galaktisches Bergbau-Imperium. Prestige ab 1 Mio. Ore – für maximale 20 DM musst du alles maxen.</div><div class="homeActions"><button class="btn" id="hStart">${IC.star} Spielen</button><button class="btn sec" id="hLb">${IC.lb} Leaderboard</button><button class="btn sec" id="hAch">${IC.trophy} Achievements</button><button class="btn sec" id="hSet">${IC.gear} Settings</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px"><span class="chip">10 Gebäude</span><span class="chip">10 Upgrades</span><span class="chip">v1.2.1 (hotfix)</span></div></div><div class="heroRight card"><div class="menuCard" id="hmLb"><div><div class="mTitle">Leaderboard</div><div class="mDesc">Top Lifetime Ore weltweit</div></div><div class="menuIco">${IC.lb}</div></div><div class="menuCard" id="hmAch"><div><div class="mTitle">Achievements</div><div class="mDesc">${Object.keys(G.ach).length}/${ACHS.length} freigeschaltet</div></div><div class="menuIco">${IC.trophy}</div></div><div class="menuCard" id="hmSet"><div><div class="mTitle">Settings</div><div class="mDesc">Speichern · Laden · Reset</div></div><div class="menuIco">${IC.gear}</div></div><div class="menuCard" id="hmPlay"><div><div class="mTitle">Weiterspielen</div><div class="mDesc">${fmt(G.ore)} Ore · ${fmt(cps())} CPS</div></div><div class="menuIco">${IC.star}</div></div></div></div></div>`;
 document.getElementById('hStart').onclick=()=>showScreen('gameScreen');
 document.getElementById('hLb').onclick=()=>{renderLb();showScreen('lbScreen')};
 document.getElementById('hAch').onclick=()=>{renderAch();showScreen('achScreen')};
