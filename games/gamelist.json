@@ -29,10 +29,10 @@
       "name": "AstroMiner",
       "icon": "games/astrominer/icon.jpeg",
       "path": "games/astrominer/index.html",
-      "changelogs": [
+      "patchlogs": [
         {
           "version": "2.0",
-          "changes": "new planet coming"
+          "changes": ["new planet coming"]
         }
       ]
     }
