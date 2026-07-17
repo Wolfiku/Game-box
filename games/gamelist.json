@@ -44,6 +44,13 @@
       "icon": "games/tto/icon.jpeg",
       "path": "games/tto/index.html",
       "patchlogs": []
-    }
+    },
+    {
+      "index": 3,
+      "name": "Farmline",
+      "icon": "games/farmline/icon.jpeg",
+      "path": "games/farmline/index.html",
+      "patchlogs": []
+    },
   ]
 }
