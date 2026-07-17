@@ -4,14 +4,14 @@
       "index": 1,
       "name": "Lonely Tower",
       "icon": "games/lonely-tower/icon.png",
-      "path": "games/lonely-tower/index.html"
+      "path": "games/lonely-tower/index.html",
       "patchlogs": [
         {
           "version": "1.2",
-          "changes": ["Ranklist added + new wave system "]
+          "changes": ["Ranklist added + new wave system"]
         }
       ]
-    }
+    },
     {
       "index": 5,
       "name": "Breakout 404",
