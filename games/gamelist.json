@@ -13,24 +13,6 @@
       ]
     },
     {
-      "index": 5,
-      "name": "Breakout 404",
-      "icon": "games/breakout-404/icon.png",
-      "path": "games/breakout-404/index.html"
-    },
-    {
-      "index": 7,
-      "name": "Tic Tac Toe",
-      "icon": "games/tto/icon.jpeg",
-      "path": "games/tto/index.html"
-    },
-    {
-      "index": 6,
-      "name": "Crossy Road",
-      "icon": "games/Crossyroad/icon.jpeg",
-      "path": "games/Crossyroad/index.html"
-    },
-    {
       "index": 2,
       "name": "AstroMiner",
       "icon": "games/astrominer/icon.jpeg",
@@ -41,6 +23,27 @@
           "changes": ["new planet !!!"]
         }
       ]
+    },
+    {
+      "index": 5,
+      "name": "Breakout 404",
+      "icon": "games/breakout-404/icon.png",
+      "path": "games/breakout-404/index.html",
+      "patchlogs": []
+    },
+    {
+      "index": 6,
+      "name": "Crossy Road",
+      "icon": "games/crossy-road/icon.jpeg",
+      "path": "games/crossy-road/index.html",
+      "patchlogs": []
+    },
+    {
+      "index": 7,
+      "name": "Tic Tac Toe",
+      "icon": "games/tto/icon.jpeg",
+      "path": "games/tto/index.html",
+      "patchlogs": []
     }
   ]
 }
