@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farm Automation</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="ui">
+    <div id="startMenu" class="overlay show">
+      <div class="card hero">
+        <div class="badge">Farm Automation</div>
+        <h1>Ernte. Baue. Automatisiere.</h1>
+        <p>Starte dein Farm-Setup, verwalte Roboter und öffne den Shop für Upgrades, Gebäude und Seeds.</p>
+        <div class="row">
+          <button id="btnNewGame" class="primary">Neues Spiel</button>
+          <button id="btnContinue">Fortsetzen</button>
+        </div>
+        <div class="muted" id="startHint"></div>
+      </div>
+    </div>
+
+    <div id="topbar">
+      <div id="stats"></div>
+      <div id="actions"></div>
+    </div>
+
+    <div id="shop" class="panel shop hidden"></div>
+    <div id="panel" class="panel"></div>
+    <div id="log" class="panel log"></div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
