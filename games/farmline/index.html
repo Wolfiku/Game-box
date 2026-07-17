@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0d12" />
+<title>Farm Automation</title>
+<link rel="stylesheet" href="style.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="ui">
+  <div id="startMenu" class="overlay show">
+    <div class="menu-card">
+      <div class="menu-brand"><i data-lucide="tractor"></i><span>Farm Automation</span></div>
+      <h1>Baue deine automatisierte Farm</h1>
+      <p class="menu-sub">Mobile first, moderne UI und Farm-Assets. Ziehen, zoomen, klicken oder tippen zum Platzieren.</p>
+      <div class="menu-actions">
+        <button id="btnNewGame" class="btn btn-primary"><i data-lucide="play"></i><span>Neues Spiel</span></button>
+        <button id="btnContinue" class="btn btn-secondary"><i data-lucide="rotate-ccw"></i><span>Fortsetzen</span></button>
+        <button id="btnSettings" class="btn btn-ghost"><i data-lucide="settings"></i><span>Einstellungen</span></button>
+      </div>
+      <div class="menu-footer"><div class="menu-tip"><i data-lucide="mouse-pointer-click"></i>Tippe Buttons, ziehe die Map, zoome mit zwei Fingern oder Mausrad.</div></div>
+    </div>
+  </div>
+  <div id="settingsMenu" class="overlay">
+    <div class="menu-card small">
+      <div class="menu-brand"><i data-lucide="sliders-horizontal"></i><span>Einstellungen</span></div>
+      <div class="setting-row"><span><i data-lucide="volume-2"></i>Sound</span><label class="switch"><input type="checkbox" id="toggleSound" checked><span class="slider"></span></label></div>
+      <div class="setting-row"><span><i data-lucide="save"></i>Auto-Speichern</span><label class="switch"><input type="checkbox" id="toggleAutosave" checked><span class="slider"></span></label></div>
+      <div class="setting-row"><span><i data-lucide="trash-2"></i>Spielstand löschen</span><button id="btnWipe" class="btn btn-danger small-btn"><i data-lucide="trash-2"></i>Löschen</button></div>
+      <button id="btnCloseSettings" class="btn btn-secondary full">Schließen</button>
+    </div>
+  </div>
+  <div id="topbar" class="hidden">
+    <div id="stats" class="glass"></div>
+    <div id="hud-buttons">
+      <button id="btnOpenShop" class="btn btn-icon"><i data-lucide="shopping-bag"></i><span>Shop</span></button>
+      <button id="btnOpenMenu" class="btn btn-icon"><i data-lucide="menu"></i></button>
+    </div>
+  </div>
+  <div id="actions" class="glass hidden"></div>
+  <div id="shop" class="glass shop hidden">
+    <div class="shop-header"><div class="shop-title"><i data-lucide="shopping-bag"></i><span>Shop</span></div><button id="closeShop" class="icon-btn"><i data-lucide="x"></i></button></div>
+    <div class="shop-tabs">
+      <button class="tab-btn active" data-tab="seeds"><i data-lucide="sprout"></i>Saaten</button>
+      <button class="tab-btn" data-tab="buildings"><i data-lucide="warehouse"></i>Gebäude</button>
+      <button class="tab-btn" data-tab="tech"><i data-lucide="cpu"></i>Tech</button>
+    </div>
+    <div id="shopContent" class="shop-content"></div>
+  </div>
+  <div id="panel" class="glass panel hidden"></div>
+  <div id="log" class="glass log hidden"></div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
