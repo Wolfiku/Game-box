@@ -28,16 +28,200 @@ function draw(){const dpr=devicePixelRatio||1;canvas.width=innerWidth*dpr;canvas
 function loop(t){state.acc+=t-state.last;state.last=t;while(state.acc>=DT){state.tick++;updateCrops();updateTechIncome();for(const r of state.robots)tickRobot(r);state.acc-=DT;if(state.tick%40===0)save()}draw();requestAnimationFrame(loop)}
 function buildButtons(){actionsEl.innerHTML='';const tools=[['plant-wheat','Plant Wheat'],['plant-corn','Plant Corn'],['plant-carrot','Plant Carrot'],['robot','Add Robot'],['storage','Storage'],['farm','Farm Plot'],['dock','Dock'],['conveyor','Conveyor']];for(const [id,label] of tools){const b=document.createElement('button');b.textContent=label;b.className=id===state.selected?'sel':'';b.onclick=()=>{state.selected=id;buildButtons();};actionsEl.appendChild(b)}for(const td of techDefs){const b=document.createElement('button');b.textContent=`${td.name} ${state.tech[td.id]||0} (${costForTech(td.id,state.tech[td.id]||0)}g)`;b.onclick=()=>buyTech(td.id);actionsEl.appendChild(b)}const b=document.createElement('button');b.textContent=state.autoPlant?'Auto on':'Auto off';b.onclick=()=>{state.autoPlant=!state.autoPlant;buildButtons()};actionsEl.appendChild(b)}
 canvas.addEventListener('mousedown',e=>{const rect=canvas.getBoundingClientRect();const x=(e.clientX-rect.left)/state.camera.zoom+state.camera.x;const y=(e.clientY-rect.top)/state.camera.zoom+state.camera.y;const gx=Math.floor(x/TILE),gy=Math.floor(y/TILE);if(!state.grid.in(gx,gy))return;if(e.button===1)return;const id=state.grid.idx(gx,gy);if(state.selected==='robot'){state.robots.push(new Robot(gx,gy));return}if(state.selected.startsWith('plant-')){const type=state.selected.split('-')[1];const def=cropDefs[type];if(state.inv.get('seeds')>=def.seedCost&&state.grid.get(gx,gy)===1&&!state.grid.crop[id]){state.inv.add('seeds',-def.seedCost);state.grid.crop[id]={type,grow:0,ready:false}}}else if(buildingDefs[state.selected])placeBuilding(state.selected,gx,gy);else if(state.selected==='conveyor')state.grid.set(gx,gy,2)});
-let drag=false,sx=0,sy=0,cx=0,cy=0;canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('wheel',e=>{const z=state.camera.zoom;state.camera.zoom=Math.max(.5,Math.min(2,z*(e.deltaY>0?.9:1.1)))});canvas.addEventListener('pointerdown',e=>{drag=true;sx=e.clientX;sy=e.clientY;cx=state.camera.x;cy=state.camera.y});window.addEventListener('pointerup',()=>drag=false);window.addEventListener('pointermove',e=>{if(!drag)return;state.camera.x=Math.max(0,Math.min(W*TILE-innerWidth/state.camera.zoom,cx-(e.clientX-sx)/state.camera.zoom));state.camera.y=Math.max(0,Math.min(H*TILE-innerHeight/state.camera.zoom,cy-(e.clientY-sy)/state.camera.zoom))});window.addEventListener('keydown',e=>{if(e.key==='s'&&(e.ctrlKey||e.metaKey)){e.preventDefault();save()}if(e.key==='p')state.paused=!state.paused;if(e.key==='r')save()});buildButtons();load();setInterval(()=>{if(!state.paused)save()},5000);requestAnimationFrame(loop);
+let drag=false,sx=0,sy=0,cx=0,cy=0;canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('wheel',e=>{const z=state.camera.zoom;state.camera.zoom=Math.max(.5,Math.min(2,z*(e.deltaY>0?.9:1.1)))});canvas.addEventListener('pointerdown',e=>{drag=true;sx=e.clientX;sy=e.clientY;cx=state.camera.x;cy=state.camera.y});window.addEventListener('pointerup',()=>drag=false);window.addEventListener('pointermove',e=>{if(!drag)return;state.camera.x=Math.max(0,Math.min(W*TILE-innerWidth/state.camera.zoom,cx-(e.clientX-sx)/state.camera.zoom));state.camera.y=Math.max(0,Math.min(H*TILE-innerHeight/state.camera.zoom,cy-(e.clientY-sy)/state.camera.zoom))});window.addEventListener('keydown',e=>{if(e.key==='s'&&(e.ctrlKey||e.metaKey)){e.preventDefault();save()}if(e.key==='p')state.paused=!state.paused;if(e.key==='r')save()});
 
-const ui={startMenu:document.getElementById('startMenu'),shop:document.getElementById('shop'),btnNewGame:document.getElementById('btnNewGame'),btnContinue:document.getElementById('btnContinue'),startHint:document.getElementById('startHint')};
-function openStartMenu(show){ui.startMenu.classList.toggle('show',!!show);state.paused=!!show;}
-function toggleShop(force){const v=force!==undefined?force:ui.shop.classList.contains('hidden');ui.shop.classList.toggle('hidden',!v);}
-function renderShop(){const items=[...Object.entries(buildingDefs).map(([id,d])=>({type:'building',id,label:d.name,cost:d.cost})),...cropDefs?Object.entries(cropDefs).map(([id,d])=>({type:'seed',id,label:d.name,cost:{seeds:d.seedCost}})):[],...techDefs.map(td=>({type:'tech',id:td.id,label:td.name,cost:{gold:costForTech(td.id,state.tech[td.id]||0)}}))];ui.shop.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px"><strong>Shop</strong><button id="closeShop">Schließen</button></div>'+items.map(it=>`<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin:8px 0;padding:8px;border:1px solid #334357;border-radius:10px"><div><div><b>${it.label}</b></div><div class="hint">${Object.entries(it.cost).map(([k,v])=>`${v} ${k}`).join(', ')}</div></div><button data-buy="${it.type}:${it.id}">Kaufen</button></div>`).join('');ui.shop.querySelector('#closeShop').onclick=()=>toggleShop(false);ui.shop.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const [type,id]=b.dataset.buy.split(':');if(type==='tech')buyTech(id);else if(type==='seed'){state.inv.add('seeds',10);state.inv.add('gold',-cropDefs[id].seedCost)}else if(type==='building'){state.selected=id;buildButtons()}renderShop();});}
-function buildButtons(){actionsEl.innerHTML='';const tools=[['plant-wheat','Plant Wheat'],['plant-corn','Plant Corn'],['plant-carrot','Plant Carrot'],['robot','Add Robot'],['storage','Storage'],['farm','Farm Plot'],['dock','Dock'],['conveyor','Conveyor']];for(const [id,label] of tools){const b=document.createElement('button');b.textContent=label;b.className=id===state.selected?'sel':'';b.onclick=()=>{state.selected=id;buildButtons();};actionsEl.appendChild(b)}const shopBtn=document.createElement('button');shopBtn.textContent='Shop';shopBtn.onclick=()=>{toggleShop(true);renderShop()};actionsEl.appendChild(shopBtn);const b=document.createElement('button');b.textContent=state.autoPlant?'Auto on':'Auto off';b.onclick=()=>{state.autoPlant=!state.autoPlant;buildButtons()};actionsEl.appendChild(b)}
-if(ui.btnNewGame)ui.btnNewGame.onclick=()=>{localStorage.removeItem(SAVE_KEY);state.paused=false;state.inv=new Inventory();state.robots=[];state.tech={robotSpeed:0,yieldBoost:0,harvestRadius:0,routeSlots:0,automation:0};state.selected='plant-wheat';state.camera={x:0,y:0,zoom:1};state.tick=0;state.autoPlant=true;state.grid.tiles=new Uint8Array(W*H);state.grid.crop=Array(W*H).fill(null);state.grid.building=Array(W*H).fill(null);placeInitial();openStartMenu(false);buildButtons();renderShop();save()};
-if(ui.btnContinue)ui.btnContinue.onclick=()=>{load();openStartMenu(false);buildButtons();renderShop()};
-if(ui.startHint)ui.startHint.textContent='Tipp: Im Shop kannst du Seeds, Gebäude und Tech-Upgrades kaufen.';
-renderShop();
-if(typeof load==='function'){const _load=load;load=function(){const r=_load();if(ui.btnContinue)ui.btnContinue.disabled=!localStorage.getItem(SAVE_KEY);return r}};
-if(typeof save==='function'){const _save=save;save=function(){const r=_save();if(ui.btnContinue)ui.btnContinue.disabled=false;return r}};
+/* ===================== UI LAYER (menu, shop, icons) ===================== */
+const uiEls = {
+  startMenu: document.getElementById('startMenu'),
+  settingsMenu: document.getElementById('settingsMenu'),
+  topbar: document.getElementById('topbar'),
+  actions: document.getElementById('actions'),
+  shop: document.getElementById('shop'),
+  shopContent: document.getElementById('shopContent'),
+  panel: document.getElementById('panel'),
+  log: document.getElementById('log'),
+  btnNewGame: document.getElementById('btnNewGame'),
+  btnContinue: document.getElementById('btnContinue'),
+  btnSettings: document.getElementById('btnSettings'),
+  btnCloseSettings: document.getElementById('btnCloseSettings'),
+  btnWipe: document.getElementById('btnWipe'),
+  btnOpenShop: document.getElementById('btnOpenShop'),
+  btnOpenMenu: document.getElementById('btnOpenMenu'),
+  closeShop: document.getElementById('closeShop'),
+};
+
+const ICONS = {
+  wheat: 'wheat', corn: 'wheat', carrot: 'carrot',
+  storage: 'warehouse', farm: 'sprout', dock: 'anchor', conveyor: 'move-horizontal',
+  robot: 'bot', gold: 'coins', wood: 'trees', stone: 'mountain', seeds: 'sprout',
+  robotSpeed: 'gauge', yieldBoost: 'trending-up', harvestRadius: 'crosshair',
+  routeSlots: 'route', automation: 'cpu',
+};
+
+function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
+
+function showGameUI(show){
+  [uiEls.topbar, uiEls.actions, uiEls.panel, uiEls.log].forEach(el=>{
+    if(!el) return;
+    el.classList.toggle('hidden', !show);
+  });
+}
+
+function openStart(show){
+  uiEls.startMenu.classList.toggle('show', !!show);
+  state.paused = !!show;
+  if(uiEls.btnContinue) uiEls.btnContinue.disabled = !localStorage.getItem(SAVE_KEY);
+}
+
+function openSettings(show){
+  uiEls.settingsMenu.classList.toggle('show', !!show);
+}
+
+function toggleShop(force){
+  const willShow = force !== undefined ? force : uiEls.shop.classList.contains('hidden');
+  uiEls.shop.classList.toggle('hidden', !willShow);
+  if(willShow) renderShopTab(currentShopTab);
+}
+
+let currentShopTab = 'seeds';
+
+function shopIconWrap(name){
+  return `<div class="shop-item-icon"><i data-lucide="${name}"></i></div>`;
+}
+
+function renderShopTab(tab){
+  currentShopTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  let html = '';
+  if(tab === 'seeds'){
+    for(const [id, def] of Object.entries(cropDefs)){
+      const can = state.inv.get('gold') >= def.seedCost;
+      html += `<div class="shop-item">
+        <div class="shop-item-info">${shopIconWrap(ICONS[id]||'sprout')}
+          <div class="shop-item-text"><b>${def.name}</b><span class="cost">${def.seedCost} gold &rarr; +1 Saat</span></div>
+        </div>
+        <button class="shop-buy" data-buyseed="${id}" ${can?'':'disabled'}>Kaufen</button>
+      </div>`;
+    }
+  } else if(tab === 'buildings'){
+    for(const [id, def] of Object.entries(buildingDefs)){
+      const costStr = Object.entries(def.cost).map(([k,v])=>`${v} ${k}`).join(', ');
+      html += `<div class="shop-item">
+        <div class="shop-item-info">${shopIconWrap(ICONS[id]||'box')}
+          <div class="shop-item-text"><b>${def.name}</b><span class="cost">${costStr}</span></div>
+        </div>
+        <button class="shop-buy" data-select="${id}">Wählen</button>
+      </div>`;
+    }
+    html += `<div class="shop-item">
+      <div class="shop-item-info">${shopIconWrap('bot')}
+        <div class="shop-item-text"><b>Roboter</b><span class="cost">Platzieren per Klick</span></div>
+      </div>
+      <button class="shop-buy" data-select="robot">Wählen</button>
+    </div>`;
+  } else if(tab === 'tech'){
+    for(const td of techDefs){
+      const lvl = state.tech[td.id] || 0;
+      const cost = costForTech(td.id, lvl);
+      const can = state.inv.get('gold') >= cost;
+      html += `<div class="shop-item">
+        <div class="shop-item-info">${shopIconWrap(ICONS[td.id]||'cpu')}
+          <div class="shop-item-text"><b>${td.name} · Lv.${lvl}</b><span class="cost">${td.desc} — ${cost} gold</span></div>
+        </div>
+        <button class="shop-buy" data-buytech="${td.id}" ${can?'':'disabled'}>Kaufen</button>
+      </div>`;
+    }
+  }
+  uiEls.shopContent.innerHTML = html;
+  refreshIcons();
+  uiEls.shopContent.querySelectorAll('[data-buytech]').forEach(b=>{
+    b.onclick = () => { buyTech(b.dataset.buytech); renderShopTab(currentShopTab); buildButtons(); };
+  });
+  uiEls.shopContent.querySelectorAll('[data-buyseed]').forEach(b=>{
+    b.onclick = () => {
+      const id = b.dataset.buyseed; const def = cropDefs[id];
+      if(state.inv.get('gold') >= def.seedCost){ state.inv.add('gold', -def.seedCost); state.inv.add('seeds', 1); log(`+1 ${def.name} Saat`); }
+      renderShopTab(currentShopTab);
+    };
+  });
+  uiEls.shopContent.querySelectorAll('[data-select]').forEach(b=>{
+    b.onclick = () => { state.selected = b.dataset.select; buildButtons(); toggleShop(false); };
+  });
+}
+
+document.querySelectorAll('.tab-btn').forEach(b=>{
+  b.onclick = () => renderShopTab(b.dataset.tab);
+});
+
+function buildButtons(){
+  actionsEl.innerHTML = '';
+  const tools = [
+    ['plant-wheat','Weizen','wheat'],
+    ['plant-corn','Mais','wheat'],
+    ['plant-carrot','Karotte','carrot'],
+    ['robot','Roboter','bot'],
+    ['storage','Lager','warehouse'],
+    ['farm','Feld','sprout'],
+    ['dock','Dock','anchor'],
+    ['conveyor','Förderband','move-horizontal'],
+  ];
+  for(const [id,label,icon] of tools){
+    const b = document.createElement('button');
+    b.innerHTML = `<i data-lucide="${icon}" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"></i>${label}`;
+    b.className = id === state.selected ? 'sel' : '';
+    b.onclick = () => { state.selected = id; buildButtons(); };
+    actionsEl.appendChild(b);
+  }
+  const auto = document.createElement('button');
+  auto.innerHTML = `<i data-lucide="${state.autoPlant?'zap':'zap-off'}" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px"></i>Auto ${state.autoPlant?'an':'aus'}`;
+  auto.onclick = () => { state.autoPlant = !state.autoPlant; buildButtons(); };
+  actionsEl.appendChild(auto);
+  refreshIcons();
+}
+
+/* ---- Start menu wiring ---- */
+uiEls.btnNewGame.onclick = () => {
+  localStorage.removeItem(SAVE_KEY);
+  state.inv = new Inventory();
+  state.robots = [];
+  state.tech = {robotSpeed:0,yieldBoost:0,harvestRadius:0,routeSlots:0,automation:0};
+  state.selected = 'plant-wheat';
+  state.camera = {x:0,y:0,zoom:1};
+  state.tick = 0;
+  state.autoPlant = true;
+  state.grid.tiles = new Uint8Array(W*H);
+  state.grid.crop = Array(W*H).fill(null);
+  state.grid.building = Array(W*H).fill(null);
+  placeInitial();
+  showGameUI(true);
+  openStart(false);
+  buildButtons();
+  save();
+};
+
+uiEls.btnContinue.onclick = () => {
+  if(!localStorage.getItem(SAVE_KEY)) return;
+  load();
+  showGameUI(true);
+  openStart(false);
+  buildButtons();
+};
+
+uiEls.btnSettings.onclick = () => openSettings(true);
+uiEls.btnCloseSettings.onclick = () => openSettings(false);
+uiEls.btnWipe.onclick = () => {
+  localStorage.removeItem(SAVE_KEY);
+  uiEls.btnContinue.disabled = true;
+  log('Spielstand gelöscht');
+};
+uiEls.btnOpenShop.onclick = () => toggleShop(true);
+uiEls.closeShop.onclick = () => toggleShop(false);
+uiEls.btnOpenMenu.onclick = () => { showGameUI(false); openStart(true); };
+
+/* boot */
+showGameUI(false);
+openStart(true);
+buildButtons();
+refreshIcons();
+setInterval(() => { if(!state.paused) save(); }, 5000);
+requestAnimationFrame(loop);
