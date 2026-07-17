@@ -34,8 +34,8 @@
     {
       "index": 6,
       "name": "Crossy Road",
-      "icon": "games/crossy-road/icon.jpeg",
-      "path": "games/crossy-road/index.html",
+      "icon": "games/Crossy-road/icon.jpeg",
+      "path": "games/Crossy-road/index.html",
       "patchlogs": []
     },
     {
