@@ -47,6 +47,83 @@ async function apiPost(path, body) {
   return json;
 }
 
+
+// ── Ban Check ──────────────────────────────────────────────────────────────
+async function checkBan(type, id) {
+  const res = await fetch(`${GAMEBOX_API}/api/system/ban-check?type=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`);
+  let data = null;
+  try { data = await res.json(); } catch { data = {}; }
+  if (!res.ok) throw new Error((data && (data.error || data.message)) || res.statusText);
+  return data;
+}
+
+function showBanBlock(ban) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.overlay').forEach(o => o.classList.remove('show'));
+
+  let overlay = document.getElementById('ban-block-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'ban-block-overlay';
+    overlay.className = 'overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.zIndex = '99999';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.innerHTML = `
+      <div class="confirm-box" style="max-width:340px;text-align:center;">
+        <h3 id="ban-block-title">Zugriff gesperrt</h3>
+        <p id="ban-block-text"></p>
+        <div class="confirm-row">
+          <button class="btn btn-danger" id="ban-block-logout">Ausloggen</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    document.getElementById('ban-block-logout').addEventListener('click', async () => {
+      await dbSet('account_id', undefined);
+      await dbSet('account_key', undefined);
+      await dbSet('account_username', undefined);
+      location.reload();
+    });
+  }
+
+  const text = ban.status === 'timeban'
+    ? `Du bist noch ${ban.length_hours ?? '?'}h gebannt${ban.reason ? ' (Grund: ' + ban.reason + ')' : ''}. Bis: ${ban.banned_until ?? '-'}`
+    : `Du bist dauerhaft gebannt${ban.reason ? ' (Grund: ' + ban.reason + ')' : ''}.`;
+  document.getElementById('ban-block-text').textContent = text;
+  overlay.classList.add('show');
+  overlay.style.display = 'flex';
+}
+
+function hideBanBlock() {
+  const overlay = document.getElementById('ban-block-overlay');
+  if (overlay) {
+    overlay.classList.remove('show');
+    overlay.style.display = 'none';
+  }
+}
+
+// Returns { blocked: bool, ban? } and shows a full-screen lock if banned.
+async function enforceBanForAuth(auth) {
+  if (!auth) return { blocked: false };
+  const banId = auth.type === 'account' ? auth.account_id : auth.console_key;
+  let ban;
+  try {
+    ban = await checkBan(auth.type, banId);
+  } catch (err) {
+    console.error('Ban-check request failed:', err);
+    return { blocked: false }; // fail-open on network errors, backend still enforces
+  }
+  if (ban.status === 'allowed') {
+    hideBanBlock();
+    return { blocked: false };
+  }
+  showBanBlock(ban);
+  return { blocked: true, ban };
+}
+
 async function registerConsole(label) {
   const data = await apiPost('/api/console/register', { label });
   await dbSet('console_id', data.console_id);
@@ -216,6 +293,11 @@ async function finishSetup(username, password) {
     }
     // 'skip' → only console_key
 
+    const banResult = await enforceBanForAuth(await getAuth());
+    if (banResult.blocked) {
+      return;
+    }
+
     await dbSet('consoleName', consoleName);
     await dbSet('theme', dark ? 'dark' : 'light');
     await dbSet('setupDone', true);
@@ -267,6 +349,8 @@ document.getElementById('btn-settings-account-login').addEventListener('click', 
   setSettingsAccountError(null);
   try {
     const data = await loginAccount(username, password);
+    const banResult = await enforceBanForAuth(await getAuth());
+    if (banResult.blocked) return;
     await updateSettingsAccountUI();
     const consoleName = await dbGet('consoleName');
     document.getElementById('home-meta-label').textContent = data.username + '  \u00b7  ' + consoleName;
@@ -290,6 +374,8 @@ document.getElementById('btn-settings-account-register').addEventListener('click
   setSettingsAccountError(null);
   try {
     const data = await registerAccount(username, password);
+    const banResult = await enforceBanForAuth(await getAuth());
+    if (banResult.blocked) return;
     await updateSettingsAccountUI();
     const consoleName = await dbGet('consoleName');
     document.getElementById('home-meta-label').textContent = data.username + '  \u00b7  ' + consoleName;
@@ -388,7 +474,9 @@ document.getElementById('patchlog-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('patchlog-overlay'))
     document.getElementById('patchlog-overlay').classList.remove('show');
 });
-function launchGame(game) {
+async function launchGame(game) {
+  const banResult = await enforceBanForAuth(await getAuth());
+  if (banResult.blocked) return;
   document.getElementById('game-frame').src = BASE + game.path;
   show('screen-runner');
 }
@@ -459,7 +547,13 @@ async function afterLoad() {
     return;
   }
   if (theme) applyTheme(theme === 'dark');
+
   if (done) {
+    // Ban-Check direkt beim Start, bevor der Home-Screen sichtbar wird
+    const auth = await getAuth();
+    const banResult = await enforceBanForAuth(auth);
+    if (banResult.blocked) return;
+
     const displayName = account_username || 'Gast';
     await goHome(displayName, consoleName || 'My Game-Box');
   } else {
