@@ -45,5 +45,12 @@
       "path": "games/tto/index.html",
       "patchlogs": []
     }
+    {
+      "index": 100,
+      "name": " 1 Month Fest",
+      "icon": "games/fest/1month.html",
+      "path": "games/breakout-404/index.html",
+      "patchlogs": []
+    }
   ]
 }
