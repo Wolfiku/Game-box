@@ -48,8 +48,8 @@
     {
       "index": 100,
       "name": " 1 Month Fest",
-      "icon": "games/fest/1month.html",
-      "path": "games/breakout-404/index.html",
+      "icon": "games/fest/1month.jpeg",
+      "path": "games/fest/1month.html",
       "patchlogs": []
     }
   ]
