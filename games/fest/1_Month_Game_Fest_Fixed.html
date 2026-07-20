@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1 Month Game Fest</title>
+<style>
+    :root {
+        --bg: #1e1e24;
+        --panel: #2b2b36;
+        --accent: #00d2d3;
+        --accent2: #ff9f43;
+        --text: #f5f6fa;
+        --danger: #ff4757;
+        --radius: 8px;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        user-select: none;
+    }
+
+    .screen {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(30, 30, 36, 0.9);
+        z-index: 10;
+    }
+    .screen.active { display: flex; }
+
+    /* Canvas styling */
+    #game-container {
+        position: relative;
+        display: none;
+        border: 2px solid #3d3d4e;
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: #111;
+        z-index: 5;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    canvas { display: block; }
+    
+    #hud {
+        position: absolute;
+        top: 15px; left: 15px;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text);
+        pointer-events: none;
+        z-index: 20;
+    }
+
+    /* Typography */
+    h1 {
+        font-size: clamp(2.5rem, 6vw, 4rem);
+        color: var(--text);
+        text-align: center;
+        margin-bottom: 10px;
+        font-weight: 800;
+    }
+    h2 {
+        font-size: 2rem;
+        color: var(--text);
+        margin-bottom: 25px;
+        text-align: center;
+    }
+    p { font-size: 1.1rem; line-height: 1.6; color: #a4b0be; margin-bottom: 15px; text-align: center; max-width: 600px; }
+
+    /* Inputs & Buttons */
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        max-width: 300px;
+        margin-top: 20px;
+    }
+
+    button {
+        background: var(--accent);
+        border: none;
+        color: #111;
+        font-family: inherit;
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding: 14px 20px;
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: background 0.2s, transform 0.1s;
+    }
+    button:hover:not(:disabled) {
+        background: #00e0e0;
+    }
+    button:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+    button.sec {
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid #4b4b5c;
+    }
+    button.sec:hover:not(:disabled) {
+        background: #3a3a47;
+    }
+    
+    button:disabled {
+        background: #4b4b5c;
+        color: #7b838f;
+        cursor: not-allowed;
+        border-color: #3d3d4e;
+    }
+
+    /* Modals / Boxes */
+    .box {
+        background: var(--panel);
+        border: 1px solid #3d3d4e;
+        padding: 40px;
+        border-radius: var(--radius);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 90%;
+        width: 500px;
+    }
+
+    /* Leaderboard */
+    .lb-list {
+        width: 100%;
+        max-height: 350px;
+        overflow-y: auto;
+        margin-bottom: 25px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-right: 10px;
+    }
+    .lb-list::-webkit-scrollbar { width: 8px; }
+    .lb-list::-webkit-scrollbar-track { background: var(--bg); border-radius: 4px; }
+    .lb-list::-webkit-scrollbar-thumb { background: #4b4b5c; border-radius: 4px; }
+
+    .lb-entry {
+        display: flex;
+        justify-content: space-between;
+        background: #353542;
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-size: 1.05rem;
+    }
+    .lb-rank { color: var(--accent2); font-weight: 700; width: 40px; }
+    .lb-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+    .lb-score { color: var(--accent); font-weight: 700; text-align: right; }
+
+    /* Info Screen specials */
+    .countdown-box {
+        background: var(--bg);
+        padding: 20px;
+        border-radius: var(--radius);
+        margin: 20px 0;
+        width: 100%;
+        border: 1px solid #3d3d4e;
+    }
+    .timer {
+        font-size: 2rem;
+        color: var(--accent);
+        text-align: center;
+        font-weight: 700;
+        margin-top: 5px;
+        font-variant-numeric: tabular-nums;
+    }
+    
+    .event-list {
+        text-align: left;
+        margin-top: 15px;
+        list-style: none;
+        color: var(--text);
+        width: 100%;
+    }
+    .event-list li {
+        margin-bottom: 10px;
+        padding-left: 20px;
+        position: relative;
+    }
+    .event-list li::before {
+        content: '•';
+        position: absolute;
+        left: 0;
+        color: var(--accent);
+        font-size: 1.2rem;
+        line-height: 1;
+    }
+
+    #user-greeting {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--accent2);
+        margin-bottom: 15px;
+    }
+</style>
+</head>
+<body>
+
+    <!-- Start Menu -->
+    <div id="start-screen" class="screen active">
+        <h1>1 Month<br>Game Fest</h1>
+        <div id="user-greeting" style="color: #ff4757;">Prüfe Account...</div>
+        <p>1 Monat GameBox. Weiche den Bällen aus. Je länger du überlebst, desto schwieriger wird es!</p>
+        
+        <div class="btn-group">
+            <button id="btn-play" disabled>Laden...</button>
+            <button id="btn-lb" class="sec">Rangliste</button>
+            <button id="btn-info" class="sec">Informationen</button>
+        </div>
+    </div>
+
+    <!-- Info Screen -->
+    <div id="info-screen" class="screen">
+        <div class="box">
+            <h2>GameFest Event</h2>
+            <p>Zur Feier von "1 Monat Game Box" startet das große GameFest (1 Woche)!</p>
+            
+            <div class="countdown-box">
+                <div style="font-size: 0.9rem; color: #a4b0be; text-align: center; text-transform: uppercase; font-weight: 600;">Das Event startet in:</div>
+                <div id="timer" class="timer">Laden...</div>
+            </div>
+
+            <ul class="event-list">
+                <li><b>Datum:</b> 24. Juli 2026 um 08:30 Uhr</li>
+                <li><b>Anlass:</b> GameBox wird 1 Monat alt!</li>
+                <li><b>Release 1:</b> Lonely Tower Update</li>
+                <li><b>Release 2:</b> Ein neues Secret Game</li>
+            </ul>
+
+            <button class="sec" style="margin-top: 25px; width: 100%;" onclick="showScreen('start-screen')">Zurück zum Menü</button>
+        </div>
+    </div>
+
+    <!-- Leaderboard Screen -->
+    <div id="lb-screen" class="screen">
+        <div class="box">
+            <h2>Rangliste</h2>
+            <div id="lb-content" class="lb-list">
+                <div style="text-align:center; padding: 20px;">Lade Rangliste...</div>
+            </div>
+            <button class="sec" style="width: 100%;" onclick="showScreen('start-screen')">Zurück</button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-container">
+        <div id="hud">0.00 s</div>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen">
+        <div class="box">
+            <h2 style="color: var(--danger); font-size: 2.5rem; margin-bottom: 10px;">Zerstört!</h2>
+            <p style="font-size: 1.2rem; color: var(--text);">Überlebt: <span id="go-score" style="color: var(--accent); font-weight: 700;"></span></p>
+            <p id="go-status" style="font-size: 0.95rem; color: #a4b0be; margin-bottom: 25px;">Speichere Score...</p>
+            
+            <div class="btn-group" style="width: 100%;">
+                <button id="btn-restart">Nochmal spielen</button>
+                <button class="sec" onclick="showScreen('start-screen')">Hauptmenü</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- GAMEBOX BACKEND INTEGRATION ---
+    const GB_API = 'https://gameboxsaves.db.scoodol.de';
+    const GAME_ID = '1monthfest';
+    const BOARD_KEY = 'survival';
+
+    let globalUsername = 'Gast';
+    let gbAuthPromise = null;
+
+    // Funktion um den Username vom Parent iframe zu lesen
+    const parentDbGet = key => new Promise(res => {
+        const id = 'gbg_' + Math.random().toString(36).slice(2);
+        const h = e => {
+            if (e.data && e.data.__gbRes === id) {
+                window.removeEventListener('message', h);
+                res(e.data.value);
+            }
+        };
+        window.addEventListener('message', h);
+        window.parent.postMessage({ __gbGet: key, __gbReqId: id }, '*');
+        setTimeout(() => { window.removeEventListener('message', h); res(null); }, 1500);
+    });
+
+    async function gbAuth() {
+        if(gbAuthPromise) return gbAuthPromise;
+        gbAuthPromise = (async () => {
+            try {
+                const [account_id, account_key, console_key, username] = await Promise.all([
+                    parentDbGet('account_id'), parentDbGet('account_key'),
+                    parentDbGet('console_key'), parentDbGet('account_username')
+                ]);
+                
+                let finalConsoleKey = console_key;
+                
+                // Fallback Registrierung (Wird im Hintergrund gemacht, 
+                // aber der Nutzer bleibt als 'Gast' eingestuft, wenn er keinen Account hat)
+                if (!account_id && !finalConsoleKey) {
+                    let localKey = localStorage.getItem('1month_console_key_normal');
+                    if(localKey) {
+                        finalConsoleKey = localKey;
+                    } else {
+                        const res = await fetch(GB_API + '/api/console/register', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ label: '1MonthFest-Normal' })
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            finalConsoleKey = data.console_key;
+                            localStorage.setItem('1month_console_key_normal', finalConsoleKey);
+                        }
+                    }
+                }
+
+                globalUsername = username || 'Gast';
+                
+                const btnPlay = document.getElementById('btn-play');
+                const userGreeting = document.getElementById('user-greeting');
+                
+                if (globalUsername === 'Gast') {
+                    userGreeting.innerText = `Bitte melde dich bei GameBox an!`;
+                    userGreeting.style.color = 'var(--danger)';
+                    btnPlay.disabled = true;
+                    btnPlay.innerText = 'Anmeldung nötig';
+                } else {
+                    userGreeting.innerText = `Eingeloggt als: ${globalUsername}`;
+                    userGreeting.style.color = 'var(--accent2)';
+                    btnPlay.disabled = false;
+                    btnPlay.innerText = 'Spielen';
+                }
+
+                return { account_id, account_key, console_key: finalConsoleKey, username: globalUsername };
+            } catch (e) {
+                globalUsername = 'Gast';
+                document.getElementById('user-greeting').innerText = `Fehler beim Account abrufen.`;
+                document.getElementById('user-greeting').style.color = 'var(--danger)';
+                document.getElementById('btn-play').disabled = true;
+                document.getElementById('btn-play').innerText = 'Anmeldung nötig';
+                return { username: 'Gast' };
+            }
+        })();
+        return gbAuthPromise;
+    }
+
+    async function gbEnsureBoard() {
+        try {
+            await fetch(GB_API + '/api/leaderboard/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    game_id: GAME_ID, 
+                    board_key: BOARD_KEY, 
+                    label: 'Survival Time (ms)', 
+                    sort_order: 'DESC' 
+                })
+            });
+        } catch (e) {}
+    }
+
+    async function submitScore(scoreMs) {
+        document.getElementById('go-status').innerText = "Speichere Score...";
+        const auth = await gbAuth();
+        
+        // Wenn der Nutzer ein Gast ist, wird der Score nicht gespeichert.
+        if (auth.username === 'Gast') {
+            document.getElementById('go-status').innerText = "Gast-Score wird nicht gespeichert.";
+            return;
+        }
+
+        let body = {
+            game_id: GAME_ID,
+            board_key: BOARD_KEY,
+            score: Math.floor(scoreMs),
+            username: auth.username
+        };
+
+        if (auth.account_id && auth.account_key) {
+            body.account_id = auth.account_id;
+            body.account_key = auth.account_key;
+        } else if (auth.console_key) {
+            body.console_key = auth.console_key;
+        } else {
+            document.getElementById('go-status').innerText = "Fehler: Keine Identität gefunden.";
+            return;
+        }
+        
+        try {
+            const res = await fetch(GB_API + '/api/leaderboard/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if(res.ok) {
+                document.getElementById('go-status').innerText = "Score erfolgreich gespeichert.";
+            } else {
+                document.getElementById('go-status').innerText = "Fehler beim Speichern.";
+            }
+        } catch (e) {
+            document.getElementById('go-status').innerText = "Offline - Score nicht gespeichert.";
+        }
+    }
+
+    async function loadLeaderboard() {
+        const list = document.getElementById('lb-content');
+        list.innerHTML = '<div style="text-align:center; padding: 20px;">Lade Rangliste...</div>';
+        
+        try {
+            const res = await fetch(GB_API + `/api/leaderboard/${GAME_ID}/${BOARD_KEY}/top?limit=15`);
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            
+            if (!data.entries || data.entries.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding: 20px;">Noch keine Einträge.</div>';
+                return;
+            }
+            
+            list.innerHTML = data.entries.map((e, i) => {
+                let timeStr = (e.score / 100).toFixed(2) + ' s';
+                return `<div class="lb-entry">
+                    <div class="lb-rank">#${i + 1}</div>
+                    <div class="lb-name">${e.username}</div>
+                    <div class="lb-score">${timeStr}</div>
+                </div>`;
+            }).join('');
+            
+        } catch (e) {
+            list.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--danger);">Verbindung fehlgeschlagen.</div>';
+        }
+    }
+
+    gbAuth().then(gbEnsureBoard);
+
+    // --- UI LOGIC ---
+    function showScreen(id) {
+        // Play Button Klick als Gast blockieren
+        if (id === 'game' && globalUsername === 'Gast') {
+            alert('Bitte melde dich bei GameBox an, um am GameFest teilzunehmen!');
+            return;
+        }
+
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('game-container').style.display = 'none';
+        
+        if (id === 'game') {
+            document.getElementById('game-container').style.display = 'block';
+            startGame();
+        } else {
+            document.getElementById(id).classList.add('active');
+            if (id === 'lb-screen') loadLeaderboard();
+        }
+    }
+
+    document.getElementById('btn-play').onclick = () => showScreen('game');
+    document.getElementById('btn-restart').onclick = () => showScreen('game');
+    document.getElementById('btn-lb').onclick = () => showScreen('lb-screen');
+    document.getElementById('btn-info').onclick = () => showScreen('info-screen');
+
+    // --- COUNTDOWN LOGIC ---
+    function updateCountdown() {
+        const target = new Date('2026-07-24T08:30:00+02:00').getTime();
+        const now = Date.now();
+        const diff = target - now;
+        
+        const timerEl = document.getElementById('timer');
+        if (diff <= 0) {
+            timerEl.innerText = "EVENT IST LIVE!";
+            timerEl.style.color = "var(--danger)";
+            return;
+        }
+        
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const m = Math.floor((diff / 1000 / 60) % 60);
+        const s = Math.floor((diff / 1000) % 60);
+        
+        timerEl.innerText = `${d}d ${h.toString().padStart(2,'0')}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
+    }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    // --- MINIGAME LOGIC (NORMAL STYLE) ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const hud = document.getElementById('hud');
+
+    // Bunte Farben für die Gegner, aber normales Gameplay
+    const colors = ['#ff4757', '#ffa502', '#2ed573', '#1e90ff', '#9b59b6', '#ff6b81', '#1dd1a1'];
+
+    function resizeCanvas() {
+        const maxWidth = Math.min(800, window.innerWidth - 40);
+        const maxHeight = Math.min(600, window.innerHeight - 40);
+        canvas.width = maxWidth;
+        canvas.height = maxHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let isRunning = false;
+    let animFrame = null;
+    let lastTime = 0;
+    
+    let score = 0;
+    let difficulty = 1;
+    let spawnTimer = 0;
+
+    let player = { x: canvas.width/2, y: canvas.height/2, size: 10, color: '#00d2d3' };
+    let attacks = [];
+    let particles = [];
+    
+    let targetX = canvas.width / 2;
+    let targetY = canvas.height / 2;
+    
+    function setTarget(e) {
+        if (!isRunning) return;
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        let clientX = e.clientX;
+        let clientY = e.clientY;
+        
+        if(e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        }
+        
+        targetX = clientX - rect.left;
+        targetY = clientY - rect.top;
+    }
+    
+    canvas.addEventListener('mousemove', setTarget);
+    canvas.addEventListener('touchmove', setTarget, {passive: false});
+    canvas.addEventListener('touchstart', setTarget, {passive: false});
+
+    function spawnAttack() {
+        const side = Math.floor(Math.random() * 4); 
+        let px, py, vx, vy;
+        
+        const speed = (200 + Math.random() * 150) * Math.pow(difficulty, 0.4); 
+        const sz = 6 + Math.random() * 10;
+        
+        const dx = player.x - (side === 2 ? 0 : side === 3 ? canvas.width : Math.random() * canvas.width);
+        const dy = player.y - (side === 0 ? 0 : side === 1 ? canvas.height : Math.random() * canvas.height);
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const homingX = (dx / dist) * speed;
+        const homingY = (dy / dist) * speed;
+
+        if (side === 0) { 
+            px = Math.random() * canvas.width; py = -20;
+            vx = (Math.random() - 0.5) * speed * 0.5 + homingX * 0.6; 
+            vy = Math.abs(homingY || speed);
+        } else if (side === 1) { 
+            px = Math.random() * canvas.width; py = canvas.height + 20;
+            vx = (Math.random() - 0.5) * speed * 0.5 + homingX * 0.6;
+            vy = -Math.abs(homingY || speed);
+        } else if (side === 2) { 
+            px = -20; py = Math.random() * canvas.height;
+            vx = Math.abs(homingX || speed);
+            vy = (Math.random() - 0.5) * speed * 0.5 + homingY * 0.6;
+        } else { 
+            px = canvas.width + 20; py = Math.random() * canvas.height;
+            vx = -Math.abs(homingX || speed);
+            vy = (Math.random() - 0.5) * speed * 0.5 + homingY * 0.6;
+        }
+        
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        attacks.push({ x: px, y: py, vx: vx, vy: vy, size: sz, color: color });
+    }
+
+    function spawnExplosion(x, y, color) {
+        for(let i=0; i<30; i++) {
+            particles.push({
+                x: x, y: y,
+                vx: (Math.random() - 0.5) * 400,
+                vy: (Math.random() - 0.5) * 400,
+                life: 0.5 + Math.random() * 0.5,
+                maxLife: 1.0,
+                color: color,
+                size: 2 + Math.random() * 3
+            });
+        }
+    }
+
+    function startGame() {
+        resizeCanvas();
+        targetX = canvas.width / 2;
+        targetY = canvas.height / 2;
+        player = { x: targetX, y: targetY, size: 10, color: '#00d2d3' };
+        attacks = [];
+        particles = [];
+        score = 0;
+        difficulty = 1;
+        spawnTimer = 0;
+        lastTime = performance.now();
+        isRunning = true;
+        
+        document.getElementById('hud').innerText = "0.00 s";
+        
+        if (animFrame) cancelAnimationFrame(animFrame);
+        animFrame = requestAnimationFrame(gameLoop);
+    }
+
+    function gameOver() {
+        isRunning = false;
+        if (animFrame) cancelAnimationFrame(animFrame);
+        
+        spawnExplosion(player.x, player.y, player.color);
+        
+        let goScore = (score).toFixed(2) + ' s';
+        document.getElementById('go-score').innerText = goScore;
+        
+        setTimeout(() => {
+            document.getElementById('game-container').style.display = 'none';
+            document.getElementById('game-over-screen').classList.add('active');
+            submitScore(score * 100);
+        }, 1200);
+        
+        let explFrame = null;
+        let lt = performance.now();
+        
+        // Normale Partikel Explosion (keine Konfetti-Schwerkraft)
+        function renderExplosion(t) {
+            let dt = (t - lt) / 1000;
+            lt = t;
+            
+            ctx.fillStyle = 'rgba(17, 17, 17, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx * dt; p.y += p.vy * dt;
+                
+                p.life -= dt;
+                if (p.life <= 0) { particles.splice(i, 1); continue; }
+                
+                ctx.globalAlpha = p.life / p.maxLife;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+            if (particles.length > 0) explFrame = requestAnimationFrame(renderExplosion);
+        }
+        explFrame = requestAnimationFrame(renderExplosion);
+    }
+
+    function gameLoop(timestamp) {
+        if (!isRunning) return;
+        
+        let dt = (timestamp - lastTime) / 1000; 
+        if (dt > 0.1) dt = 0.1; 
+        lastTime = timestamp;
+
+        score += dt;
+        hud.innerText = score.toFixed(2) + ' s';
+        
+        difficulty = 1 + (score * 0.15); 
+        
+        spawnTimer -= dt;
+        let currentSpawnInterval = 0.45 / Math.pow(difficulty, 0.7); 
+        if (spawnTimer <= 0) {
+            let count = Math.floor(difficulty);
+            for(let i=0; i<count; i++) spawnAttack();
+            spawnTimer = currentSpawnInterval;
+        }
+
+        player.x += (targetX - player.x) * 15 * dt;
+        player.y += (targetY - player.y) * 15 * dt;
+        
+        player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
+        player.y = Math.max(player.size, Math.min(canvas.height - player.size, player.y));
+
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Player (Normale Form)
+        ctx.fillStyle = player.color;
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Update and Draw Attacks
+        for (let i = attacks.length - 1; i >= 0; i--) {
+            let a = attacks[i];
+            a.x += a.vx * dt;
+            a.y += a.vy * dt;
+
+            // Draw Attack (Normaler bunter Kreis)
+            ctx.fillStyle = a.color;
+            ctx.beginPath();
+            ctx.arc(a.x, a.y, a.size, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Collision check 
+            let dx = player.x - a.x;
+            let dy = player.y - a.y;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < player.size + a.size - 2) { 
+                gameOver();
+                return;
+            }
+
+            if (a.x < -100 || a.x > canvas.width + 100 || a.y < -100 || a.y > canvas.height + 100) {
+                attacks.splice(i, 1);
+            }
+        }
+        
+        if (isRunning) animFrame = requestAnimationFrame(gameLoop);
+    }
+</script>
+</body>
+</html>
