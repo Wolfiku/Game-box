@@ -106,15 +106,14 @@ function hideBanBlock() {
 }
 
 // Returns { blocked: bool, ban? } and shows a full-screen lock if banned.
-async function enforceBanForAuth(auth) {
-  if (!auth) return { blocked: false };
-  const banId = auth.type === 'account' ? auth.account_id : auth.console_key;
+async function enforceBanForIdentity(identity) {
+  if (!identity) return { blocked: false };
   let ban;
   try {
-    ban = await checkBan(auth.type, banId);
+    ban = await checkBan(identity.type, identity.id);
   } catch (err) {
     console.error('Ban-check request failed:', err);
-    return { blocked: false }; // fail-open on network errors, backend still enforces
+    return { blocked: false, error: err }; // fail-open on network errors
   }
   if (ban.status === 'allowed') {
     hideBanBlock();
@@ -148,12 +147,12 @@ async function loginAccount(username, password) {
 }
 
 // Get current auth object for API calls
-async function getAuth() {
-  const [account_id, account_key, console_key] = await Promise.all([
-    dbGet('account_id'), dbGet('account_key'), dbGet('console_key')
+async function getBanIdentity() {
+  const [account_id, console_id] = await Promise.all([
+    dbGet('account_id'), dbGet('console_id')
   ]);
-  if (account_id && account_key) return { type: 'account', account_id, account_key };
-  if (console_key) return { type: 'console', console_key };
+  if (account_id) return { type: 'account', id: account_id };
+  if (console_id) return { type: 'console', id: console_id };
   return null;
 }
 
@@ -293,7 +292,7 @@ async function finishSetup(username, password) {
     }
     // 'skip' → only console_key
 
-    const banResult = await enforceBanForAuth(await getAuth());
+    const banResult = await enforceBanForIdentity(await getBanIdentity());
     if (banResult.blocked) {
       return;
     }
@@ -349,7 +348,13 @@ document.getElementById('btn-settings-account-login').addEventListener('click', 
   setSettingsAccountError(null);
   try {
     const data = await loginAccount(username, password);
-    const banResult = await enforceBanForAuth(await getAuth());
+    const banResult = await enforceBanForIdentity(await getBanIdentity());
+    if (banResult.blocked) return;
+    const identity = await getBanIdentity();
+    const banResult = await enforceBanForIdentity(identity);
+    if (banResult.blocked) return;
+    const identity = await getBanIdentity();
+    const banResult = await enforceBanForIdentity(identity);
     if (banResult.blocked) return;
     await updateSettingsAccountUI();
     const consoleName = await dbGet('consoleName');
@@ -374,7 +379,13 @@ document.getElementById('btn-settings-account-register').addEventListener('click
   setSettingsAccountError(null);
   try {
     const data = await registerAccount(username, password);
-    const banResult = await enforceBanForAuth(await getAuth());
+    const banResult = await enforceBanForIdentity(await getBanIdentity());
+    if (banResult.blocked) return;
+    const identity = await getBanIdentity();
+    const banResult = await enforceBanForIdentity(identity);
+    if (banResult.blocked) return;
+    const identity = await getBanIdentity();
+    const banResult = await enforceBanForIdentity(identity);
     if (banResult.blocked) return;
     await updateSettingsAccountUI();
     const consoleName = await dbGet('consoleName');
@@ -475,7 +486,7 @@ document.getElementById('patchlog-overlay').addEventListener('click', e => {
     document.getElementById('patchlog-overlay').classList.remove('show');
 });
 async function launchGame(game) {
-  const banResult = await enforceBanForAuth(await getAuth());
+  const banResult = await enforceBanForIdentity(await getBanIdentity());
   if (banResult.blocked) return;
   document.getElementById('game-frame').src = BASE + game.path;
   show('screen-runner');
@@ -550,8 +561,8 @@ async function afterLoad() {
 
   if (done) {
     // Ban-Check direkt beim Start, bevor der Home-Screen sichtbar wird
-    const auth = await getAuth();
-    const banResult = await enforceBanForAuth(auth);
+    const identity = await getBanIdentity();
+    const banResult = await enforceBanForIdentity(identity);
     if (banResult.blocked) return;
 
     const displayName = account_username || 'Gast';
@@ -564,6 +575,13 @@ async function afterLoad() {
 
 async function boot() {
   db = await openDB();
+
+  const auth = await getAuth();
+  if (auth) {
+    const banResult = await enforceBanForAuth(auth);
+    if (banResult.blocked) return;
+  }
+
   const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   if (!isPWA) { show('screen-nopwa'); return; }
   const storageAsked = await dbGet('storageAsked');
