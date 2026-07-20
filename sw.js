@@ -2,7 +2,7 @@
 // Cache version = build timestamp — changes with EVERY commit so the browser
 // always detects a new SW and triggers the update flow.
 
-const CACHE = 'gamebox-20260717_2004';
+const CACHE = 'gamebox-20260720_0541';
 
 const BASE = self.location.pathname.replace(/sw\.js$/, '');
 
