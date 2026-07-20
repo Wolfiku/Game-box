@@ -348,11 +348,6 @@ document.getElementById('btn-settings-account-login').addEventListener('click', 
   setSettingsAccountError(null);
   try {
     const data = await loginAccount(username, password);
-    const banResult = await enforceBanForIdentity(await getBanIdentity());
-    if (banResult.blocked) return;
-    const identity = await getBanIdentity();
-    const banResult = await enforceBanForIdentity(identity);
-    if (banResult.blocked) return;
     const identity = await getBanIdentity();
     const banResult = await enforceBanForIdentity(identity);
     if (banResult.blocked) return;
@@ -379,11 +374,6 @@ document.getElementById('btn-settings-account-register').addEventListener('click
   setSettingsAccountError(null);
   try {
     const data = await registerAccount(username, password);
-    const banResult = await enforceBanForIdentity(await getBanIdentity());
-    if (banResult.blocked) return;
-    const identity = await getBanIdentity();
-    const banResult = await enforceBanForIdentity(identity);
-    if (banResult.blocked) return;
     const identity = await getBanIdentity();
     const banResult = await enforceBanForIdentity(identity);
     if (banResult.blocked) return;
@@ -576,9 +566,9 @@ async function afterLoad() {
 async function boot() {
   db = await openDB();
 
-  const auth = await getAuth();
-  if (auth) {
-    const banResult = await enforceBanForAuth(auth);
+  const identity = await getBanIdentity();
+  if (identity) {
+    const banResult = await enforceBanForIdentity(identity);
     if (banResult.blocked) return;
   }
 
