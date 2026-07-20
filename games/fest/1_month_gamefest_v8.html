@@ -1,64 +1,83 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>1 Month Game Fest v8</title>
-<style>
-:root{--bg:#08101b;--panel:#11192a;--accent:#ff4d7d;--accent2:#3fd7ff;--gold:#ffd24a;--text:#eef2ff;--muted:#91a0c7}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent} html,body{margin:0;height:100%;overflow:hidden;background:radial-gradient(circle at 50% 0%,#1b2441,var(--bg) 60%);color:var(--text);font-family:Segoe UI,Roboto,Arial,sans-serif;user-select:none;touch-action:none}
-#app{position:relative;width:100vw;height:100vh}
-.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;text-align:center;animation:fade .25s ease}.hidden{display:none!important}@keyframes fade{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
-.icon{display:inline-block;min-width:1em;color:var(--gold);font-weight:900}
-h1.title{font-size:clamp(30px,7vw,58px);margin:0;letter-spacing:1px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:900;filter:drop-shadow(0 0 16px rgba(255,77,125,.3))}
-.subtitle{color:var(--muted);font-size:clamp(13px,2.6vw,17px);max-width:560px;margin-top:-8px}
-.badge{display:inline-block;padding:6px 14px;border-radius:999px;background:rgba(63,215,255,.12);border:1px solid rgba(63,215,255,.35);color:var(--accent2);font-size:13px;font-weight:700}
-.menu-btn,.small-btn{width:min(340px,80vw);padding:15px 18px;border-radius:14px;border:none;cursor:pointer;font-weight:800;font-size:18px;transition:.15s;box-shadow:0 4px 0 rgba(0,0,0,.25)}
-.menu-btn:active,.small-btn:active{transform:translateY(3px);box-shadow:none}.primary{background:linear-gradient(135deg,var(--accent),#c51d57);color:#fff}.secondary{background:linear-gradient(135deg,var(--accent2),#1d89a9);color:#031c24}.ghost{background:transparent;border:1px solid rgba(255,255,255,.15);color:var(--muted);box-shadow:none}
-.panel-box{width:min(620px,92vw);max-height:78vh;overflow:auto;background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:22px 24px}
-.panel-box h2{margin-top:0;color:var(--gold);font-size:22px}.panel-box p{line-height:1.52;font-size:15px;text-align:left}.muted{color:var(--muted)}
-#countdownBox{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}.cd-unit{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;min-width:64px}.cd-unit .num{font-size:26px;font-weight:900;color:var(--accent2);display:block}.cd-unit .lbl{font-size:11px;color:var(--muted);letter-spacing:.5px}
-.event-list{text-align:left;list-style:none;padding:0;margin:10px 0}.event-list li{padding:10px 0;border-bottom:1px dashed rgba(255,255,255,.08);font-size:14.5px}.event-list li .tag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:6px;background:rgba(255,210,74,.15);color:var(--gold);font-size:11px;font-weight:800}
-table.lb{width:100%;border-collapse:collapse;font-size:14px}table.lb th{text-align:left;color:var(--muted);font-size:12px;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.12)}table.lb td{padding:8px;border-bottom:1px solid rgba(255,255,255,.05)}table.lb tr:first-child td{color:var(--gold);font-weight:900}table.lb tr:nth-child(2) td{color:#dce5ff;font-weight:800}table.lb tr:nth-child(3) td{color:#ddb07d;font-weight:800}
-.name-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}.name-row input{padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#0d1220;color:var(--text);font-size:14px;width:210px}
-#gameScreen{padding:0}#hud{position:absolute;top:10px;left:0;right:0;display:flex;justify-content:space-between;padding:0 16px;font-weight:800;font-size:16px;z-index:5;pointer-events:none}.score{color:var(--gold)}.lvl{color:var(--accent2)}#gameCanvas{display:block;background:#0b1020}#joyHint{position:absolute;bottom:12px;left:0;right:0;text-align:center;color:var(--muted);font-size:12.5px;z-index:5;pointer-events:none}
-#gameOverBox{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,7,14,.76);backdrop-filter:blur(4px);z-index:10}#gameOverBox h2{color:var(--accent)}#finalScore{font-size:40px;font-weight:900;color:var(--gold);margin:6px 0 16px}
-footer.credit{position:absolute;bottom:6px;width:100%;text-align:center;font-size:11px;color:#4a5170}
-.ui-ico{display:inline-flex;align-items:center;justify-content:center;width:1em;height:1em;flex:0 0 auto;vertical-align:-0.18em}
-.ui-ico svg{width:100%;height:100%;fill:currentColor;display:block}
-.menu-btn .ui-ico,.small-btn .ui-ico{margin-right:.35em}
-
-</style>
-</head>
-<body>
-<div id="app">
-<section id="mainMenu" class="screen"><span class="badge">GAMEBOX &middot; 1 MONAT</span><h1 class="title">1 MONTH<br>GAME FEST</h1><p class="subtitle">Weiche Angriffen von allen Seiten aus. Jede Sekunde wird es stärker. Wie lange hältst du durch?</p><button class="menu-btn primary" id="btnPlay"><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg></span> Spielen</button><button class="menu-btn secondary" id="btnRank"><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.8 7.2L22 12l-7.2 2.8L12 22l-2.8-7.2L2 12l7.2-2.8z"/></svg></span> Rangliste</button><button class="menu-btn ghost" id="btnInfo"><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 10h2v8h-2zm0-4h2v2h-2zM12 2a10 10 0 100 20 10 10 0 000-20z"/></svg></span> Informationen</button></section>
-<section id="infoScreen" class="screen hidden"><div class="panel-box"><h2><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 10h2v8h-2zm0-4h2v2h-2zM12 2a10 10 0 100 20 10 10 0 000-20z"/></svg></span> Informationen</h2><p><b>1 MONTH GAME FEST</b> feiert einen Monat Game-Box. Das große Game-Fest läuft eine ganze Woche und startet am <b>Freitag, 24. Juli, 08:30 Uhr</b> — genau an dem Tag, an dem Game-Box <b>1 Monat alt</b> wird.</p><div id="countdownBox"><div class="cd-unit"><span class="num" id="cdDays">--</span><span class="lbl">TAGE</span></div><div class="cd-unit"><span class="num" id="cdHours">--</span><span class="lbl">STD</span></div><div class="cd-unit"><span class="num" id="cdMins">--</span><span class="lbl">MIN</span></div><div class="cd-unit"><span class="num" id="cdSecs">--</span><span class="lbl">SEK</span></div></div><p class="muted" id="cdStatusText" style="text-align:center;"></p><ul class="event-list"><li><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM7 7h10v10H7z"/></svg></span> <b>Game-Fest Start:</b> Freitag, 24. Juli, 08:30 Uhr <span class="tag">1 MONAT</span></li><li><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 10-8 10-8-10z"/></svg></span> <b>Dauer:</b> 1 ganze Woche voller Events &amp; Highlights</li><li><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.8 7.2L22 12l-7.2 2.8L12 22l-2.8-7.2L2 12l7.2-2.8z"/></svg></span> <b>Update:</b> Lonely Tower Update erscheint <span class="tag">NEU</span></li><li><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l8 8-8 8-8-8zM12 8l4 4-4 4-4-4z"/></svg></span> <b>Secret Game:</b> Ein komplett neues, geheimes Spiel wird veröffentlicht <span class="tag">SECRET</span></li></ul><p class="muted">Diese Challenge ist der offizielle Countdown-Vorgeschmack auf das Fest. Spiele, sammle Punkte und sichere dir einen Platz in der Rangliste, bevor das Fest beginnt.</p></div><button class="menu-btn ghost" id="btnBackFromInfo"><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6L4 12l6 6v-4h10v-4H10z"/></svg></span> Zurück</button></section>
-<section id="rankScreen" class="screen hidden"><div class="panel-box"><h2><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.8 7.2L22 12l-7.2 2.8L12 22l-2.8-7.2L2 12l7.2-2.8z"/></svg></span> Rangliste</h2><div class="name-row" id="accountRow"></div><p class="muted" id="accountInfo" style="text-align:center;margin-top:-4px;">Kein Account geladen</p><p class="muted" id="rankStatus" style="text-align:center;">Lade Rangliste...</p><table class="lb"><thead><tr><th>#</th><th>Name</th><th>Score</th></tr></thead><tbody id="rankBody"></tbody></table></div><button class="menu-btn secondary" id="btnRefreshRank"><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.95 7.95 0 0012 4a8 8 0 108 8h-2a6 6 0 11-1.76-4.24L14 10h8V2l-4.35 4.35z"/></svg></span> Aktualisieren</button><button class="menu-btn ghost" id="btnBackFromRank"><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6L4 12l6 6v-4h10v-4H10z"/></svg></span> Zurück</button></section>
-<section id="gameScreen" class="screen hidden"><div id="hud"><span class="score">Zeit: <span id="hudScore">0.0</span>s</span><span class="lvl">Level <span id="hudLevel">1</span></span></div><canvas id="gameCanvas"></canvas><div id="joyHint">Ziehen auf dem Bildschirm zum Ausweichen</div><div id="gameOverBox" class="hidden"><div class="panel-box" style="text-align:center"><h2><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7L12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg></span> Getroffen!</h2><span class="muted">Überlebenszeit</span><div id="finalScore">0.0s</div><p class="muted" id="submitStatus" style="text-align:center;font-size:13px;"></p><button class="menu-btn primary" id="btnRetry"><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.95 7.95 0 0012 4a8 8 0 108 8h-2a6 6 0 11-1.76-4.24L14 10h8V2l-4.35 4.35z"/></svg></span> Nochmal</button><button class="menu-btn ghost" id="btnToMenu"><span class="ui-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6L4 12l6 6v-4h10v-4H10z"/></svg></span> Hauptmenü</button></div></div></section>
-<footer class="credit">1 Month Game Fest — powered by GameBox</footer>
-</div>
 <script>
-const API_BASE='https://gameboxsaves.db.scoodol.de', GAME_ID='1month-gamefest', BOARD_KEY='alltime', FEST_START=new Date('2026-07-24T08:30:00+02:00');
-const screens={main:mainMenu,info:infoScreen,rank:rankScreen,game:gameScreen};
-function show(n){Object.values(screens).forEach(s=>s.classList.add('hidden'));screens[n].classList.remove('hidden')}
-btnPlay.onclick=()=>{show('game');startGame()}; btnInfo.onclick=()=>show('info'); btnBackFromInfo.onclick=()=>show('main'); btnRank.onclick=()=>{show('rank');loadLeaderboard()}; btnBackFromRank.onclick=()=>show('main'); btnRefreshRank.onclick=loadLeaderboard; btnToMenu.onclick=()=>{gameOverBox.classList.add('hidden');show('main')}; btnRetry.onclick=()=>{gameOverBox.classList.add('hidden');startGame()};
-let accountData = JSON.parse(localStorage.getItem('gf_account_data')||'null');
-function renderAccountInfo(){accountInfo.textContent = accountData ? `Account: ${accountData.username} | ID: ${accountData.account_id}` : 'Kein Account geladen'}
-async function ensureAccount(){try{const stored = JSON.parse(localStorage.getItem('gf_account_data')||'null'); if(stored && stored.account_id && stored.account_key && stored.username){accountData = stored; renderAccountInfo(); return true;} const r = await fetch(API_BASE+'/api/account/me',{credentials:'include'}); if(!r.ok) return false; const d = await r.json(); if(!d.account_id||!d.account_key||!d.username) return false; accountData = d; localStorage.setItem('gf_account_data',JSON.stringify(d)); renderAccountInfo(); return true;}catch(e){return false}}
-renderAccountInfo(); ensureAccount();
-function updateCountdown(){const now=new Date(), diff=FEST_START-now, st=cdStatusText; if(diff<=0){const weekEnd=new Date(FEST_START.getTime()+14*864e5); st.textContent=now<weekEnd?`Das Game-Fest läuft JETZT! Noch ${Math.ceil((weekEnd-now)/36e5)} Stunden übrig.`:'Das Game-Fest ist vorbei.'; cdDays.textContent=0; cdHours.textContent=0; cdMins.textContent=0; cdSecs.textContent=0; return} st.textContent='Bis zum Start des Game-Fests:'; let r=diff, d=Math.floor(r/864e5); r-=d*864e5; let h=Math.floor(r/36e5); r-=h*36e5; let m=Math.floor(r/6e4); r-=m*6e4; let s=Math.floor(r/1000); cdDays.textContent=d; cdHours.textContent=String(h).padStart(2,'0'); cdMins.textContent=String(m).padStart(2,'0'); cdSecs.textContent=String(s).padStart(2,'0')} setInterval(updateCountdown,1000); updateCountdown();
-let accountId = accountData?.account_id || null; let accountKey = accountData?.account_key || null; let accountUsername = accountData?.username || null;
-async function ensureBoard(){try{await fetch(API_BASE+'/api/leaderboard/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({game_id:GAME_ID,board_key:BOARD_KEY,label:'1 Month Game Fest - Bestzeit',sort_order:'DESC'})})}catch(e){}} ensureBoard();
-async function submitScore(score){submitStatus.textContent='Sende Score...'; try{if(!accountData || !accountData.account_id || !accountData.account_key || !accountData.username) throw new Error('Kein Account geladen'); const body={account_id:accountData.account_id,account_key:accountData.account_key,username:accountData.username,game_id:GAME_ID,board_key:BOARD_KEY,score:Math.round(score*10)/10}; const res=await fetch(API_BASE+'/api/leaderboard/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); submitStatus.textContent=res.ok?'Score erfolgreich eingereicht!':'Fehler beim Einreichen.'}catch(e){submitStatus.textContent='Account-Daten fehlen oder Verbindung fehlgeschlagen.'}}
-async function loadLeaderboard(){rankStatus.textContent='Lade Rangliste...'; rankBody.innerHTML=''; try{const res=await fetch(API_BASE+`/api/leaderboard/${GAME_ID}/${BOARD_KEY}/top?limit=10`); const data=await res.json(); if(!data.entries||!data.entries.length){rankStatus.textContent='Noch keine Einträge — sei der Erste!'; return} rankStatus.textContent=''; data.entries.forEach((e,i)=>{const tr=document.createElement('tr'); tr.innerHTML=`<td>${i+1}</td><td>${escapeHtml(e.username)}</td><td>${Number(e.score).toFixed(1)}s</td>`; rankBody.appendChild(tr)})}catch(e){rankStatus.textContent='Rangliste konnte nicht geladen werden.'}}
-function escapeHtml(s){const d=document.createElement('div'); d.textContent=s; return d.innerHTML}
-const canvas=gameCanvas, ctx=canvas.getContext('2d'); let W,H; function resizeCanvas(){W=canvas.width=Math.min(innerWidth,900); H=canvas.height=innerHeight} addEventListener('resize',resizeCanvas); resizeCanvas();
+const API_BASE = 'https://gameboxsaves.db.scoodol.de';
+const GAME_ID = '1month-gamefest';
+const BOARD_KEY = 'alltime';
+const FEST_START = new Date('2026-07-24T08:30:00+02:00');
+
+const screens = { main: mainMenu, info: infoScreen, rank: rankScreen, game: gameScreen };
+function show(n){ Object.values(screens).forEach(s => s.classList.add('hidden')); screens[n].classList.remove('hidden'); }
+btnPlay.onclick = ()=>{ show('game'); startGame(); };
+btnInfo.onclick = ()=>show('info');
+btnBackFromInfo.onclick = ()=>show('main');
+btnRank.onclick = ()=>{ show('rank'); loadLeaderboard(); };
+btnBackFromRank.onclick = ()=>show('main');
+btnRefreshRank.onclick = loadLeaderboard;
+btnToMenu.onclick = ()=>{ gameOverBox.classList.add('hidden'); show('main'); };
+btnRetry.onclick = ()=>{ gameOverBox.classList.add('hidden'); startGame(); };
+
+let auth = JSON.parse(localStorage.getItem('gf_auth') || 'null');
+function saveAuth(data){ auth = data; localStorage.setItem('gf_auth', JSON.stringify(data)); renderAccountInfo(); }
+function isAccount(){ return auth?.type === 'account' && auth.account_id && auth.account_key; }
+function isConsole(){ return auth?.type === 'console' && auth.console_key; }
+function renderAccountInfo(){
+  if(!auth) accountInfo.textContent = 'Kein Account geladen';
+  else if(isAccount()) accountInfo.textContent = `Account: ${auth.username} | ID: ${auth.account_id}`;
+  else if(isConsole()) accountInfo.textContent = `Console: ${auth.username} | Key: ${auth.console_key} (keine Saves)`;
+  else accountInfo.textContent = 'Ungültige Auth-Daten';
+}
+async function ensureAuth(){
+  try{ const stored = JSON.parse(localStorage.getItem('gf_auth') || 'null'); if(stored?.type === 'account' && stored.account_id && stored.account_key && stored.username){ auth = stored; renderAccountInfo(); return true; } if(stored?.type === 'console' && stored.console_key && stored.username){ auth = stored; renderAccountInfo(); return true; } }catch{}
+  try{ const r = await fetch(API_BASE + '/api/account/me', { credentials:'include' }); if(r.ok){ const d = await r.json(); if(d.account_id && d.account_key && d.username){ saveAuth({type:'account', ...d}); return true; } } }catch{}
+  try{ const r = await fetch(API_BASE + '/api/console/me', { credentials:'include' }); if(r.ok){ const d = await r.json(); if(d.console_key && d.username){ saveAuth({type:'console', ...d}); return true; } } }catch{}
+  auth = null; renderAccountInfo(); return false;
+}
+renderAccountInfo(); ensureAuth();
+
+function updateCountdown(){
+  const now = new Date(); const diff = FEST_START - now; const st = cdStatusText;
+  if(diff <= 0){ const weekEnd = new Date(FEST_START.getTime() + 14 * 864e5); st.textContent = now < weekEnd ? `Das Game-Fest läuft JETZT! Noch ${Math.ceil((weekEnd - now) / 36e5)} Stunden übrig.` : 'Das Game-Fest ist vorbei.'; cdDays.textContent = 0; cdHours.textContent = 0; cdMins.textContent = 0; cdSecs.textContent = 0; return; }
+  st.textContent = 'Bis zum Start des Game-Fests:'; let r = diff; let d = Math.floor(r / 864e5); r -= d * 864e5; let h = Math.floor(r / 36e5); r -= h * 36e5; let m = Math.floor(r / 6e4); r -= m * 6e4; let s = Math.floor(r / 1000);
+  cdDays.textContent = d; cdHours.textContent = String(h).padStart(2,'0'); cdMins.textContent = String(m).padStart(2,'0'); cdSecs.textContent = String(s).padStart(2,'0');
+}
+setInterval(updateCountdown, 1000); updateCountdown();
+
+async function ensureBoard(){ try{ await fetch(API_BASE + '/api/leaderboard/create', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ game_id: GAME_ID, board_key: BOARD_KEY, label: '1 Month Game Fest - Bestzeit', sort_order: 'DESC' }) }); }catch{} }
+ensureBoard();
+
+async function submitScore(score){
+  submitStatus.textContent = 'Sende Score...';
+  try{
+    if(!auth) throw new Error('Keine Auth');
+    const body = { username: auth.username, game_id: GAME_ID, board_key: BOARD_KEY, score: Math.round(score * 10) / 10 };
+    if(isAccount()){ body.account_id = auth.account_id; body.account_key = auth.account_key; }
+    else if(isConsole()){ body.console_key = auth.console_key; }
+    else throw new Error('Ungültiger Auth-Typ');
+    const res = await fetch(API_BASE + '/api/leaderboard/submit', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    submitStatus.textContent = res.ok ? 'Score erfolgreich eingereicht!' : 'Fehler beim Einreichen.';
+  }catch{ submitStatus.textContent = 'Score konnte nicht gesendet werden.'; }
+}
+
+async function loadLeaderboard(){
+  rankStatus.textContent = 'Lade Rangliste...'; rankBody.innerHTML = '';
+  try{ const res = await fetch(API_BASE + `/api/leaderboard/${GAME_ID}/${BOARD_KEY}/top?limit=10`); const data = await res.json(); if(!data.entries || !data.entries.length){ rankStatus.textContent = 'Noch keine Einträge — sei der Erste!'; return; } rankStatus.textContent = ''; data.entries.forEach((e,i)=>{ const tr = document.createElement('tr'); tr.innerHTML = `<td>${i+1}</td><td>${escapeHtml(e.username)}</td><td>${Number(e.score).toFixed(1)}s</td>`; rankBody.appendChild(tr); }); }catch{ rankStatus.textContent = 'Rangliste konnte nicht geladen werden.'; }
+}
+function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+async function saveGameData(data){ if(!isAccount()) return; try{ await fetch(API_BASE + '/api/save/set', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ account_id: auth.account_id, account_key: auth.account_key, game_id: GAME_ID, data }) }); }catch{} }
+async function loadGameData(){ if(!isAccount()) return null; try{ const res = await fetch(API_BASE + '/api/save/get', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ account_id: auth.account_id, account_key: auth.account_key, game_id: GAME_ID }) }); if(!res.ok) return null; const d = await res.json(); return d.data ?? null; }catch{ return null; } }
+
+const canvas = gameCanvas, ctx = canvas.getContext('2d'); let W, H;
+function resizeCanvas(){ W = canvas.width = Math.min(innerWidth, 900); H = canvas.height = innerHeight; }
+addEventListener('resize', resizeCanvas); resizeCanvas();
+
 let player, attacks, gameRunning, startTime, lastSpawn, elapsed, difficultyLevel, animId, pointerActive=false, pointerX=0, pointerY=0;
-function startGame(){resizeCanvas(); player={x:W/2,y:H/2,r:14,speed:320}; attacks=[]; keys={}; gameRunning=true; startTime=performance.now(); lastSpawn=0; elapsed=0; difficultyLevel=1; gameOverBox.classList.add('hidden'); hudScore.textContent='0.0'; hudLevel.textContent='1'; if(animId) cancelAnimationFrame(animId); let last=performance.now(); const loop=now=>{if(!gameRunning) return; const dt=Math.min((now-last)/1000,0.05); last=now; elapsed=(now-startTime)/1000; difficultyLevel=1+Math.floor(elapsed); update(dt); draw(); animId=requestAnimationFrame(loop)}; animId=requestAnimationFrame(loop)}
-function spawnAttack(kind){const speed=90+difficultyLevel*22, size=8+Math.random()*10, side=Math.floor(Math.random()*4); let x,y,vx,vy, color; if(kind===2){x=Math.random()*W; y=Math.random()<.5?-size:H+size; vx=(Math.random()-.5)*60; vy=y<0?speed:-speed; color='#7cff6b'} else if(kind===1){x=Math.random()<.5?-size:W+size; y=Math.random()*H; vx=x<0?speed:-speed; vy=(Math.random()-.5)*60; color='#ffb84d'} else { if(side===0){x=Math.random()*W;y=-size;vx=(Math.random()-.5)*40;vy=speed}else if(side===1){x=W+size;y=Math.random()*H;vx=-speed;vy=(Math.random()-.5)*40}else if(side===2){x=Math.random()*W;y=H+size;vx=(Math.random()-.5)*40;vy=-speed}else{x=-size;y=Math.random()*H;vx=speed;vy=(Math.random()-.5)*40} color='#ff4d7d'} attacks.push({x,y,vx,vy,r:size,kind,color})}
-function update(dt){let dx=0,dy=0; if(pointerActive){const ddx=pointerX-player.x, ddy=pointerY-player.y, dist=Math.hypot(ddx,ddy); if(dist>1){const follow=Math.min(1, dt*18); dx=(ddx/dist)*follow; dy=(ddy/dist)*follow}} const l=Math.hypot(dx,dy); if(l>0){dx/=l;dy/=l} player.x=Math.max(player.r,Math.min(W-player.r,player.x+dx*player.speed*dt*2.4)); player.y=Math.max(player.r,Math.min(H-player.r,player.y+dy*player.speed*dt*2.4)); const interval=Math.max(0.86-difficultyLevel*0.05,0.08); lastSpawn+=dt; if(lastSpawn>=interval){lastSpawn=0; spawnAttack(difficultyLevel>=4?Math.floor(Math.random()*3)+1:0); if(difficultyLevel>6 && Math.random()<0.6) spawnAttack(Math.floor(Math.random()*3)+1)} for(let i=attacks.length-1;i>=0;i--){const a=attacks[i]; a.x+=a.vx*dt; a.y+=a.vy*dt; if(a.x<-80||a.x>W+80||a.y<-80||a.y>H+80){attacks.splice(i,1); continue} if(Math.hypot(a.x-player.x,a.y-player.y)<a.r+player.r){endGame(); return}} hudScore.textContent=elapsed.toFixed(1); hudLevel.textContent=difficultyLevel}
-function draw(){ctx.clearRect(0,0,W,H); const g=ctx.createRadialGradient(W/2,H/2,10,W/2,H/2,Math.max(W,H)/1.2); g.addColorStop(0,'#131a31'); g.addColorStop(1,'#06090f'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); attacks.forEach(a=>{ctx.shadowColor=a.color; ctx.shadowBlur=10; ctx.fillStyle=a.color; ctx.beginPath(); ctx.arc(a.x,a.y,a.r,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0}); ctx.strokeStyle='rgba(63,215,255,.55)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(player.x,player.y,player.r+4,0,Math.PI*2); ctx.stroke(); ctx.fillStyle='#3fd7ff'; ctx.beginPath(); ctx.arc(player.x,player.y,player.r,0,Math.PI*2); ctx.fill()}
-function endGame(){gameRunning=false; cancelAnimationFrame(animId); finalScore.textContent=elapsed.toFixed(1)+'s'; submitStatus.textContent=''; gameOverBox.classList.remove('hidden')}
- addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true); addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false); function pos(x,y){const r=canvas.getBoundingClientRect(); return {x:x-r.left,y:y-r.top}} canvas.addEventListener('pointerdown',e=>{pointerActive=true; const p=pos(e.clientX,e.clientY); pointerX=p.x; pointerY=p.y}); canvas.addEventListener('pointermove',e=>{if(pointerActive){const p=pos(e.clientX,e.clientY); pointerX=p.x; pointerY=p.y}}); canvas.addEventListener('pointerup',()=>pointerActive=false); canvas.addEventListener('pointerleave',()=>pointerActive=false); show('main');
-</script></body></html>
+function startGame(){ resizeCanvas(); player = {x:W/2, y:H/2, r:14, speed:320}; attacks = []; keys = {}; gameRunning = true; startTime = performance.now(); lastSpawn = 0; elapsed = 0; difficultyLevel = 1; gameOverBox.classList.add('hidden'); hudScore.textContent='0.0'; hudLevel.textContent='1'; if(animId) cancelAnimationFrame(animId); let last = performance.now(); const loop = now => { if(!gameRunning) return; const dt = Math.min((now-last)/1000,0.05); last = now; elapsed = (now-startTime)/1000; difficultyLevel = 1 + Math.floor(elapsed); update(dt); draw(); animId = requestAnimationFrame(loop); }; animId = requestAnimationFrame(loop); }
+function spawnAttack(kind){ const speed = 90 + difficultyLevel*22, size = 8 + Math.random()*10, side = Math.floor(Math.random()*4); let x,y,vx,vy,color; if(kind===2){ x=Math.random()*W; y=Math.random()<.5?-size:H+size; vx=(Math.random()-.5)*60; vy=y<0?speed:-speed; color='#7cff6b'; } else if(kind===1){ x=Math.random()<.5?-size:W+size; y=Math.random()*H; vx=x<0?speed:-speed; vy=(Math.random()-.5)*60; color='#ffb84d'; } else { if(side===0){x=Math.random()*W;y=-size;vx=(Math.random()-.5)*40;vy=speed}else if(side===1){x=W+size;y=Math.random()*H;vx=-speed;vy=(Math.random()-.5)*40}else if(side===2){x=Math.random()*W;y=H+size;vx=(Math.random()-.5)*40;vy=-speed}else{x=-size;y=Math.random()*H;vx=speed;vy=(Math.random()-.5)*40} color='#ff4d7d'; } attacks.push({x,y,vx,vy,r:size,kind,color}); }
+function update(dt){ let dx=0, dy=0; if(pointerActive){ const ddx=pointerX-player.x, ddy=pointerY-player.y, dist=Math.hypot(ddx,ddy); if(dist>1){ const follow = Math.min(1, dt*18); dx=(ddx/dist)*follow; dy=(ddy/dist)*follow; } } const l=Math.hypot(dx,dy); if(l>0){ dx/=l; dy/=l; } player.x = Math.max(player.r, Math.min(W-player.r, player.x + dx*player.speed*dt*2.4)); player.y = Math.max(player.r, Math.min(H-player.r, player.y + dy*player.speed*dt*2.4)); const interval = Math.max(0.86-difficultyLevel*0.05,0.08); lastSpawn += dt; if(lastSpawn>=interval){ lastSpawn=0; spawnAttack(difficultyLevel>=4?Math.floor(Math.random()*3)+1:0); if(difficultyLevel>6 && Math.random()<0.6) spawnAttack(Math.floor(Math.random()*3)+1); } for(let i=attacks.length-1;i>=0;i--){ const a=attacks[i]; a.x+=a.vx*dt; a.y+=a.vy*dt; if(a.x<-80||a.x>W+80||a.y<-80||a.y>H+80){ attacks.splice(i,1); continue; } if(Math.hypot(a.x-player.x,a.y-player.y)<a.r+player.r){ endGame(); return; } } hudScore.textContent=elapsed.toFixed(1); hudLevel.textContent=difficultyLevel; }
+function draw(){ ctx.clearRect(0,0,W,H); const g = ctx.createRadialGradient(W/2,H/2,10,W/2,H/2,Math.max(W,H)/1.2); g.addColorStop(0,'#131a31'); g.addColorStop(1,'#06090f'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); attacks.forEach(a=>{ ctx.shadowColor=a.color; ctx.shadowBlur=10; ctx.fillStyle=a.color; ctx.beginPath(); ctx.arc(a.x,a.y,a.r,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; }); ctx.strokeStyle='rgba(63,215,255,.55)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(player.x,player.y,player.r+4,0,Math.PI*2); ctx.stroke(); ctx.fillStyle='#3fd7ff'; ctx.beginPath(); ctx.arc(player.x,player.y,player.r,0,Math.PI*2); ctx.fill(); }
+function endGame(){ gameRunning=false; cancelAnimationFrame(animId); finalScore.textContent=elapsed.toFixed(1)+'s'; submitStatus.textContent=''; gameOverBox.classList.remove('hidden'); submitScore(elapsed); }
+addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true); addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false); function pos(x,y){const r=canvas.getBoundingClientRect(); return {x:x-r.left,y:y-r.top};}
+canvas.addEventListener('pointerdown',e=>{ pointerActive=true; const p=pos(e.clientX,e.clientY); pointerX=p.x; pointerY=p.y; });
+canvas.addEventListener('pointermove',e=>{ if(pointerActive){ const p=pos(e.clientX,e.clientY); pointerX=p.x; pointerY=p.y; } });
+canvas.addEventListener('pointerup',()=>pointerActive=false); canvas.addEventListener('pointerleave',()=>pointerActive=false); show('main');
+</script>
