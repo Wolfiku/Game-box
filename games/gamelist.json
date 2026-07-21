@@ -32,13 +32,6 @@
       "patchlogs": []
     },
     {
-      "index": 6,
-      "name": "Crossy Road",
-      "icon": "games/Crossy-road/icon.jpeg",
-      "path": "games/Crossy-road/index.html",
-      "patchlogs": []
-    },
-    {
       "index": 7,
       "name": "Tic Tac Toe",
       "icon": "games/tto/icon.jpeg",
