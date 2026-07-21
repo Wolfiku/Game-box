@@ -47,8 +47,8 @@
     },
     {
       "index": 100,
-      "name": " 1-Month Fest",
-      "icon": "games/fest/1month.jpeg",
+      "name": " 1 Month Fest",
+      "icon": "games/fest/icon.jpeg",
       "path": "games/fest/index.html",
       "patchlogs": []
     }
