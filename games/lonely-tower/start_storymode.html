@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tower of Dragons - Story Mode</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:#0a0a0f;color:#e0e0e0;font-family:'Courier New',monospace;
+display:flex;align-items:center;justify-content:center;}
+#loading{font-size:0.9rem;letter-spacing:3px;color:#4a9eff;}
+</style>
+</head>
+<body>
+<div id="loading">LADE STORY MODE...</div>
+<script>
+/*
+  Diese Datei entscheidet automatisch, welche Story-Mode-Datei als naechstes
+  geoeffnet werden muss, basierend auf dem gespeicherten Fortschritt.
+
+  Fortschritts-Reihenfolge:
+  1. introduce.html          -> Kapitel 1 Intro (Brief von Logan)
+  2. game_ch1.html            -> Kapitel 1 (Aufbau/Verteidigung, 12 Monate)
+  3. epilogue_ch1.html        -> Kapitel 1 Epilog (Der Sturm, Turm faellt)
+  4. introduce_ch2.html       -> Kapitel 2 Intro (20 Jahre spaeter)
+  5. index.html (Story Mode) -> Kapitel 2 (Lonely Tower, Wave 100 im Story Mode)
+  6. chapter3.html            -> Kapitel 3 (Evelyn baut den Turm wieder auf)
+  7. credits.html             -> Abschluss / Credits
+
+  Benoetigte Flags (muessen von den jeweiligen Kapiteln gesetzt werden):
+  - localStorage['towerOfDragonsCh1Completed']   = 'true'  (in game_ch1.html bei Sieg setzen)
+  - JSON.parse(localStorage['lonelyTowerv5']).storyModeCompleted === true (wird von index.html bereits gesetzt)
+  - localStorage['towerOfDragonsCh3Completed']   = 'true'  (wird von chapter3.html automatisch gesetzt)
+  - localStorage['towerOfDragonsCreditsSeen']    = 'true'  (wird von credits.html optional gesetzt)
+*/
+
+function getCh1Completed(){
+  return localStorage.getItem('towerOfDragonsCh1Completed') === 'true';
+}
+function getCh1Started(){
+  // game_ch1.html speichert Fortschritt unter towerOfDragonsch1progress
+  return !!localStorage.getItem('towerOfDragonsch1progress');
+}
+function getCh2StoryCompleted(){
+  try{
+    const d = JSON.parse(localStorage.getItem('lonelyTowerv5'));
+    return !!(d && d.storyModeCompleted);
+  }catch(e){ return false; }
+}
+function getCh2Started(){
+  return !!localStorage.getItem('lonelyTowerv5');
+}
+function getCh3Completed(){
+  return localStorage.getItem('towerOfDragonsCh3Completed') === 'true';
+}
+function getCh3Started(){
+  return !!localStorage.getItem('towerOfDragonsch3progress') || !!localStorage.getItem('towerOfDragonsch3');
+}
+function getCreditsSeen(){
+  return localStorage.getItem('towerOfDragonsCreditsSeen') === 'true';
+}
+
+function decideTarget(){
+  if(getCreditsSeen()) return 'credits.html';
+  if(getCh3Completed()) return 'credits.html';
+  if(getCh3Started()) return 'chapter3.html';
+  if(getCh2StoryCompleted()) return 'chapter3.html';
+  if(getCh2Started()) return 'index.html?mode=story';
+  if(getCh1Completed()) return 'introduce_ch2.html';
+  if(getCh1Started()) return 'game_ch1.html';
+  return 'introduce.html';
+}
+
+window.location.href = decideTarget();
+</script>
+</body>
+</html>

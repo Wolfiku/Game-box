@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tower of Dragons - Credits</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:#0a0a0f;color:#e0e0e0;font-family:'Courier New',monospace;
+display:flex;align-items:center;justify-content:center;overflow:hidden;}
+#box{text-align:center;cursor:pointer;user-select:none;padding:40px;}
+#main-text{font-size:1.6rem;letter-spacing:4px;text-transform:uppercase;color:#e0e0e0;transition:opacity .5s ease;}
+#sub-text{font-size:0.9rem;letter-spacing:3px;color:#4a9eff;margin-top:14px;transition:opacity .5s ease;}
+#hint{font-size:0.7rem;color:#333;letter-spacing:2px;margin-top:60px;position:absolute;bottom:30px;left:0;width:100%;text-align:center;}
+.fade{opacity:0;}
+#fade-white{position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a0f;z-index:999;opacity:0;pointer-events:none;transition:opacity .8s ease;}
+#fade-white.on{opacity:1;pointer-events:all;}
+</style>
+</head>
+<body>
+<div id="fade-white"></div>
+<div id="box" onclick="onCreditsClick()">
+  <div id="main-text">Created by @wolfiku</div>
+  <div id="sub-text" style="display:none;">Thanks for playing</div>
+</div>
+<div id="hint">Klicken</div>
+
+<script>
+let clicked=false;
+function onCreditsClick(){
+  if(clicked)return;
+  clicked=true;
+  const main=document.getElementById('main-text');
+  const sub=document.getElementById('sub-text');
+  const hint=document.getElementById('hint');
+  main.classList.add('fade');
+  hint.style.display='none';
+  setTimeout(()=>{
+    main.textContent='Thanks for playing';
+    main.classList.remove('fade');
+    sub.style.display='block';
+    setTimeout(()=>{sub.style.opacity='1';},50);
+    setTimeout(()=>{
+      const fade=document.getElementById('fade-white');
+      fade.classList.add('on');
+      setTimeout(()=>{window.location.href='index.html';},800);
+    },1800);
+  },500);
+}
+</script>
+</body>
+</html>

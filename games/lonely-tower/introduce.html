@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Tower of Dragons</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:100%; height:100%;
+    background:#ffffff;
+    color:#1a1a1a;
+    font-family: Georgia, 'Times New Roman', serif;
+    overflow:hidden;
+  }
+  .screen {
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    background:#ffffff;
+  }
+  .screen.active { display:flex; }
+
+  /* ---------- TITEL ---------- */
+  #screen-title .line {
+    width:220px;
+    height:1px;
+    background:#1a1a1a;
+    margin:14px 0;
+  }
+  #screen-title h1 {
+    font-size:3rem;
+    letter-spacing:4px;
+    font-weight:400;
+    text-align:center;
+  }
+  #screen-title .author {
+    font-size:1rem;
+    letter-spacing:2px;
+    color:#4a4a4a;
+    margin-top:6px;
+  }
+  #start-btn {
+    margin-top:60px;
+    padding:14px 34px;
+    background:none;
+    border:1px solid #1a1a1a;
+    color:#1a1a1a;
+    font-family:Georgia, serif;
+    font-size:1rem;
+    letter-spacing:2px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    transition: background .3s, color .3s;
+  }
+  #start-btn:hover {
+    background:#1a1a1a;
+    color:#ffffff;
+  }
+  .arrow-icon {
+    width:0; height:0;
+    border-top:5px solid transparent;
+    border-bottom:5px solid transparent;
+    border-left:8px solid #1a1a1a;
+    transition: border-left-color .3s;
+  }
+  #start-btn:hover .arrow-icon {
+    border-left-color:#ffffff;
+  }
+
+  /* ---------- BRIEF ---------- */
+  #screen-letter {
+    padding:8% 12%;
+    align-items:flex-start;
+  }
+  #letter-text {
+    font-size:1.15rem;
+    line-height:1.9;
+    white-space:pre-wrap;
+    max-width:700px;
+  }
+  #next-btn {
+    margin-top:40px;
+    padding:12px 30px;
+    background:none;
+    border:1px solid #1a1a1a;
+    color:#1a1a1a;
+    font-family:Georgia, serif;
+    font-size:0.95rem;
+    letter-spacing:2px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .8s ease, background .3s, color .3s;
+    align-self:flex-end;
+  }
+  #next-btn.visible {
+    opacity:1;
+    pointer-events:auto;
+  }
+  #next-btn:hover {
+    background:#1a1a1a;
+    color:#ffffff;
+  }
+  #next-btn:hover .arrow-icon {
+    border-left-color:#ffffff;
+  }
+
+  /* ---------- DATUM ---------- */
+  #screen-date span {
+    font-size:2rem;
+    letter-spacing:3px;
+  }
+
+  /* ---------- FADE OVERLAY ---------- */
+  #fade-white {
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:#ffffff;
+    z-index:999;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .8s ease;
+  }
+  #fade-white.on {
+    opacity:1;
+    pointer-events:all;
+  }
+</style>
+</head>
+<body>
+
+<div id="fade-white"></div>
+
+<div class="screen active" id="screen-title">
+  <div class="line"></div>
+  <h1>Tower of Dragons</h1>
+  <div class="author">@wolfikuproduction</div>
+  <div class="line"></div>
+  <button id="start-btn">
+    <span>Start</span>
+    <span class="arrow-icon"></span>
+  </button>
+</div>
+
+<div class="screen" id="screen-letter">
+  <div id="letter-text"></div>
+  <button id="next-btn">
+    <span>Weiter</span>
+    <span class="arrow-icon"></span>
+  </button>
+</div>
+
+<div class="screen" id="screen-date">
+  <span>7.1.9998</span>
+</div>
+
+<script>
+  const fade = document.getElementById('fade-white');
+  const screens = {
+    title: document.getElementById('screen-title'),
+    letter: document.getElementById('screen-letter'),
+    date: document.getElementById('screen-date')
+  };
+
+  function switchScreen(from, to, callback) {
+    fade.classList.add('on');
+    setTimeout(() => {
+      from.classList.remove('active');
+      to.classList.add('active');
+      setTimeout(() => {
+        fade.classList.remove('on');
+        if (callback) callback();
+      }, 300);
+    }, 800);
+  }
+
+  const letterFull =
+"Hallo Evelyn, ich hoffe, es geht dir gut.\n\n" +
+"Unsere Truppe wurde heute versetzt, da unsere letzte Basis in Nova Coast gefallen ist. Viele unserer Männer sind gestorben, und wir mussten nun zum letzten stehenden Stützpunkt in Skyridge einkehren. Der Weg dorthin war schrecklich – die Felder sind abgebrannt, und die einst wundervollen Ferienhöfe und Skigebiete sind zerstört.\n\n" +
+"Wir sind auf den höchsten aller Berge geklettert, wo ein riesiger Turm steht. Alle verbliebenen 700 Mann konnten dort untergebracht werden. Ich schlafe zusammen mit dem Rest meiner Truppe in Etage 6, während die Ranghöchsten in Etage 100, der höchsten, wohnen – dort leben die Gruppenleiter.\n\n" +
+"Ich wurde für morgen eingeteilt, um Essen anzubauen und Vorräte anzuhäufen, falls wir eines Tages angegriffen werden …\n\n" +
+"Ich hoffe, es geht dir gut.\n\n" +
+"In Liebe, dein Logan";
+
+  function typeLetter(el, text, speed, onDone) {
+    let i = 0;
+    el.textContent = "";
+    function step() {
+      if (i < text.length) {
+        el.textContent += text.charAt(i);
+        i++;
+        setTimeout(step, speed);
+      } else if (onDone) {
+        onDone();
+      }
+    }
+    step();
+  }
+
+  document.getElementById('start-btn').addEventListener('click', () => {
+    switchScreen(screens.title, screens.letter, () => {
+      const textEl = document.getElementById('letter-text');
+      const nextBtn = document.getElementById('next-btn');
+      typeLetter(textEl, letterFull, 28, () => {
+        nextBtn.classList.add('visible');
+      });
+    });
+  });
+
+  document.getElementById('next-btn').addEventListener('click', () => {
+    switchScreen(screens.letter, screens.date, () => {
+      setTimeout(() => {
+        fade.classList.add('on');
+        setTimeout(() => {
+          window.location.href = 'game_ch1.html';
+        }, 800);
+      }, 1200);
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tower of Dragons - Kapitel 3</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100vh;background:#ffffff;color:#1a1a1a;font-family:Georgia,'Times New Roman',serif;overflow:hidden;}
+#app{width:100%;height:100vh;display:flex;flex-direction:column;align-items:center;}
+.screen{position:fixed;top:0;left:0;width:100%;height:100%;display:none;align-items:center;justify-content:center;flex-direction:column;background:#ffffff;}
+.screen.active{display:flex;}
+.letter-text{font-size:1.15rem;line-height:1.9;white-space:pre-wrap;max-width:700px;padding:0 20px;}
+.nav-btn{margin-top:40px;padding:12px 30px;background:none;border:1px solid #1a1a1a;color:#1a1a1a;font-family:Georgia,serif;font-size:0.95rem;letter-spacing:2px;cursor:pointer;display:flex;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:opacity .8s ease,background .3s,color .3s;align-self:flex-end;}
+.nav-btn.visible{opacity:1;pointer-events:auto;}
+.nav-btn:hover{background:#1a1a1a;color:#ffffff;}
+#fade-white{position:fixed;top:0;left:0;width:100%;height:100%;background:#ffffff;z-index:999;opacity:0;pointer-events:none;transition:opacity .8s ease;}
+#fade-white.on{opacity:1;pointer-events:all;}
+
+#topbar{width:100%;max-width:960px;display:flex;justify-content:space-between;align-items:center;padding:14px 18px 6px;}
+.chapter-label{font-size:0.85rem;letter-spacing:2px;color:#4a4a4a;}
+.date-display{font-size:1rem;letter-spacing:2px;border:1px solid #1a1a1a;padding:6px 16px;}
+#main-area{width:100%;max-width:960px;display:flex;gap:16px;flex:1;padding:10px 18px 18px;align-items:flex-start;}
+#stage-wrap{position:relative;border:1px solid #1a1a1a;}
+#stage{display:block;background:#ffffff;}
+#bars-row{display:flex;justify-content:space-between;width:100%;margin-top:8px;gap:12px;}
+.bar-block{flex:1;}
+.bar-label{font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#4a4a4a;margin-bottom:3px;display:flex;justify-content:space-between;}
+.bar-outer{border:1px solid #1a1a1a;height:12px;width:100%;position:relative;}
+.bar-inner{background:#1a1a1a;height:100%;width:100%;transition:width .3s;}
+
+#shop-panel{width:280px;border:1px solid #1a1a1a;padding:14px;display:flex;flex-direction:column;gap:9px;max-height:640px;overflow-y:auto;}
+.shop-title{font-size:0.95rem;letter-spacing:3px;text-align:center;border-bottom:1px solid #1a1a1a;padding-bottom:8px;margin-bottom:2px;}
+.gold-row{display:flex;justify-content:space-between;font-size:0.85rem;letter-spacing:1px;border-bottom:1px solid #ccc;padding-bottom:8px;}
+.shop-item{border:1px solid #1a1a1a;padding:9px 10px;cursor:pointer;position:relative;transition:background .2s,color .2s;}
+.shop-item:hover:not(.maxed){background:#1a1a1a;color:#ffffff;}
+.shop-item.maxed{opacity:0.55;cursor:default;}
+.si-name{font-size:0.8rem;letter-spacing:1px;}
+.si-desc{font-size:0.66rem;color:#4a4a4a;margin-top:4px;line-height:1.35;}
+.shop-item:hover:not(.maxed) .si-desc{color:#dddddd;}
+.si-level{font-size:0.68rem;margin-top:5px;letter-spacing:1px;}
+.si-cost{position:absolute;top:9px;right:10px;font-size:0.76rem;}
+.day-info{font-size:0.68rem;color:#4a4a4a;text-align:center;border-top:1px solid #ccc;padding-top:8px;line-height:1.5;}
+
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#ffffff;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:900;text-align:center;padding:0 20px;}
+.overlay.show{display:flex;}
+.overlay h2{font-size:2rem;letter-spacing:4px;margin-bottom:14px;}
+.overlay p{font-size:0.95rem;color:#4a4a4a;margin-bottom:26px;max-width:480px;line-height:1.7;}
+.ov-btn{background:none;border:1px solid #1a1a1a;color:#1a1a1a;font-family:Georgia,serif;font-size:0.95rem;letter-spacing:2px;padding:12px 30px;cursor:pointer;transition:background .3s,color .3s;margin:5px;}
+.ov-btn:hover{background:#1a1a1a;color:#ffffff;}
+
+#wave-announce{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.3rem;letter-spacing:3px;color:#1a1a1a;opacity:0;pointer-events:none;z-index:100;text-align:center;white-space:nowrap;}
+#wave-announce.show{animation:wann 1.6s ease forwards;}
+@keyframes wann{0%{opacity:0;transform:translate(-50%,-50%) scale(0.9);}20%{opacity:1;transform:translate(-50%,-50%) scale(1);}75%{opacity:1;}100%{opacity:0;}}
+#pause-btn{background:none;border:1px solid #1a1a1a;color:#1a1a1a;font-family:Georgia,serif;font-size:0.75rem;letter-spacing:2px;padding:6px 14px;cursor:pointer;transition:background .3s,color .3s;}
+#pause-btn:hover{background:#1a1a1a;color:#ffffff;}
+@media (max-width:760px){#main-area{flex-direction:column;align-items:center;}#shop-panel{width:100%;max-width:340px;max-height:280px;}}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="fade-white"></div>
+
+<div class="screen active" id="screen-letter">
+  <div class="letter-text" id="letter-text"></div>
+  <button class="nav-btn" id="next-btn">Weiter <span>&rarr;</span></button>
+</div>
+
+
+<div class="screen" id="screen-final-letter">
+  <div class="letter-text" id="final-letter-text"></div>
+  <button class="nav-btn" id="final-next-btn">Weiter <span>&rarr;</span></button>
+</div>
+
+<div class="screen" id="screen-game">
+  <div id="topbar">
+    <div class="chapter-label">Kapitel 3 &middot; Skyridge, 20 Jahre spaeter</div>
+    <button id="pause-btn" onclick="openStopMenu()">Stop</button>
+    <div class="date-display" id="date-display">Tag 1 von 270</div>
+  </div>
+  <div id="main-area">
+    <div style="display:flex;flex-direction:column;">
+      <div id="stage-wrap">
+        <canvas id="stage" width="480" height="560"></canvas>
+        <div id="wave-announce"></div>
+      </div>
+      <div id="bars-row">
+        <div class="bar-block">
+          <div class="bar-label"><span>Turm</span><span id="hp-text">0/500</span></div>
+          <div class="bar-outer"><div id="hp-inner" class="bar-inner" style="width:0%"></div></div>
+        </div>
+        <div class="bar-block">
+          <div class="bar-label"><span>Fortschritt</span><span id="energy-label">0%</span></div>
+          <div class="bar-outer"><div id="energy-inner" class="bar-inner" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+    <div id="shop-panel">
+      <div class="shop-title">Wiederaufbau</div>
+      <div class="gold-row"><span>Materialien</span><span id="gold-text">0</span></div>
+      <div id="shop-items-container"></div>
+      <div class="day-info">Tag <span id="day-num">1</span> von <span id="day-total">40</span><br>Verteidige die Baustelle und baue den Turm wieder auf.</div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-death">
+  <h2>Die Baustelle ist gefallen</h2>
+  <p id="death-text">Zu viele Plünderer haben den halbfertigen Turm ueberrannt. Man bringt Evelyn zurueck an den Anfang des Tages.</p>
+  <button class="ov-btn" onclick="respawnAtDayStart()">Von Neuem</button>
+</div>
+
+<div class="overlay" id="stop-menu-overlay" style="z-index:1090">
+  <h2>Pausiert</h2>
+  <p>Der Wiederaufbau ruht.</p>
+  <button class="ov-btn" onclick="resumeFromStop()">Fortsetzen</button>
+</div>
+
+
+<div class="overlay" id="ov-dragon-intro">
+  <h2>Der Drache erwacht</h2>
+  <p id="dragon-intro-text">Der Schatten am Ende des Briefes war real. Ein Drache steigt aus den Ruinen der alten Kammern auf. Evelyn muss ihn bezwingen, um Skyridge endgueltig zu sichern.</p>
+  <button class="ov-btn" id="dragon-fight-btn">Kampf beginnen</button>
+</div>
+
+<div class="overlay" id="ov-dragon-victory">
+  <h2>Der Drache ist gefallen</h2>
+  <p>Die letzte Bestie liegt am Boden. Skyridge ist frei - fuer immer.</p>
+  <button class="ov-btn" id="dragon-continue-btn">Weiter</button>
+</div>
+
+<div class="overlay" id="ov-victory">
+  <h2>Skyridge steht wieder</h2>
+  <p>Neun Monate hat Evelyn gebraucht, um aus Ruinen einen neuen Turm zu formen und den Drachen zu bezwingen. Er ist staerker als zuvor - eine Mahnung und ein Versprechen zugleich, dass niemand vergessen wird, der hier geblieben ist.</p>
+  <button class="ov-btn" id="to-credits-btn">Weiter</button>
+</div>
+
+</div>
+<script>
+/* ============ NARRATIVE INTRO ============ */
+const fade=document.getElementById('fade-white');
+const screens={letter:document.getElementById('screen-letter'),game:document.getElementById('screen-game'),finalLetter:document.getElementById('screen-final-letter')};
+function switchScreen(from,to,cb){
+  fade.classList.add('on');
+  setTimeout(()=>{from.classList.remove('active');to.classList.add('active');
+    setTimeout(()=>{fade.classList.remove('on');if(cb)cb();},300);
+  },800);
+}
+const letterFull=`Liebe Marie,
+
+meine Simulation war erfolgreich. Jeder Mechanismus, jede Abwehrlinie, jedes System, das Skyridge einst beschuetzt hat, funktioniert jetzt in meinem Modell perfekt.
+
+Ich habe alles vorbereitet. Die Baupläne, die Materialien, die Route auf den Berg. Morgen fahre ich nach Skyridge. Zwanzig Jahre nach dem Sturm werde ich zurueckkehren an den Ort, an dem Logan sein Leben gelassen hat.
+
+Ich werde den Turm wieder aufbauen. Nicht als Ruine, sondern staerker als zuvor. Doch der Berg ist nicht leer geblieben - Plünderer und wilde Bestien streifen durch die Ruinen. Ich werde mich verteidigen muessen, waehrend ich baue.
+
+Fuer Logan. Fuer alle, die dort geblieben sind. Fuer die, die nach uns kommen.
+
+In Liebe,
+deine Evelyn`;
+
+const finalLetterFull=`Liebe Marie,
+
+neun Monate sind vergangen, seit ich den ersten Stein wieder aufgerichtet habe. Der Turm steht fast vollstaendig - hoeher und staerker, als ich es mir je vorgestellt hatte.
+
+Doch letzte Nacht habe ich etwas gesehen. Unter den alten Kammern, tief im Fels, wo einst Logan seine letzte Stellung hielt, regt sich ein Schatten, der grosser ist als jeder Pluenderer, jede wilde Bestie.
+
+Die Chroniken der alten Waechter sprachen immer von einem Wesen, das den Berg bewacht - ich hielt es fuer eine Legende. Jetzt weiss ich es besser. Ein Drache erwacht aus seinem jahrzehntelangen Schlaf, als wuerde er den fast fertigen Turm als Bedrohung erkennen.
+
+Ich werde mich ihm stellen muessen. Nicht mit einer Simulation, sondern mit allem, was ich in diesen neun Monaten aufgebaut habe. Wenn dieser Brief dich erreicht und ich nicht zurueckkehre, dann weisst du: Ich habe es zumindest versucht, fuer Skyridge, fuer Logan, fuer uns alle.
+
+In Liebe,
+deine Evelyn`;
+
+function typeLetter(el,text,speed,onDone){
+  let i=0;el.textContent='';
+  function step(){if(i<text.length){el.textContent+=text.charAt(i);i++;setTimeout(step,speed);}else if(onDone)onDone();}
+  step();
+}
+const textEl=document.getElementById('letter-text');
+const nextBtn=document.getElementById('next-btn');
+typeLetter(textEl,letterFull,22,()=>nextBtn.classList.add('visible'));
+nextBtn.addEventListener('click',()=>{
+  switchScreen(screens.letter,screens.game,()=>{startGameLoop();});
+});
+
+const finalTextEl=document.getElementById('final-letter-text');
+const finalNextBtn=document.getElementById('final-next-btn');
+let finalLetterShown=false;
+function showFinalLetter(){
+  if(finalLetterShown)return;
+  finalLetterShown=true;
+  game.paused=true;
+  switchScreen(screens.game,screens.finalLetter,()=>{
+    typeLetter(finalTextEl,finalLetterFull,22,()=>finalNextBtn.classList.add('visible'));
+  });
+}
+finalNextBtn.addEventListener('click',()=>{
+  switchScreen(screens.finalLetter,screens.game,()=>{
+    game.paused=false;
+    startDragonFight();
+  });
+});
+
+/* ============ REBUILD + DEFENSE GAME ============ */
+const LS='towerOfDragonsch3';
+const PROGKEY='towerOfDragonsch3progress';
+function loadSave(){try{return JSON.parse(localStorage.getItem(LS))||{};}catch(e){return {};}}
+function writeSave(d){localStorage.setItem(LS,JSON.stringify(d));}
+const TOTALDAYS=270; // 9 Monate (30 Tage/Monat)
+const canvas=document.getElementById('stage');
+const ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height;
+const TOWERX=W/2,TOWERY=H-60;
+
+const IC={
+ hammer:'<svg width="12" height="13" viewBox="0 0 12 13"><path d="M1,12 L7,2 L11,1 L10,5 L2,11 Z" fill="none" stroke="#1a1a1a" stroke-width="1.1"/></svg>',
+ brick:'<svg width="13" height="10" viewBox="0 0 13 10"><rect x="0" y="0" width="5.5" height="4.5" fill="none" stroke="#1a1a1a" stroke-width="0.9"/><rect x="6.5" y="0" width="5.5" height="4.5" fill="none" stroke="#1a1a1a" stroke-width="0.9"/><rect x="3" y="5.5" width="5.5" height="4.5" fill="none" stroke="#1a1a1a" stroke-width="0.9"/></svg>',
+ bow:'<svg width="12" height="13" viewBox="0 0 12 13"><path d="M2,1 Q10,6.5 2,12" fill="none" stroke="#1a1a1a" stroke-width="1.1"/><line x1="2" y1="1" x2="2" y2="12" stroke="#1a1a1a" stroke-width="0.7"/></svg>',
+ shield:'<svg width="11" height="13" viewBox="0 0 11 13"><path d="M5.5,0 L11,2 L11,7 Q11,11 5.5,13 Q0,11 0,7 L0,2 Z" fill="none" stroke="#1a1a1a" stroke-width="1"/></svg>',
+ bolt:'<svg width="10" height="12" viewBox="0 0 10 14"><polygon points="6,0 0,8 5,8 4,14 10,6 5,6" fill="#1a1a1a"/></svg>',
+ bell:'<svg width="10" height="12" viewBox="0 0 10 12"><path d="M5,0 C7,0 8,2 8,4.5 L9,9 L1,9 L2,4.5 C2,2 3,0 5,0 Z" fill="none" stroke="#1a1a1a" stroke-width="1"/><rect x="3.5" y="9" width="3" height="2" fill="#1a1a1a"/></svg>',
+ heart:'<svg width="11" height="10" viewBox="0 0 11 10"><path d="M5.5,9 C5.5,9 0,5 0,2.5 A2.5,2.5,0,0,1,5.5,1.5 A2.5,2.5,0,0,1,11,2.5 C11,5 5.5,9 5.5,9Z" fill="#1a1a1a"/></svg>',
+ banner:'<svg width="10" height="13" viewBox="0 0 10 13"><line x1="1" y1="0" x2="1" y2="13" stroke="#1a1a1a" stroke-width="1"/><path d="M1,1 L9,3 L1,6 Z" fill="#1a1a1a"/></svg>'
+};
+
+const CATEGORIES=[
+ {key:'attack',name:'Schusstaerke',icon:IC.bolt,unlockDay:1,maxLv:20,base:20,exp:1.5,desc:'Mehr Schaden pro Treffer gegen Pluenderer.'},
+ {key:'firerate',name:'Schussgeschwindigkeit',icon:IC.bow,unlockDay:1,maxLv:20,base:18,exp:1.5,desc:'Der Turm schiesst schneller.'},
+ {key:'crew',name:'Baumannschaft',icon:IC.hammer,unlockDay:1,maxLv:16,base:22,exp:1.5,desc:'Beschleunigt den Baufortschritt pro Tag.'},
+ {key:'supply',name:'Materiallager',icon:IC.brick,unlockDay:2,maxLv:16,base:24,exp:1.5,desc:'Mehr Materialien pro Tag und pro Kill.'},
+ {key:'armor',name:'Ruestung',icon:IC.shield,unlockDay:3,maxLv:12,base:30,exp:1.6,desc:'Erhoeht die maximale Lebenskraft des Turms.'},
+ {key:'range',name:'Reichweite',icon:IC.bow,unlockDay:5,maxLv:8,base:34,exp:1.65,desc:'Der Turm greift Gegner aus grosserer Distanz an.'},
+ {key:'alarm',name:'Alarmglocke',icon:IC.bell,unlockDay:8,maxLv:8,base:36,exp:1.65,desc:'Mehr Zeit zwischen den Wellen zur Vorbereitung.'},
+ {key:'memorial',name:'Gedenkstaette',icon:IC.heart,unlockDay:14,maxLv:6,base:42,exp:1.7,desc:'Ein Ort fuer Logan. Kleiner Bonus auf alle Werte.'},
+ {key:'bastion',name:'Letzte Bastion',icon:IC.banner,unlockDay:22,maxLv:6,base:48,exp:1.75,desc:'Letzte Verstaerkungen vor der Fertigstellung.'},
+];
+
+let save=loadSave();
+save.levels=save.levels||{};
+for(const c of CATEGORIES) save.levels[c.key]=save.levels[c.key]??0;
+writeSave(save);
+
+function lv(k){return save.levels[k]||0;}
+function cat(k){return CATEGORIES.find(c=>c.key===k);}
+function costFor(k){
+  const c=cat(k),level=lv(k);
+  if(level>=c.maxLv)return Infinity;
+  const dayMul=1+Math.max(0,c.unlockDay-1)*0.18;
+  return Math.round(c.base*dayMul*Math.pow(c.exp,level));
+}
+function buyUpgrade(k){
+  const cost=costFor(k);
+  if(game.material<cost)return;
+  game.material-=cost;
+  save.levels[k]=(save.levels[k]||0)+1;
+  writeSave(save);
+  if(k==='armor')game.towerMaxHP=500+lv('armor')*40;
+  renderShop();
+}
+function attackPower(){return 12*(1+0.26*lv('attack'))*(1+0.06*lv('bastion'));}
+function fireRate(){return 1.0*(1+0.18*lv('firerate'))*(1+0.06*lv('bastion'));}
+function buildSpeed(){return 1+lv('crew')*0.12;}
+function materialPerDay(){return 5+lv('supply')*2;}
+function materialPerKill(){return 2+lv('supply');}
+function towerRange(){return 110+lv('range')*20;}
+function intermissionBonus(){return lv('alarm')*0.4;}
+function allBonus(){return 1+lv('memorial')*0.04;}
+
+function renderShop(){
+  document.getElementById('gold-text').textContent=Math.floor(game.material);
+  document.getElementById('day-num').textContent=game.dayCounter;
+  const container=document.getElementById('shop-items-container');
+  container.innerHTML='';
+  for(const c of CATEGORIES){
+    if(c.unlockDay>game.dayCounter)continue;
+    const level=lv(c.key),maxed=level>=c.maxLv,cost=costFor(c.key);
+    const div=document.createElement('div');
+    div.className='shop-item'+(maxed?' maxed':'');
+    div.onclick=()=>buyUpgrade(c.key);
+    div.innerHTML='<div class="si-name">'+c.icon+' '+c.name+'</div><div class="si-desc">'+c.desc+'</div><div class="si-level">Stufe '+level+'/'+c.maxLv+'</div><div class="si-cost">'+(maxed?'Max.':cost+' Mat.')+'</div>';
+    container.appendChild(div);
+  }
+}
+
+let game={
+ dayCounter:1, towerHP:0, towerMaxHP:500, material:30, running:true, paused:false,
+ enemies:[], projectiles:[], spawnQueue:0, spawnTimer:0, waveActive:false,
+ intermissionTimer:1.2, lastShot:0, lastTime:0, loopStarted:false, progressAdded:false,
+ dragonFight:false, dragon:null
+};
+
+function enemyCountForDay(day){return 2+Math.floor(day*0.7);}
+function enemyHPFor(day){return 8+day*3.4;}
+function enemyDmgFor(day){return 2+day*0.5;}
+function enemySpeedFor(day){return 24+day*1.1;}
+function enemyTypeFor(day){
+  const wildChance=Math.min(0.35,0.03+day*0.01);
+  return Math.random()<wildChance?'wild':'pluenderer';
+}
+
+function startWave(){
+  game.spawnQueue=enemyCountForDay(game.dayCounter);
+  game.spawnTimer=0;
+  game.waveActive=true;
+  game.progressAdded=false;
+  showAnnounce('TAG '+game.dayCounter+' &middot; ANGRIFF');
+}
+function showAnnounce(text){
+  const el=document.getElementById('wave-announce');
+  el.innerHTML=text; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+}
+function spawnEnemy(){
+  const day=game.dayCounter;
+  const type=enemyTypeFor(day);
+  const wildMul=type==='wild'?1.5:1.0;
+  const x=30+Math.random()*(W-60);
+  game.enemies.push({x,y:-20,hp:enemyHPFor(day)*wildMul,maxHp:enemyHPFor(day)*wildMul,
+    dmg:enemyDmgFor(day)*(type==='wild'?1.2:1.0),speed:enemySpeedFor(day)*(type==='wild'?0.9:1.0),
+    r:type==='wild'?15:11,type});
+}
+
+function update(dt){
+  if(game.paused||!game.running)return;
+  if(game.dragonFight){
+    updateDragon(dt);
+    return;
+  }
+  if(game.waveActive){
+    if(game.spawnQueue>0){
+      game.spawnTimer-=dt;
+      if(game.spawnTimer<=0){spawnEnemy();game.spawnQueue--;game.spawnTimer=0.7;}
+    }
+  } else {
+    game.intermissionTimer-=dt;
+    if(game.intermissionTimer<=0)startWave();
+  }
+
+  for(let i=game.enemies.length-1;i>=0;i--){
+    const e=game.enemies[i];
+    const dx=TOWERX-e.x,dy=TOWERY-e.y;
+    const dist=Math.hypot(dx,dy);
+    if(dist<e.r+18){
+      game.towerHP-=e.dmg;
+      game.enemies.splice(i,1);
+      continue;
+    }
+    e.x+=dx/dist*e.speed*dt;
+    e.y+=dy/dist*e.speed*dt;
+  }
+
+  game.lastShot+=dt;
+  const interval=1/fireRate();
+  if(game.lastShot>=interval && game.enemies.length>0){
+    const range=towerRange();
+    const inRange=game.enemies.filter(e=>Math.hypot(e.x-TOWERX,e.y-TOWERY)<=range);
+    const pool=inRange.length>0?inRange:game.enemies;
+    pool.sort((a,b)=>Math.hypot(a.x-TOWERX,a.y-TOWERY)-Math.hypot(b.x-TOWERX,b.y-TOWERY));
+    const target=pool[0];
+    game.projectiles.push({x:TOWERX,y:TOWERY-20,target,speed:480});
+    game.lastShot=0;
+  }
+
+  for(let i=game.projectiles.length-1;i>=0;i--){
+    const p=game.projectiles[i];
+    if(!game.enemies.includes(p.target)){game.projectiles.splice(i,1);continue;}
+    const dx=p.target.x-p.x,dy=p.target.y-p.y;
+    const dist=Math.hypot(dx,dy);
+    if(dist<10){
+      p.target.hp-=attackPower()*allBonus();
+      if(p.target.hp<=0){
+        const idx=game.enemies.indexOf(p.target);
+        if(idx>=0){game.material+=materialPerKill()*allBonus();game.enemies.splice(idx,1);}
+      }
+      game.projectiles.splice(i,1);
+    } else {
+      p.x+=dx/dist*p.speed*dt;
+      p.y+=dy/dist*p.speed*dt;
+    }
+  }
+
+  if(game.waveActive && game.spawnQueue<=0 && game.enemies.length<=0){
+    game.waveActive=false;
+    endOfDay();
+  }
+
+  if(game.towerHP<=0 && !game.dragonFight){
+    triggerSetback();
+  }
+}
+
+function saveCheckpoint(){
+  localStorage.setItem(PROGKEY,JSON.stringify({day:game.dayCounter,towerHP:game.towerHP,material:game.material}));
+}
+function loadCheckpoint(){try{return JSON.parse(localStorage.getItem(PROGKEY))||{};}catch(e){return {};}}
+
+const FINAL_LETTER_DAY=TOTALDAYS-3;
+function endOfDay(){
+  if(game.progressAdded)return;
+  game.progressAdded=true;
+  const gain=(game.towerMaxHP/TOTALDAYS)*buildSpeed()*allBonus();
+  game.towerHP=Math.min(game.towerMaxHP,game.towerHP+gain);
+  game.material+=materialPerDay()*allBonus();
+  saveCheckpoint();
+  renderShop();
+
+  if((game.dayCounter>=FINAL_LETTER_DAY || game.dayCounter>=TOTALDAYS) && !finalLetterShown){
+    showFinalLetter();
+    return;
+  }
+  game.dayCounter=Math.min(TOTALDAYS,game.dayCounter+1);
+  game.intermissionTimer=2.5+intermissionBonus();
+  renderShop();
+}
+
+function drawTower(progress){
+  ctx.save();ctx.translate(TOWERX,TOWERY);
+  ctx.strokeStyle='#1a1a1a';ctx.lineWidth=1.3;
+  const h=140*Math.max(0.08,progress);
+  ctx.strokeRect(-38,-h,76,h);
+  const rows=Math.max(1,Math.floor(5*progress));
+  for(let i=1;i<=rows;i++){
+    ctx.beginPath();ctx.moveTo(-38,-h*i/5);ctx.lineTo(38,-h*i/5);ctx.stroke();
+  }
+  if(progress>0.9){
+    ctx.beginPath();ctx.moveTo(-36,-h);ctx.lineTo(0,-h-34);ctx.lineTo(36,-h);ctx.closePath();ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawEnemy(e){
+  ctx.save();ctx.translate(e.x,e.y);
+  ctx.strokeStyle='#1a1a1a';ctx.lineWidth=e.type==='wild'?1.6:1.1;
+  ctx.beginPath();
+  if(e.type==='wild'){
+    ctx.moveTo(0,-e.r);ctx.lineTo(e.r*0.9,-e.r*0.2);ctx.lineTo(e.r*0.6,e.r*0.7);
+    ctx.lineTo(-e.r*0.6,e.r*0.7);ctx.lineTo(-e.r*0.9,-e.r*0.2);ctx.closePath();
+  } else {
+    ctx.moveTo(0,-e.r);ctx.lineTo(e.r*0.8,e.r*0.5);ctx.lineTo(0,e.r*0.2);ctx.lineTo(-e.r*0.8,e.r*0.5);ctx.closePath();
+  }
+  ctx.stroke();
+  const hpRatio=Math.max(0,e.hp/e.maxHp);
+  ctx.strokeRect(-e.r,-e.r-10,e.r*2,3);
+  ctx.fillStyle='#1a1a1a';
+  ctx.fillRect(-e.r,-e.r-10,e.r*2*hpRatio,3);
+  ctx.restore();
+}
+function drawProjectile(p){
+  ctx.fillStyle='#1a1a1a';
+  ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill();
+}
+function updateBars(){
+  document.getElementById('date-display').textContent=game.dragonFight?'Der Drache':('Tag '+game.dayCounter+' von '+TOTALDAYS);
+  document.getElementById('day-total').textContent=TOTALDAYS;
+  document.getElementById('hp-text').textContent=Math.max(0,Math.round(game.towerHP))+'/'+game.towerMaxHP;
+  document.getElementById('hp-inner').style.width=Math.max(0,game.towerHP/game.towerMaxHP*100)+'%';
+  const pct=Math.round(game.towerHP/game.towerMaxHP*100);
+  document.getElementById('energy-label').textContent=game.dragonFight?Math.round(game.dragon.hp/game.dragon.maxHp*100)+'%':pct+'%';
+  document.getElementById('energy-inner').style.width=(game.dragonFight?Math.max(0,game.dragon.hp/game.dragon.maxHp*100):pct)+'%';
+}
+function render(){
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#e8e8e8';ctx.lineWidth=1;
+  for(let i=1;i<6;i++){ctx.beginPath();ctx.moveTo(0,i*H/6);ctx.lineTo(W,i*H/6);ctx.stroke();}
+  drawTower(game.towerHP/game.towerMaxHP);
+  if(game.dragonFight){
+    drawDragon();
+  } else {
+    for(const e of game.enemies)drawEnemy(e);
+  }
+  for(const p of game.projectiles)drawProjectile(p);
+  updateBars();
+}
+
+
+function showDragonIntro(){
+  game.running=false;
+  document.getElementById('ov-dragon-intro').classList.add('show');
+}
+document.getElementById('dragon-fight-btn').addEventListener('click',()=>{
+  document.getElementById('ov-dragon-intro').classList.remove('show');
+  actuallyStartDragonFight();
+});
+function startDragonFight(){
+  showDragonIntro();
+}
+function actuallyStartDragonFight(){
+  game.dragonFight=true;
+  game.enemies=[];
+  game.projectiles=[];
+  game.waveActive=false;
+  game.dragon={
+    x:W/2, y:90, hp:2600+lv('armor')*60, maxHp:2600+lv('armor')*60,
+    dmg:14, speed:70, phase:'approach', attackTimer:2.0, fireballs:[]
+  };
+  game.running=true;
+  game.lastTime=0;
+  showAnnounce('DER DRACHE');
+}
+function updateDragon(dt){
+  const d=game.dragon;
+  if(!d)return;
+  const dx=TOWERX-d.x, dy=(TOWERY-160)-d.y;
+  const dist=Math.hypot(dx,dy);
+  if(dist>10){
+    d.x+=dx/dist*d.speed*dt;
+    d.y+=dy/dist*d.speed*dt;
+  }
+  d.attackTimer-=dt;
+  if(d.attackTimer<=0){
+    d.fireballs.push({x:d.x,y:d.y+20,vx:0,vy:150});
+    d.attackTimer=1.8-Math.min(0.9,lv('alarm')*0.05);
+  }
+  for(let i=d.fireballs.length-1;i>=0;i--){
+    const f=d.fireballs[i];
+    f.x+=f.vx*dt; f.y+=f.vy*dt;
+    const fdist=Math.hypot(TOWERX-f.x,TOWERY-f.y);
+    if(fdist<24){
+      game.towerHP-=d.dmg;
+      d.fireballs.splice(i,1);
+      continue;
+    }
+    if(f.y>H+20)d.fireballs.splice(i,1);
+  }
+
+  game.lastShot+=dt;
+  const interval=1/fireRate();
+  if(game.lastShot>=interval){
+    game.projectiles.push({x:TOWERX,y:TOWERY-20,target:d,speed:480,isDragonShot:true});
+    game.lastShot=0;
+  }
+  for(let i=game.projectiles.length-1;i>=0;i--){
+    const p=game.projectiles[i];
+    const tx=p.target.x, ty=p.target.y;
+    const pdx=tx-p.x, pdy=ty-p.y;
+    const pdist=Math.hypot(pdx,pdy);
+    if(pdist<16){
+      d.hp-=attackPower()*allBonus()*1.4;
+      game.projectiles.splice(i,1);
+      if(d.hp<=0){
+        winDragonFight();
+        return;
+      }
+    } else {
+      p.x+=pdx/pdist*p.speed*dt;
+      p.y+=pdy/pdist*p.speed*dt;
+    }
+  }
+
+  if(game.towerHP<=0){
+    game.towerHP=game.towerMaxHP*0.3;
+  }
+}
+function drawDragon(){
+  const d=game.dragon;
+  if(!d)return;
+  ctx.save();ctx.translate(d.x,d.y);
+  ctx.strokeStyle='#1a1a1a';ctx.lineWidth=1.6;
+  ctx.beginPath();
+  ctx.moveTo(-40,0);ctx.lineTo(-15,-22);ctx.lineTo(15,-22);ctx.lineTo(40,0);
+  ctx.lineTo(15,20);ctx.lineTo(-15,20);ctx.closePath();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-40,-4);ctx.lineTo(-65,-26);ctx.lineTo(-40,-12);ctx.closePath();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(40,-4);ctx.lineTo(65,-26);ctx.lineTo(40,-12);ctx.closePath();ctx.stroke();
+  ctx.restore();
+  const hpRatio=Math.max(0,d.hp/d.maxHp);
+  ctx.strokeRect(d.x-60,d.y-46,120,6);
+  ctx.fillStyle='#1a1a1a';
+  ctx.fillRect(d.x-60,d.y-46,120*hpRatio,6);
+  ctx.fillStyle='#1a1a1a';
+  for(const f of d.fireballs){
+    ctx.beginPath();ctx.arc(f.x,f.y,5,0,Math.PI*2);ctx.fill();
+  }
+}
+function winDragonFight(){
+  game.running=false;
+  game.dragonFight=false;
+  document.getElementById('ov-dragon-victory').classList.add('show');
+}
+document.getElementById('dragon-continue-btn').addEventListener('click',()=>{
+  document.getElementById('ov-dragon-victory').classList.remove('show');
+  triggerVictory();
+});
+
+function triggerSetback(){
+  game.running=false;
+  document.getElementById('ov-death').classList.add('show');
+}
+function respawnAtDayStart(){
+  game.towerHP=game.towerMaxHP*0.4;
+  game.enemies=[];game.projectiles=[];game.waveActive=false;
+  game.intermissionTimer=1.5;
+  game.running=true;
+  document.getElementById('ov-death').classList.remove('show');
+  game.lastTime=0;
+  renderShop();
+}
+function triggerVictory(){
+  game.running=false;
+  writeSave(save);
+  localStorage.setItem('towerOfDragonsCh3Completed','true');
+  document.getElementById('ov-victory').classList.add('show');
+}
+document.getElementById('to-credits-btn').addEventListener('click',()=>{
+  window.location.href='credits.html';
+});
+function openStopMenu(){if(!game.running)return;document.getElementById('stop-menu-overlay').classList.add('show');game.paused=true;}
+function resumeFromStop(){document.getElementById('stop-menu-overlay').classList.remove('show');game.paused=false;}
+
+function loop(ts){
+  if(!game.lastTime)game.lastTime=ts;
+  const dt=Math.min(0.05,(ts-game.lastTime)/1000);
+  game.lastTime=ts;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+function startGameLoop(){
+  if(game.loopStarted)return;
+  game.loopStarted=true;
+  game.towerMaxHP=500+lv('armor')*40;
+  const pg=loadCheckpoint();
+  game.dayCounter=Math.max(1,Math.min(TOTALDAYS,pg.day||1));
+  game.towerHP=pg.towerHP??game.towerMaxHP*0.15;
+  game.material=pg.material??30;
+  renderShop();
+  updateBars();
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>

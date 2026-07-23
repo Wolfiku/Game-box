@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Tower of Dragons - Kapitel 2</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:100%; height:100%;
+    background:#ffffff;
+    color:#1a1a1a;
+    font-family: Georgia, 'Times New Roman', serif;
+    overflow:hidden;
+  }
+  .screen {
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    background:#ffffff;
+  }
+  .screen.active { display:flex; }
+
+  #screen-letter1, #screen-letter2 {
+    padding:8% 12%;
+    align-items:flex-start;
+  }
+  .letter-text {
+    font-size:1.15rem;
+    line-height:1.9;
+    white-space:pre-wrap;
+    max-width:700px;
+  }
+  .nav-btn {
+    margin-top:40px;
+    padding:12px 30px;
+    background:none;
+    border:1px solid #1a1a1a;
+    color:#1a1a1a;
+    font-family:Georgia, serif;
+    font-size:0.95rem;
+    letter-spacing:2px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .8s ease, background .3s, color .3s;
+    align-self:flex-end;
+  }
+  .nav-btn.visible {
+    opacity:1;
+    pointer-events:auto;
+  }
+  .nav-btn:hover {
+    background:#1a1a1a;
+    color:#ffffff;
+  }
+  .arrow-icon {
+    width:0; height:0;
+    border-top:5px solid transparent;
+    border-bottom:5px solid transparent;
+    border-left:8px solid #1a1a1a;
+    transition: border-left-color .3s;
+  }
+  .nav-btn:hover .arrow-icon {
+    border-left-color:#ffffff;
+  }
+
+  #screen-timeskip span {
+    font-size:2rem;
+    letter-spacing:3px;
+    text-align:center;
+  }
+  #screen-timeskip .sub {
+    font-size:1rem;
+    letter-spacing:2px;
+    color:#4a4a4a;
+    margin-top:14px;
+  }
+
+  #screen-date span {
+    font-size:2rem;
+    letter-spacing:3px;
+  }
+
+  #fade-white {
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:#ffffff;
+    z-index:999;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .8s ease;
+  }
+  #fade-white.on {
+    opacity:1;
+    pointer-events:all;
+  }
+</style>
+</head>
+<body>
+
+<div id="fade-white"></div>
+
+<div class="screen active" id="screen-letter1">
+  <div class="letter-text" id="letter-text-1"></div>
+  <button class="nav-btn" id="next-btn-1">
+    <span>Weiter</span>
+    <span class="arrow-icon"></span>
+  </button>
+</div>
+
+<div class="screen" id="screen-timeskip">
+  <span>20 Jahre spaeter</span>
+  <div class="sub">Die Erde ist unbesetztes Land geworden.</div>
+</div>
+
+<div class="screen" id="screen-letter2">
+  <div class="letter-text" id="letter-text-2"></div>
+  <button class="nav-btn" id="next-btn-2">
+    <span>Weiter</span>
+    <span class="arrow-icon"></span>
+  </button>
+</div>
+
+<div class="screen" id="screen-date">
+  <span>Kapitel 2</span>
+</div>
+
+<script>
+  const fade = document.getElementById('fade-white');
+  const screens = {
+    letter1: document.getElementById('screen-letter1'),
+    timeskip: document.getElementById('screen-timeskip'),
+    letter2: document.getElementById('screen-letter2'),
+    date: document.getElementById('screen-date')
+  };
+
+  function switchScreen(from, to, callback) {
+    fade.classList.add('on');
+    setTimeout(() => {
+      from.classList.remove('active');
+      to.classList.add('active');
+      setTimeout(() => {
+        fade.classList.remove('on');
+        if (callback) callback();
+      }, 300);
+    }, 800);
+  }
+
+  const letter1Full =
+"An Evelyn Ashford, zugestellt durch das Kommando ausserhalb der unbesetzten Zone,\n\n" +
+"es faellt mir schwer, Ihnen diese Zeilen zu schreiben. Wir muessen Ihnen mitteilen, dass Ihr Mann, Logan, im Dienst gefallen ist.\n\n" +
+"Der Turm von Skyridge wurde in der Nacht nach dem grossen Sturm von etwas Unbekanntem angegriffen. Die letzten Funkaufnahmen sprechen von einem Drachen, der aus den Wolken kam, als die Stromversorgung bereits zusammengebrochen war. Danach herrschte nur noch Stille.\n\n" +
+"Es gibt keine Ueberlebenden. Rettungstrupps, die den Berg spaeter erreichten, fanden nur noch die Ruinen des Turms und verkohlte Erde. Wir haben Skyridge daraufhin aus der Liste der besetzten Gebiete gestrichen.\n\n" +
+"Mein tiefstes Beileid gilt Ihnen und allen Familien der Gefallenen.\n\n" +
+"In Ihrem Dienst, Commander R. Halden";
+
+  const letter2Full =
+"Liebe Marie,\n\n" +
+"es ist jetzt zwanzig Jahre her, seit ich die Nachricht von Logan erhalten habe. Ich habe all die Jahre nicht aufgehoert, an Skyridge zu denken, an den Turm, an das, was dort geschehen ist.\n\n" +
+"Ich habe etwas entwickelt, von dem ich dir unbedingt erzaehlen muss. Eine Simulation, ein System, mit dem ich in der Realitaet nachbilden kann, wie der Turm funktioniert hat - seine Abwehr, seine Versorgung, jeden einzelnen Mechanismus, den die Waechter damals nutzten.\n\n" +
+"Wenn meine Berechnungen stimmen, koennten wir Skyridge wieder aufbauen. Nicht als Ruine, sondern staerker als zuvor. Ich weiss, es klingt verrueckt nach so langer Zeit, aber ich glaube, ich schulde es Logan und allen, die dort geblieben sind.\n\n" +
+"Ich hoffe, es geht dir gut.\n\n" +
+"In Liebe, deine Evelyn";
+
+  function typeLetter(el, text, speed, onDone) {
+    let i = 0;
+    el.textContent = "";
+    function step() {
+      if (i < text.length) {
+        el.textContent += text.charAt(i);
+        i++;
+        setTimeout(step, speed);
+      } else if (onDone) {
+        onDone();
+      }
+    }
+    step();
+  }
+
+  typeLetter(document.getElementById('letter-text-1'), letter1Full, 26, () => {
+    document.getElementById('next-btn-1').classList.add('visible');
+  });
+
+  document.getElementById('next-btn-1').addEventListener('click', () => {
+    switchScreen(screens.letter1, screens.timeskip, () => {
+      setTimeout(() => {
+        switchScreen(screens.timeskip, screens.letter2, () => {
+          typeLetter(document.getElementById('letter-text-2'), letter2Full, 26, () => {
+            document.getElementById('next-btn-2').classList.add('visible');
+          });
+        });
+      }, 3200);
+    });
+  });
+
+  document.getElementById('next-btn-2').addEventListener('click', () => {
+    switchScreen(screens.letter2, screens.date, () => {
+      setTimeout(() => {
+        fade.classList.add('on');
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 800);
+      }, 1200);
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Tower of Dragons - Epilog Kapitel 1</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; background:#ffffff; color:#1a1a1a; font-family: Georgia, 'Times New Roman', serif; overflow:hidden; }
+.screen { position:fixed; top:0; left:0; width:100%; height:100%; display:none; align-items:center; justify-content:center; flex-direction:column; background:#ffffff; }
+.screen.active { display:flex; }
+#screen-letter { padding:8% 12%; align-items:flex-start; }
+#letter-text { font-size:1.1rem; line-height:1.85; white-space:pre-wrap; max-width:700px; }
+.nav-btn { margin-top:36px; padding:12px 30px; background:none; border:1px solid #1a1a1a; color:#1a1a1a; font-family:Georgia, serif; font-size:0.95rem; letter-spacing:2px; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .8s ease, background .3s, color .3s; align-self:flex-end; }
+.nav-btn.visible { opacity:1; pointer-events:auto; }
+.nav-btn:hover { background:#1a1a1a; color:#ffffff; }
+#fade-white { position:fixed; top:0; left:0; width:100%; height:100%; background:#ffffff; z-index:999; opacity:0; pointer-events:none; transition:opacity .8s ease; }
+#fade-white.on { opacity:1; pointer-events:all; }
+
+#stage-wrap { position:relative; border:1px solid #1a1a1a; }
+#stage { display:block; background:#ffffff; transition:filter 1.2s ease, background 1.2s ease; }
+#topbar { width:480px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+#date-display { font-size:1rem; letter-spacing:2px; border:1px solid #1a1a1a; padding:6px 16px; }
+#bars-row { display:flex; justify-content:space-between; width:480px; margin-top:8px; gap:12px; }
+.bar-block { flex:1; }
+.bar-label { font-size:0.7rem; letter-spacing:2px; text-transform:uppercase; color:#4a4a4a; margin-bottom:3px; display:flex; justify-content:space-between; }
+.bar-outer { border:1px solid #1a1a1a; height:12px; width:100%; position:relative; }
+.bar-inner { background:#1a1a1a; height:100%; width:100%; transition:width .3s; }
+#energy-inner { background:repeating-linear-gradient(45deg,#1a1a1a 0 4px,#ffffff 4px 8px); transition:opacity 1s ease; }
+#event-caption { position:absolute; bottom:14px; left:0; width:100%; text-align:center; font-size:0.85rem; letter-spacing:2px; color:#1a1a1a; opacity:0; transition:opacity 1s ease; }
+#event-caption.show { opacity:1; }
+#blackout-overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:#000000; opacity:0; transition:opacity 2s ease; pointer-events:none; }
+#blackout-overlay.on { opacity:1; }
+</style>
+</head>
+<body>
+
+<div id="fade-white"></div>
+
+<div class="screen active" id="screen-letter">
+  <div id="letter-text"></div>
+  <button class="nav-btn" id="next-btn">Weiter</button>
+</div>
+
+<div class="screen" id="screen-storm">
+  <div id="topbar">
+    <div style="font-size:0.85rem; letter-spacing:2px; color:#4a4a4a;">Kapitel 1 &middot; Der Sturm</div>
+    <div id="date-display">1. Februar 9999</div>
+  </div>
+  <div id="stage-wrap">
+    <canvas id="stage" width="480" height="560"></canvas>
+    <div id="blackout-overlay"></div>
+    <div id="event-caption"></div>
+  </div>
+  <div id="bars-row">
+    <div class="bar-block">
+      <div class="bar-label"><span>Turm</span><span id="hp-text">100/100</span></div>
+      <div class="bar-outer"><div id="hp-inner" class="bar-inner" style="width:100%;"></div></div>
+    </div>
+    <div class="bar-block">
+      <div class="bar-label"><span>Energie</span><span id="energy-label">Netz aktiv</span></div>
+      <div class="bar-outer"><div id="energy-inner" class="bar-inner" style="width:100%;"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="screen-end">
+  <div style="font-size:2rem; letter-spacing:4px; margin-bottom:16px;">Skyridge brennt</div>
+  <div style="font-size:0.95rem; color:#4a4a4a; max-width:480px; text-align:center; line-height:1.8; margin-bottom:30px;">
+    Der Drache hat den letzten Widerstand des Turms gebrochen. Alles wird schwarz...
+  </div>
+</div>
+
+<script>
+const fade = document.getElementById('fade-white');
+const screens = {
+  letter: document.getElementById('screen-letter'),
+  storm: document.getElementById('screen-storm'),
+  end: document.getElementById('screen-end'),
+};
+
+function switchScreen(from, to, callback){
+  fade.classList.add('on');
+  setTimeout(() => {
+    from.classList.remove('active');
+    to.classList.add('active');
+    setTimeout(() => { fade.classList.remove('on'); if(callback) callback(); }, 300);
+  }, 800);
+}
+
+const letterFull =
+"Hallo Evelyn, ich hoffe, es geht dir gut.\n\n" +
+"Zwoelf Monate sind vergangen, seit wir hier in Skyridge angekommen sind. Es ist inzwischen ganz in Ordnung hier - die Vorraete reichen, die Waechter halten die Streuner in Schach, und die Nacht wird ruhiger.\n\n" +
+"Doch heute Morgen sahen wir dunkle Wolken ueber den Bergen aufziehen. Ein Sturm zieht auf, wie ich noch keinen erlebt habe. Ich habe Angst, Evelyn. Angst vor dem, was er mit sich bringt.\n\n" +
+"Ich hoffe, es geht dir gut.\n\n" +
+"In Liebe, dein Logan";
+
+function typeLetter(el, text, speed, onDone){
+  let i = 0; el.textContent = "";
+  function step(){
+    if(i < text.length){ el.textContent += text.charAt(i); i++; setTimeout(step, speed); }
+    else if(onDone) onDone();
+  }
+  step();
+}
+
+document.getElementById('next-btn').addEventListener('click', () => {
+  switchScreen(screens.letter, screens.storm, () => { startStormSequence(); });
+});
+
+const MONTH_NAMES_SHORT = ["Februar"];
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const TOWER_X = W/2, TOWER_Y = H - 60;
+
+let stormState = {
+  day: 1,
+  hp: 100,
+  maxHp: 100,
+  energy: 100,
+  running: true,
+  rainParticles: [],
+  dragonProgress: 0,
+  dragonActive: false,
+};
+
+function drawTower(dark){
+  ctx.save();
+  ctx.translate(TOWER_X, TOWER_Y);
+  ctx.strokeStyle = dark ? '#333333' : '#1a1a1a';
+  ctx.fillStyle = dark ? '#333333' : '#1a1a1a';
+  ctx.lineWidth = 1.3;
+  ctx.beginPath(); ctx.rect(-38, -6, 76, 14); ctx.stroke();
+  ctx.beginPath(); ctx.rect(-30, -70, 60, 64); ctx.stroke();
+  for(let row=1;row<5;row++){ ctx.beginPath(); ctx.moveTo(-30, -70+row*13); ctx.lineTo(30, -70+row*13); ctx.stroke(); }
+  ctx.beginPath(); ctx.rect(-8, -50, 6, 12); ctx.stroke();
+  ctx.beginPath(); ctx.rect(4, -34, 6, 12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-36,-70); ctx.lineTo(0,-104); ctx.lineTo(36,-70); ctx.closePath(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,-104); ctx.lineTo(0,-124); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,-124); ctx.lineTo(20,-118); ctx.lineTo(0,-112); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawRain(){
+  ctx.strokeStyle = '#c0c0c0';
+  ctx.lineWidth = 1;
+  for(const r of stormState.rainParticles){
+    ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x-4, r.y+14); ctx.stroke();
+  }
+}
+
+function drawDragon(progress){
+  const x = W*0.15 + (TOWER_X - W*0.15) * progress;
+  const y = 60 + (TOWER_Y-140 - 60) * progress;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(-30,0); ctx.lineTo(0,-10); ctx.lineTo(30,0); ctx.lineTo(10,4); ctx.lineTo(0,14); ctx.lineTo(-10,4); ctx.closePath();
+  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(6,-2); ctx.stroke();
+  ctx.restore();
+}
+
+function showCaption(text){
+  const el = document.getElementById('event-caption');
+  el.textContent = text;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 4000);
+}
+
+function updateDateDisplay(){
+  document.getElementById('date-display').textContent = stormState.day + '. Februar 9999';
+}
+function updateBars(){
+  document.getElementById('hp-text').textContent = Math.max(0,Math.round(stormState.hp))+'/'+stormState.maxHp;
+  document.getElementById('hp-inner').style.width = Math.max(0,(stormState.hp/stormState.maxHp*100))+'%';
+  document.getElementById('energy-inner').style.opacity = stormState.energy>0 ? '1' : '0.15';
+  const lbl = document.getElementById('energy-label');
+  if(stormState.day < 10) lbl.textContent = 'Netz aktiv';
+  else if(stormState.day < 20) lbl.textContent = 'Instabil';
+  else lbl.textContent = 'Ausgefallen';
+}
+
+let stormDayTimer = 0;
+const DAY_DURATION = 1400;
+let lastTs = 0;
+
+function stormLoop(ts){
+  if(!stormState.running) return;
+  if(!lastTs) lastTs = ts;
+  const dt = ts - lastTs;
+  lastTs = ts;
+  stormDayTimer += dt;
+
+  ctx.clearRect(0,0,W,H);
+  const isDark = stormState.day >= 20 && stormState.day < 30;
+  ctx.fillStyle = isDark ? '#050505' : '#ffffff';
+  ctx.fillRect(0,0,W,H);
+
+  if(stormState.day >= 5 && stormState.day < 20){
+    if(Math.random() < 0.6) stormState.rainParticles.push({x: Math.random()*W, y: -10});
+    for(const r of stormState.rainParticles) r.y += 9;
+    stormState.rainParticles = stormState.rainParticles.filter(r=>r.y<H);
+    drawRain();
+  }
+
+  drawTower(isDark);
+
+  if(stormState.dragonActive){
+    stormState.dragonProgress += dt/2200;
+    drawDragon(Math.min(1, stormState.dragonProgress));
+    if(stormState.dragonProgress >= 1){
+      stormState.hp = 0;
+      updateBars();
+      document.getElementById('blackout-overlay').classList.add('on');
+      setTimeout(()=>{ switchScreen(screens.storm, screens.end, ()=>{ setTimeout(()=>{ window.location.href='introduce_ch2.html'; }, 2000); }); }, 1800);
+      stormState.running = false;
+      return;
+    }
+  }
+
+  updateDateDisplay();
+
+  if(stormDayTimer >= DAY_DURATION){
+    stormDayTimer = 0;
+    advanceStormDay();
+  }
+
+  requestAnimationFrame(stormLoop);
+}
+
+function advanceStormDay(){
+  stormState.day++;
+
+  if(stormState.day === 5) showCaption('Es beginnt zu regnen.');
+  if(stormState.day === 10) showCaption('Die Stromversorgung wird instabil.');
+  if(stormState.day > 10 && stormState.day <= 20){
+    stormState.energy = Math.max(0, stormState.energy - 10);
+  }
+  if(stormState.day === 20) showCaption('Der Strom ist weg. Alles wird schwarz.');
+  if(stormState.day === 30){
+    showCaption('Es wird wieder hell...');
+    stormState.hp = 17;
+    stormState.energy = 0;
+  }
+  if(stormState.day > 20 && stormState.day < 30){
+    // blackout period - nothing happens, no gold, no enemies
+  }
+  if(stormState.day >= 30 && stormState.day < 35){
+    stormState.hp = Math.min(stormState.maxHp, stormState.hp + 3);
+  }
+  if(stormState.day === 35){
+    showCaption('Ein Drache naehert sich...');
+    stormState.dragonActive = true;
+    stormState.dragonProgress = 0;
+  }
+
+  updateBars();
+
+  if(stormState.day > 35) stormState.day = 35;
+}
+
+function startStormSequence(){
+  updateDateDisplay();
+  updateBars();
+  requestAnimationFrame(stormLoop);
+}
+
+typeLetter(document.getElementById('letter-text'), letterFull, 26, () => {
+  document.getElementById('next-btn').classList.add('visible');
+});
+</script>
+</body>
+</html>
