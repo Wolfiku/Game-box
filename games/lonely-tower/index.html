@@ -475,7 +475,21 @@ const CRYSTAL_UPGS = [
 
 // ─── SAVE / LOAD ──────────────────────────────────────────────────────────────
 const LS = 'lonelyTower_v5';
-function loadSave(){ try{ return JSON.parse(localStorage.getItem(LS))||{}; }catch{ return {}; } }
+const LS_OLD = 'lonelyTower_v4';
+function loadSave(){
+  try{
+    const raw = localStorage.getItem(LS);
+    if(raw) return JSON.parse(raw)||{};
+    // Migration: alten v4-Spielstand übernehmen, falls vorhanden und v5 noch leer ist
+    const oldRaw = localStorage.getItem(LS_OLD);
+    if(oldRaw){
+      const oldData = JSON.parse(oldRaw)||{};
+      localStorage.setItem(LS, JSON.stringify(oldData));
+      return oldData;
+    }
+    return {};
+  }catch{ return {}; }
+}
 function writeSave(d){ localStorage.setItem(LS, JSON.stringify(d)); }
 
 let save = loadSave();
