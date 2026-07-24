@@ -4,7 +4,7 @@
       "index": 1,
       "name": "Lonely Tower",
       "icon": "games/lonely-tower/icon.png",
-      "path": "games/lonely-tower/old.html",
+      "path": "games/lonely-tower/index.html",
       "patchlogs": [
         {
           "version": "2",
