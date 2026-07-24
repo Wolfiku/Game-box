@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tower of Dragons - Kapitel 1</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  width:100%; height:100%;
+  background:#ffffff;
+  color:#1a1a1a;
+  font-family: Georgia, 'Times New Roman', serif;
+  overflow:hidden;
+}
+#app { width:100%; height:100vh; display:flex; flex-direction:column; align-items:center; }
+#topbar {
+  width:100%; max-width:960px;
+  display:flex; justify-content:space-between; align-items:center;
+  padding:14px 18px 6px;
+}
+#chapter-label { font-size:0.85rem; letter-spacing:2px; color:#4a4a4a; }
+#date-display { font-size:1rem; letter-spacing:2px; border:1px solid #1a1a1a; padding:6px 16px; }
+#main-area {
+  width:100%; max-width:960px; display:flex; gap:16px; flex:1;
+  padding:10px 18px 18px; align-items:flex-start;
+}
+#stage-wrap { position:relative; border:1px solid #1a1a1a; }
+#stage { display:block; background:#ffffff; }
+#bars-row { display:flex; justify-content:space-between; width:100%; margin-top:8px; gap:12px; }
+.bar-block { flex:1; }
+.bar-label { font-size:0.7rem; letter-spacing:2px; text-transform:uppercase; color:#4a4a4a; margin-bottom:3px; display:flex; justify-content:space-between; }
+.bar-outer { border:1px solid #1a1a1a; height:12px; width:100%; position:relative; }
+.bar-inner { background:#1a1a1a; height:100%; width:100%; transition:width .3s; }
+#energy-inner { background:repeating-linear-gradient(45deg,#1a1a1a 0 4px,#ffffff 4px 8px); }
+
+#shop-panel {
+  width:280px; border:1px solid #1a1a1a; padding:14px;
+  display:flex; flex-direction:column; gap:9px;
+  max-height:640px; overflow-y:auto;
+}
+#shop-title { font-size:0.95rem; letter-spacing:3px; text-align:center; border-bottom:1px solid #1a1a1a; padding-bottom:8px; margin-bottom:2px; }
+#gold-row { display:flex; justify-content:space-between; font-size:0.85rem; letter-spacing:1px; border-bottom:1px solid #ccc; padding-bottom:8px; }
+.shop-item { border:1px solid #1a1a1a; padding:9px 10px; cursor:pointer; position:relative; transition:background .2s, color .2s; }
+.shop-item:hover:not(.maxed) { background:#1a1a1a; color:#ffffff; }
+.shop-item:hover:not(.maxed) .icon-svg path,
+.shop-item:hover:not(.maxed) .icon-svg polygon,
+.shop-item:hover:not(.maxed) .icon-svg line { stroke:#ffffff !important; fill:#ffffff !important; }
+.shop-item.maxed { opacity:0.55; cursor:default; }
+.si-name { font-size:0.8rem; letter-spacing:1px; display:flex; align-items:center; gap:8px; }
+.si-desc { font-size:0.66rem; color:#4a4a4a; margin-top:4px; line-height:1.35; }
+.shop-item:hover:not(.maxed) .si-desc { color:#dddddd; }
+.si-level { font-size:0.68rem; margin-top:5px; letter-spacing:1px; }
+.si-cost { position:absolute; top:9px; right:10px; font-size:0.76rem; }
+
+#month-info { font-size:0.68rem; color:#4a4a4a; text-align:center; border-top:1px solid #ccc; padding-top:8px; line-height:1.5; }
+
+.overlay {
+  position:fixed; top:0; left:0; width:100%; height:100%; background:#ffffff;
+  display:none; flex-direction:column; align-items:center; justify-content:center;
+  z-index:900; text-align:center; padding:0 20px;
+}
+.overlay.show { display:flex; }
+.overlay h2 { font-size:2rem; letter-spacing:4px; margin-bottom:14px; }
+.overlay p { font-size:0.95rem; color:#4a4a4a; margin-bottom:26px; max-width:480px; line-height:1.7; }
+.ov-btn { background:none; border:1px solid #1a1a1a; color:#1a1a1a; font-family:Georgia, serif; font-size:0.95rem; letter-spacing:2px; padding:12px 30px; cursor:pointer; transition:background .3s, color .3s; margin:5px; }
+.ov-btn:hover { background:#1a1a1a; color:#ffffff; }
+
+/* TUTORIAL */
+#tut-overlay { z-index:1000; }
+#tut-box { max-width:500px; }
+#tut-icon-row { margin-bottom:20px; height:60px; display:flex; align-items:center; justify-content:center; }
+#tut-dots { display:flex; gap:7px; justify-content:center; margin-top:22px; }
+.tut-dot { width:8px; height:8px; border:1px solid #1a1a1a; }
+.tut-dot.active { background:#1a1a1a; }
+#tut-step-title { font-size:1.3rem; letter-spacing:3px; margin-bottom:14px; }
+#tut-step-text { font-size:0.9rem; color:#4a4a4a; line-height:1.8; max-width:460px; margin-bottom:24px; }
+
+#wave-announce {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  font-size:1.3rem; letter-spacing:3px; color:#1a1a1a; opacity:0; pointer-events:none; z-index:100;
+  text-align:center; white-space:nowrap;
+}
+#wave-announce.show { animation:wann 1.6s ease forwards; }
+@keyframes wann {
+  0% { opacity:0; transform:translate(-50%,-50%) scale(0.9); }
+  20% { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  75% { opacity:1; }
+  100% { opacity:0; }
+}
+#pause-btn { background:none; border:1px solid #1a1a1a; color:#1a1a1a; font-family:Georgia, serif; font-size:0.75rem; letter-spacing:2px; padding:6px 14px; cursor:pointer; transition:background .3s, color .3s; }
+#pause-btn:hover { background:#1a1a1a; color:#ffffff; }
+
+@media (max-width:760px) {
+  #main-area { flex-direction:column; align-items:center; }
+  #shop-panel { width:100%; max-width:340px; max-height:280px; }
+}
+</style>
+</head>
+<body>
+
+<div class="overlay show" id="tut-overlay">
+  <div id="tut-box">
+    <div id="tut-dots">
+      <div class="tut-dot active" data-i="0"></div>
+      <div class="tut-dot" data-i="1"></div>
+      <div class="tut-dot" data-i="2"></div>
+      <div class="tut-dot" data-i="3"></div>
+      <div class="tut-dot" data-i="4"></div>
+    </div>
+    <div id="tut-icon-row"></div>
+    <div id="tut-step-title"></div>
+    <div id="tut-step-text"></div>
+    <button class="ov-btn" onclick="tutNext()" id="tut-btn">Weiter</button>
+  </div>
+</div>
+
+<div id="app">
+  <div id="topbar">
+    <div id="chapter-label">Kapitel 1 &middot; Skyridge</div>
+    <button id="pause-btn" onclick="openStopMenu()">Stop</button>
+    <div id="date-display">7. Januar 9998</div>
+  </div>
+
+  <div id="main-area">
+    <div style="display:flex; flex-direction:column;">
+      <div id="stage-wrap">
+        <canvas id="stage" width="480" height="560"></canvas>
+        <div id="wave-announce"></div>
+      </div>
+      <div id="bars-row">
+        <div class="bar-block">
+          <div class="bar-label"><span>Turm</span><span id="hp-text">100/100</span></div>
+          <div class="bar-outer"><div id="hp-inner" class="bar-inner" style="width:100%;"></div></div>
+        </div>
+        <div class="bar-block">
+          <div class="bar-label"><span>Energie</span><span>Netz aktiv</span></div>
+          <div class="bar-outer"><div id="energy-inner" class="bar-inner" style="width:100%;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="shop-panel">
+      <div id="shop-title">Vorratslager</div>
+      <div id="gold-row"><span>Essen</span><span id="gold-text">0</span></div>
+      <div id="shop-items-container"></div>
+      <div id="month-info">Monat <span id="month-num">1</span> von 12<br>Tag <span id="day-in-month">1</span> von 30</div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-death">
+  <h2>Der Turm ist gefallen</h2>
+  <p id="death-text">Der Hunger und die Streuner haben Skyridge durchbrochen. Man bringt euch zurueck an den Anfang des Monats.</p>
+  <button class="ov-btn" onclick="respawnAtMonthStart()">Von Neuem</button>
+</div>
+
+
+
+<div class="overlay" id="stop-menu-overlay" style="z-index:1090;">
+  <h2>Spiel gestoppt</h2>
+  <p>Hier kannst du das Kapitel-Menue oeffnen oder den Run fortsetzen.</p>
+  <button class="ov-btn" onclick="resumeFromStop()">Fortsetzen</button>
+  <button class="ov-btn" onclick="openResetDialog()">Kapitel-1-Reset</button>
+  <button class="ov-btn" onclick="closeStopMenu()">Schliessen</button>
+</div>
+
+<div class="overlay" id="reset-confirm-overlay" style="z-index:1100;">
+  <h2>Spielstand loeschen?</h2>
+  <p>Wenn du bestaetigst, wird Kapitel 1 komplett auf den Anfang zurueckgesetzt.</p>
+  <button class="ov-btn" onclick="confirmHardReset()">Bestaetigen</button>
+  <button class="ov-btn" onclick="cancelHardReset()">Abbrechen</button>
+</div>
+
+<div class="overlay" id="ov-victory">
+  <h2>Kapitel 1 beendet</h2>
+  <p>Zwoelf Monate sind vergangen. Skyridge steht noch. Doch die Nacht ist noch lang...</p>
+  <button class="ov-btn" onclick="location.reload()">Neu beginnen</button>
+</div>
+
+<script>
+const MONTH_NAMES = ["Januar","Februar","Maerz","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const DAYS_PER_MONTH = 30;
+const TOTAL_MONTHS = 12;
+const START_YEAR = 9998;
+const START_MONTH_INDEX = 0;
+const START_DAY = 7;
+const DAILY_CONSUMPTION = 5;
+
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const TOWER_X = W/2, TOWER_Y = H - 60;
+
+const IC = {
+  blade:  `<svg class="icon-svg" width="12" height="13" viewBox="0 0 12 13"><path d="M1,12 L7,2 L11,1 L10,5 L2,11 Z" fill="none" stroke="#1a1a1a" stroke-width="1.1"/></svg>`,
+  wheat:  `<svg class="icon-svg" width="13" height="13" viewBox="0 0 13 13"><path d="M6.5,13 L6.5,3 M6.5,3 L4,0 M6.5,3 L9,0 M6.5,7 L4,4.5 M6.5,7 L9,4.5" fill="none" stroke="#1a1a1a" stroke-width="1"/></svg>`,
+  bow:    `<svg class="icon-svg" width="12" height="13" viewBox="0 0 12 13"><path d="M2,1 Q10,6.5 2,12" fill="none" stroke="#1a1a1a" stroke-width="1.1"/><line x1="2" y1="1" x2="2" y2="12" stroke="#1a1a1a" stroke-width="0.7"/></svg>`,
+  shield: `<svg class="icon-svg" width="11" height="13" viewBox="0 0 11 13"><path d="M5.5,0 L11,2 L11,7 Q11,11 5.5,13 Q0,11 0,7 L0,2 Z" fill="none" stroke="#1a1a1a" stroke-width="1"/></svg>`,
+  star:   `<svg class="icon-svg" width="12" height="12" viewBox="0 0 12 12"><polygon points="6,0 7.2,4.3 12,4.3 8.4,6.9 9.7,11.2 6,8.7 2.3,11.2 3.6,6.9 0,4.3 4.8,4.3" fill="#1a1a1a"/></svg>`,
+  arrows2:`<svg class="icon-svg" width="13" height="13" viewBox="0 0 13 13"><polygon points="4,0 0,6 3,6 2,13 6,5 3,5" fill="#1a1a1a"/><polygon points="10,0 6,6 9,6 8,13 12,5 9,5" fill="#1a1a1a" opacity="0.55"/></svg>`,
+  net:    `<svg class="icon-svg" width="12" height="12" viewBox="0 0 12 12"><rect x="0.5" y="0.5" width="11" height="11" fill="none" stroke="#1a1a1a" stroke-width="0.8"/><line x1="0.5" y1="4" x2="11.5" y2="4" stroke="#1a1a1a" stroke-width="0.6"/><line x1="0.5" y1="8" x2="11.5" y2="8" stroke="#1a1a1a" stroke-width="0.6"/><line x1="4" y1="0.5" x2="4" y2="11.5" stroke="#1a1a1a" stroke-width="0.6"/><line x1="8" y1="0.5" x2="8" y2="11.5" stroke="#1a1a1a" stroke-width="0.6"/></svg>`,
+  heart:  `<svg class="icon-svg" width="11" height="10" viewBox="0 0 11 10"><path d="M5.5,9 C5.5,9 0,5 0,2.5 A2.5,2.5,0,0,1,5.5,1.5 A2.5,2.5,0,0,1,11,2.5 C11,5 5.5,9 5.5,9Z" fill="#1a1a1a"/></svg>`,
+  barn:   `<svg class="icon-svg" width="13" height="12" viewBox="0 0 13 12"><path d="M0,12 L0,5 L6.5,0 L13,5 L13,12 Z" fill="none" stroke="#1a1a1a" stroke-width="1"/><line x1="6.5" y1="0" x2="6.5" y2="12" stroke="#1a1a1a" stroke-width="0.7"/></svg>`,
+  bell:   `<svg class="icon-svg" width="10" height="12" viewBox="0 0 10 12"><path d="M5,0 C7,0 8,2 8,4.5 L9,9 L1,9 L2,4.5 C2,2 3,0 5,0 Z" fill="none" stroke="#1a1a1a" stroke-width="1"/><rect x="3.5" y="9" width="3" height="2" fill="#1a1a1a"/></svg>`,
+  flame:  `<svg class="icon-svg" width="9" height="12" viewBox="0 0 9 12"><path d="M4.5,0 C7,3 8,5 6.5,7.5 C7,5 5.5,4 5,5.5 C5.5,3 3,3 3.5,6 C1,4 1,2 4.5,0 Z" fill="#1a1a1a"/></svg>`,
+  chain:  `<svg class="icon-svg" width="13" height="9" viewBox="0 0 13 9"><circle cx="3.5" cy="4.5" r="3" fill="none" stroke="#1a1a1a" stroke-width="1"/><circle cx="9.5" cy="4.5" r="3" fill="none" stroke="#1a1a1a" stroke-width="1"/></svg>`,
+  banner: `<svg class="icon-svg" width="10" height="13" viewBox="0 0 10 13"><line x1="1" y1="0" x2="1" y2="13" stroke="#1a1a1a" stroke-width="1"/><path d="M1,1 L9,3 L1,6 Z" fill="#1a1a1a"/></svg>`,
+};
+
+const LS = 'towerOfDragons_ch1';
+const PROG_KEY = 'towerOfDragons_ch1_progress';
+function loadSave(){ try{ return JSON.parse(localStorage.getItem(LS))||{}; }catch{ return {}; } }
+function writeSave(d){ localStorage.setItem(LS, JSON.stringify(d)); }
+
+const CATEGORIES = [
+  { key:'attack',  name:'Schusstaerke',      icon:IC.blade,  unlockMonth:1, maxLv:24, base:20, exp:1.55, desc:'Mehr Schaden pro Pfeiltreffer.' },
+  { key:'firerate',name:'Schussgeschwindigkeit', icon:IC.bow, unlockMonth:1, maxLv:24, base:18, exp:1.55, desc:'Der Waechter schiesst schneller.' },
+  { key:'food',    name:'Ernte',              icon:IC.wheat,  unlockMonth:1, maxLv:24, base:15, exp:1.5,  desc:'Mehr Essen einmal pro Tag am Abend.' },
+  { key:'armor',   name:'Ruestung',           icon:IC.shield, unlockMonth:3, maxLv:12, base:34, exp:1.7,  desc:'Erhoeht die maximale Lebenskraft des Turms.' },
+  { key:'crit',    name:'Zielgenauigkeit',    icon:IC.star,   unlockMonth:4, maxLv:10, base:38, exp:1.72, desc:'Chance auf doppelten Schaden bei Treffern.' },
+  { key:'multi',   name:'Mehrfachschuss',     icon:IC.arrows2,unlockMonth:5, maxLv:8,  base:50, exp:1.8,  desc:'Der Waechter feuert auf mehr Ziele zugleich.' },
+  { key:'net',     name:'Fangnetz',           icon:IC.net,    unlockMonth:6, maxLv:10, base:40, exp:1.7,  desc:'Verlangsamt Streuner in Turmnaehe.' },
+  { key:'regen',   name:'Feldlazarett',       icon:IC.heart,  unlockMonth:7, maxLv:10, base:44, exp:1.7,  desc:'Der Turm heilt jeden Tag von selbst.' },
+  { key:'storage', name:'Kornspeicher',       icon:IC.barn,   unlockMonth:8, maxLv:8,  base:36, exp:1.68, desc:'Mehr Essen pro erledigtem Gegner.' },
+  { key:'alarm',   name:'Alarmglocke',        icon:IC.bell,   unlockMonth:9, maxLv:6,  base:48, exp:1.75, desc:'Mehr Zeit zwischen den Wellen zur Vorbereitung.' },
+  { key:'fire',    name:'Brandpfeile',        icon:IC.flame,  unlockMonth:10,maxLv:10, base:52, exp:1.78, desc:'Treffer entzuenden Streuner fuer Schaden ueber Zeit.' },
+  { key:'slow',    name:'Eisenkette',         icon:IC.chain,  unlockMonth:11,maxLv:8,  base:55, exp:1.8,  desc:'Jeder Treffer verlangsamt den Gegner zusaetzlich.' },
+  { key:'bastion', name:'Letzte Bastion',     icon:IC.banner, unlockMonth:12,maxLv:6,  base:70, exp:1.85, desc:'Kleiner Bonus auf alle Kampfwerte gleichzeitig.' },
+];
+
+let save = loadSave();
+let run = { month: 1, day: 1, towerHP: 100, essen: 20 };
+save.levels = save.levels || {};
+for(const c of CATEGORIES) save.levels[c.key] = save.levels[c.key] ?? 0;
+save.tutSeen = save.tutSeen ?? false;
+writeSave(save);
+
+// ─── TUTORIAL ─────────────────────────────────────────────────────────────
+const TUT_STEPS = [
+  { title:'Der Turm', icon:IC.blade, text:'Dein Waechterturm steht mitten in Skyridge. Er schiesst automatisch auf alle Streuner und wilden Tiere, die aus der Dunkelheit kommen.' },
+  { title:'Tag und Wellen', icon:IC.bell, text:'Jeder Tag ist eine Welle. Oben rechts siehst du das aktuelle Datum. Jeder Monat hat 30 Tage - schaffst du alle 12 Monate, ist Kapitel 1 beendet.' },
+  { title:'Turm und Energie', icon:IC.shield, text:'Links siehst du die Lebensleiste deines Turms - faellt sie auf 0, ist der Monat verloren. Rechts daneben die Energieleiste: sie ist immer voll, da ihr noch am Stromnetz haengt.' },
+  { title:'Essen', icon:IC.wheat, text:'Essen bekommst du automatisch am Ende jedes Tages und zusaetzlich fuer jeden erledigten Gegner. Verbrauchst du mehr Essen als du hast, verliert dein Turm Lebenspunkte.' },
+  { title:'Das Vorratslager', icon:IC.barn, text:'Rechts im Vorratslager kannst du mit Essen dauerhaft Upgrades kaufen. Jeden Monat schaltet sich eine neue Kategorie frei - am Anfang: Schusstaerke, Schussgeschwindigkeit und Ernte.' },
+];
+let tutIndex = 0;
+function renderTutStep(){
+  const s = TUT_STEPS[tutIndex];
+  document.getElementById('tut-step-title').textContent = s.title;
+  document.getElementById('tut-step-text').textContent = s.text;
+  document.getElementById('tut-icon-row').innerHTML = s.icon;
+  document.querySelectorAll('.tut-dot').forEach((d,i)=>d.classList.toggle('active', i===tutIndex));
+  document.getElementById('tut-btn').textContent = tutIndex === TUT_STEPS.length-1 ? 'Verstanden' : 'Weiter';
+}
+function tutNext(){
+  tutIndex++;
+  if(tutIndex >= TUT_STEPS.length){
+    document.getElementById('tut-overlay').classList.remove('show');
+    save.tutSeen = true; writeSave(save);
+    startGameLoop();
+    return;
+  }
+  renderTutStep();
+}
+if(save.tutSeen){
+  document.getElementById('tut-overlay').classList.remove('show');
+} else {
+  renderTutStep();
+}
+
+let stopHoldTimer = null;
+let stopHoldArmed = false;
+let game = {
+  dayCounter: 1,
+  towerHP: 100,
+  towerMaxHP: 100,
+  essen: 20,
+  running: true,
+  paused: false,
+  waveActive: false,
+  enemies: [],
+  projectiles: [],
+  spawnQueue: 0,
+  spawnTimer: 0,
+  intermissionTimer: 0,
+  lastShot: 0,
+  lastTime: 0,
+  loopStarted: false,
+};
+
+function saveCheckpoint(){ localStorage.setItem(PROG_KEY, JSON.stringify({ month:getCurrentGameMonth(game.dayCounter), day:getDayInMonth(game.dayCounter), towerHP:game.towerHP, essen:game.essen })); }
+function loadCheckpoint(){ try { return JSON.parse(localStorage.getItem(PROG_KEY)) || {}; } catch { return {}; } }
+
+function lv(k){ return save.levels[k]||0; }
+function cat(k){ return CATEGORIES.find(c=>c.key===k); }
+function costFor(k){
+  const c = cat(k), level = lv(k);
+  if(level>=c.maxLv) return Infinity;
+  const monthMul = 1 + Math.max(0, c.unlockMonth - 1) * 0.35;
+  return Math.round(c.base * monthMul * Math.pow(c.exp, level));
+}
+function buyUpgrade(k){
+  const cost = costFor(k);
+  if(game.essen < cost) return;
+  game.essen -= cost;
+  save.levels[k] = (save.levels[k]||0) + 1;
+  writeSave(save);
+  if(k==='armor'){ game.towerMaxHP = 100 + lv('armor')*10; }
+  renderShop();
+}
+
+function getCurrentGameMonth(dayCounter){ return Math.min(TOTAL_MONTHS, Math.floor((dayCounter-1)/DAYS_PER_MONTH)+1); }
+function getDayInMonth(dayCounter){ return ((dayCounter-1) % DAYS_PER_MONTH) + 1; }
+function getCalendarDate(dayCounter){
+  const totalOffset = dayCounter - 1;
+  let day = START_DAY + totalOffset;
+  let monthIdx = START_MONTH_INDEX;
+  const monthLengths = [31,28,31,30,31,30,31,31,30,31,30,31];
+  while(day > monthLengths[monthIdx]){ day -= monthLengths[monthIdx]; monthIdx = (monthIdx+1) % 12; }
+  return { day, monthName: MONTH_NAMES[monthIdx] };
+}
+
+function attackPower(){ return 13 * (1 + 0.28*lv('attack')) * (1 + 0.06*lv('bastion')); }
+function fireRate(){ return 1.1 * (1 + 0.19*lv('firerate')) * (1 + 0.06*lv('bastion')); }
+function foodPerDay(){ return 9 + lv('food')*4; }
+function storageBonusPerKill(){ return lv('storage'); }
+function critChance(){ return Math.min(0.6, lv('crit')*0.05); }
+function multishotCount(){ return 1 + Math.floor(lv('multi')/2); }
+// Reichweite dauerhaft auf das gesamte Feld maximiert
+function towerRange(){ return Math.hypot(TOWER_X, TOWER_Y+20); }
+function regenPerDay(){ return lv('regen')*3; }
+function intermissionBonus(){ return lv('alarm')*0.4; }
+function netSlowFactor(){ return Math.max(0.35, 1 - lv('net')*0.06); }
+function fireDotDmg(){ return lv('fire')*1.5; }
+function chainSlow(){ return lv('slow')*0.03; }
+function foodPerKill(type){ return (type==='wild' ? 5 : 3) + storageBonusPerKill(); }
+
+function renderShop(){
+  const month = getCurrentGameMonth(game.dayCounter);
+  document.getElementById('gold-text').textContent = Math.floor(game.essen);
+  document.getElementById('month-num').textContent = month;
+  document.getElementById('day-in-month').textContent = getDayInMonth(game.dayCounter);
+
+  const container = document.getElementById('shop-items-container');
+  container.innerHTML = '';
+  for(const c of CATEGORIES){
+    if(c.unlockMonth > month) continue;
+    const level = lv(c.key), maxed = level>=c.maxLv, cost = costFor(c.key);
+    const div = document.createElement('div');
+    div.className = 'shop-item' + (maxed?' maxed':'');
+    div.onclick = () => buyUpgrade(c.key);
+    div.innerHTML = `
+      <div class="si-name">${c.icon} ${c.name}</div>
+      <div class="si-desc">${c.desc}</div>
+      <div class="si-level">Stufe ${level} / ${c.maxLv}</div>
+      <div class="si-cost">${maxed?'Max.':cost+' Essen'}</div>
+    `;
+    container.appendChild(div);
+  }
+}
+
+function renderTopAndBars(){
+  const d = getCalendarDate(game.dayCounter);
+  document.getElementById('date-display').textContent = d.day+'. '+d.monthName+' '+START_YEAR;
+  document.getElementById('hp-text').textContent = Math.max(0,Math.round(game.towerHP))+'/'+game.towerMaxHP;
+  document.getElementById('hp-inner').style.width = Math.max(0,(game.towerHP/game.towerMaxHP*100))+'%';
+}
+
+function enemyCountForWave(month, dayInMonth){ return 2 + Math.floor(dayInMonth/3) + Math.max(0, month-1); }
+function enemyHP(month, dayInMonth){ return 9 + month*4.8 + dayInMonth*1.0; }
+function enemyDmg(month, dayInMonth){ return 2.2 + month*0.65 + dayInMonth*0.07; }
+function enemySpeed(month, dayInMonth){ return 27 + month*1.35 + dayInMonth*0.22; }
+
+function enemyTypeFor(month, dayInMonth){
+  const wildChance = Math.min(0.4, 0.035 + month*0.022 + dayInMonth*0.0025);
+  return Math.random() < wildChance ? 'wild' : 'streuner';
+}
+
+function startWave(){
+  const month = getCurrentGameMonth(game.dayCounter);
+  const dim = getDayInMonth(game.dayCounter);
+  game.spawnQueue = enemyCountForWave(month, dim);
+  game.spawnTimer = 0;
+  game.waveActive = true;
+  showWaveAnnounce('Monat '+month+' &middot; Tag '+dim);
+}
+
+function showWaveAnnounce(text){
+  const el = document.getElementById('wave-announce');
+  el.innerHTML = text;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+}
+
+function spawnEnemy(){
+  const month = getCurrentGameMonth(game.dayCounter);
+  const dim = getDayInMonth(game.dayCounter);
+  const type = enemyTypeFor(month, dim);
+  const wildMul = type==='wild' ? 1.55 : 1.0;
+  const x = 30 + Math.random()*(W-60);
+  game.enemies.push({
+    x, y: -20,
+    hp: enemyHP(month,dim)*wildMul,
+    maxHp: enemyHP(month,dim)*wildMul,
+    dmg: enemyDmg(month,dim)*(type==='wild'?1.2:1.0),
+    speed: enemySpeed(month,dim)*(type==='wild'?0.92:1.0),
+    r: type==='wild' ? 15 : 11,
+    type,
+    slowT: 0,
+    burnT: 0,
+  });
+}
+
+function update(dt){
+  if(game.paused || !game.running) return;
+
+  if(game.waveActive){
+    if(game.spawnQueue > 0){
+      game.spawnTimer -= dt;
+      if(game.spawnTimer <= 0){ spawnEnemy(); game.spawnQueue--; game.spawnTimer = 0.7; }
+    }
+  } else {
+    game.intermissionTimer -= dt;
+    if(game.intermissionTimer <= 0){ startWave(); }
+  }
+
+  const netFactor = netSlowFactor();
+  for(let i=game.enemies.length-1;i>=0;i--){
+    const e = game.enemies[i];
+    const dx = TOWER_X - e.x, dy = TOWER_Y - e.y;
+    const dist = Math.hypot(dx,dy);
+    if(dist < e.r+18){ game.towerHP -= e.dmg; game.enemies.splice(i,1); continue; }
+    if(e.burnT>0){ e.hp -= fireDotDmg()*dt; e.burnT -= dt; }
+    let speedMul = 1;
+    if(dist < 90) speedMul *= netFactor;
+    if(e.slowT>0){ speedMul *= 0.5; e.slowT -= dt; }
+    e.x += (dx/dist)*e.speed*speedMul*dt;
+    e.y += (dy/dist)*e.speed*speedMul*dt;
+    if(e.hp<=0){
+      game.essen = game.essen + foodPerKill(e.type);
+      game.enemies.splice(i,1);
+      renderShop();
+    }
+  }
+
+  game.lastShot += dt;
+  const interval = 1/fireRate();
+  if(game.lastShot >= interval && game.enemies.length>0){
+    const range = towerRange();
+    const inRange = game.enemies.filter(e=>Math.hypot(e.x-TOWER_X,e.y-TOWER_Y)<=range);
+    // Sortiert nach unterstem Gegner zuerst (Y-Achse absteigend)
+    inRange.sort((a,b)=>b.y - a.y);
+    const targets = inRange.slice(0, multishotCount());
+    for(const t of targets){
+      game.projectiles.push({ x: TOWER_X, y: TOWER_Y-20, target: t, tx: t.x, ty: t.y, speed: 500, spent: false, vx: 0, vy: 0 });
+    }
+    if(targets.length>0) game.lastShot = 0;
+  }
+
+  for(let i=game.projectiles.length-1;i>=0;i--){
+    const p = game.projectiles[i];
+
+    if (!p.spent) {
+      const targetAlive = game.enemies.includes(p.target);
+      if(targetAlive){ p.tx = p.target.x; p.ty = p.target.y; }
+      const dx = p.tx-p.x, dy = p.ty-p.y;
+      const dist = Math.hypot(dx,dy);
+      
+      if(dist < 10){
+        if(targetAlive){
+          let dmg = attackPower();
+          if(Math.random() < critChance()) dmg *= 2;
+          p.target.hp -= dmg;
+          if(lv('fire')>0) p.target.burnT = 2.5;
+          if(lv('slow')>0) p.target.slowT = 1.2;
+        }
+        p.spent = true;
+        // Speichere die letzte Richtung, um einfach weiterzufliegen
+        if (dist > 0) {
+          p.vx = (dx/dist) * p.speed;
+          p.vy = (dy/dist) * p.speed;
+        } else {
+          p.vy = -p.speed; // Fallback, falls direkt drauf
+        }
+      } else { 
+        p.x += (dx/dist)*p.speed*dt; 
+        p.y += (dy/dist)*p.speed*dt; 
+      }
+    } else {
+      // Fliegt durch den Gegner hindurch weiter
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+    }
+
+    // Wenn das Geschoss aus dem Bildschirmrand fliegt, löschen wir es, damit das Array nicht endlos wächst
+    if(p.x < -50 || p.x > W+50 || p.y < -50 || p.y > H+50) {
+      game.projectiles.splice(i, 1);
+    }
+  }
+
+  if(game.waveActive && game.spawnQueue===0 && game.enemies.length===0){
+    game.waveActive = false;
+    endOfDay();
+    if(game.towerHP <= 0){ triggerDeath(); return; }
+    saveCheckpoint();
+    save.levels = JSON.parse(JSON.stringify(save.levels));
+    writeSave(save);
+    game.intermissionTimer = 3.5 + intermissionBonus();
+    if(getCurrentGameMonth(game.dayCounter) > TOTAL_MONTHS){ triggerVictory(); return; }
+  }
+
+  if(game.towerHP <= 0){ triggerDeath(); }
+}
+
+function endOfDay(){
+  game.essen = game.essen + foodPerDay();
+  if(regenPerDay()>0) game.towerHP = Math.min(game.towerMaxHP, game.towerHP + regenPerDay());
+  game.dayCounter++;
+  renderShop();
+}
+
+function drawTower(){
+  ctx.save();
+  ctx.translate(TOWER_X, TOWER_Y);
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.fillStyle = '#1a1a1a';
+  ctx.lineWidth = 1.3;
+
+  ctx.beginPath(); ctx.rect(-38, -6, 76, 14); ctx.stroke();
+  for(let i=-3;i<=3;i++){ ctx.beginPath(); ctx.moveTo(i*12,-6); ctx.lineTo(i*12+3,8); ctx.stroke(); }
+
+  ctx.beginPath(); ctx.rect(-30, -70, 60, 64); ctx.stroke();
+  for(let row=1;row<5;row++){
+    ctx.beginPath(); ctx.moveTo(-30, -70+row*13); ctx.lineTo(30, -70+row*13); ctx.stroke();
+  }
+  for(let row=0;row<5;row++){
+    const off = row%2===0 ? -30 : -24;
+    for(let cx=off; cx<30; cx+=12){
+      ctx.beginPath(); ctx.moveTo(cx, -70+row*13); ctx.lineTo(cx, -70+(row+1)*13); ctx.stroke();
+    }
+  }
+
+
+  ctx.beginPath();
+  ctx.moveTo(-36,-70); ctx.lineTo(0,-104); ctx.lineTo(36,-70);
+  ctx.closePath(); ctx.stroke();
+  for(let i=-30;i<=30;i+=12){
+    ctx.beginPath(); ctx.moveTo(i,-70); ctx.lineTo(0,-104); ctx.stroke();
+  }
+
+  for(let i=-4;i<=4;i+=2){
+    ctx.beginPath(); ctx.rect(i*4-2.5, -75, 5, 8); ctx.stroke();
+  }
+
+  ctx.beginPath(); ctx.moveTo(0,-104); ctx.lineTo(0,-124); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0,-124); ctx.lineTo(20,-118); ctx.lineTo(0,-112); ctx.closePath(); ctx.fill();
+
+  ctx.restore();
+}
+
+function drawEnemy(e){
+  ctx.save();
+  ctx.translate(e.x, e.y);
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = e.type==='wild' ? 1.6 : 1.1;
+  ctx.beginPath();
+  if(e.type==='wild'){
+    ctx.moveTo(0,-e.r);
+    ctx.lineTo(e.r*0.9, -e.r*0.2);
+    ctx.lineTo(e.r*0.6, e.r*0.7);
+    ctx.lineTo(-e.r*0.6, e.r*0.7);
+    ctx.lineTo(-e.r*0.9, -e.r*0.2);
+    ctx.closePath();
+    ctx.moveTo(-e.r*0.3,-e.r*0.6); ctx.lineTo(-e.r*0.5,-e.r*1.1);
+    ctx.moveTo(e.r*0.3,-e.r*0.6); ctx.lineTo(e.r*0.5,-e.r*1.1);
+  } else {
+    ctx.moveTo(0,-e.r);
+    ctx.lineTo(e.r*0.8, e.r*0.5);
+    ctx.lineTo(0, e.r*0.2);
+    ctx.lineTo(-e.r*0.8, e.r*0.5);
+    ctx.closePath();
+  }
+  ctx.stroke();
+  if(e.burnT>0){ ctx.setLineDash([2,2]); ctx.strokeRect(-e.r-2,-e.r-2,(e.r+2)*2,(e.r+2)*2); ctx.setLineDash([]); }
+  const hpRatio = Math.max(0, e.hp/e.maxHp);
+  ctx.strokeRect(-e.r, -e.r-10, e.r*2, 3);
+  ctx.fillRect(-e.r, -e.r-10, e.r*2*hpRatio, 3);
+  ctx.restore();
+}
+
+function drawProjectile(p){
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
+}
+
+function render(){
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle = '#e8e8e8'; ctx.lineWidth = 1;
+  for(let i=1;i<6;i++){ ctx.beginPath(); ctx.moveTo(0, i*H/6); ctx.lineTo(W, i*H/6); ctx.stroke(); }
+  drawTower();
+  for(const e of game.enemies) drawEnemy(e);
+  for(const p of game.projectiles) drawProjectile(p);
+  renderTopAndBars();
+}
+
+function loop(ts){
+  if(!game.lastTime) game.lastTime = ts;
+  const dt = Math.min(0.05, (ts-game.lastTime)/1000);
+  game.lastTime = ts;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+function triggerDeath(){ game.running = false; document.getElementById('ov-death').classList.add('show'); }
+function respawnAtMonthStart(){
+  const month = getCurrentGameMonth(game.dayCounter);
+  game.dayCounter = (month-1)*DAYS_PER_MONTH + 1;
+  game.towerHP = game.towerMaxHP;
+  game.essen = 20;
+  game.enemies = []; game.projectiles = [];
+  game.waveActive = false; game.intermissionTimer = 1.5;
+  game.running = true; game.lastTime = 0;
+  document.getElementById('ov-death').classList.remove('show');
+  renderShop();
+}
+function triggerVictory(){ saveProgress(); game.running = false; document.getElementById('ov-victory').classList.add('show'); }
+function openStopMenu(){
+  if(!game.running) return;
+  document.getElementById('stop-menu-overlay').classList.add('show');
+  game.paused = true;
+}
+function closeStopMenu(){ document.getElementById('stop-menu-overlay').classList.remove('show'); game.paused = false; }
+function resumeFromStop(){ closeStopMenu(); }
+function openResetDialog(){ document.getElementById('reset-confirm-overlay').classList.add('show'); }
+function confirmHardReset(){
+  localStorage.removeItem(PROG_KEY);
+  for(const c of CATEGORIES) save.levels[c.key]=0;
+  writeSave(save);
+  document.getElementById('reset-confirm-overlay').classList.remove('show');
+  location.reload();
+}
+function cancelHardReset(){ document.getElementById('reset-confirm-overlay').classList.remove('show'); }
+
+
+function startGameLoop(){
+  if(game.loopStarted) return;
+  game.loopStarted = true;
+  game.towerMaxHP = 100 + lv('armor')*10;
+  const pg = loadCheckpoint();
+  const month = Math.max(1, Math.min(TOTAL_MONTHS, pg.month || 1));
+  const day = Math.max(1, Math.min(DAYS_PER_MONTH, pg.day || 1));
+  game.dayCounter = (month-1)*DAYS_PER_MONTH + day;
+  game.towerHP = pg.towerHP ?? game.towerMaxHP;
+  game.essen = pg.essen ?? 20;
+  game.intermissionTimer = 1.2;
+  renderShop();
+  renderTopAndBars();
+  requestAnimationFrame(loop);
+}
+
+renderShop();
+renderTopAndBars();
+if(save.tutSeen){ startGameLoop(); }
+
+
+</script>
+</body>
+</html>
